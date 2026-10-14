@@ -1,0 +1,15 @@
+{
+  "name": "set25",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck"
+  },
+  "packageManager": "pnpm@10.18.2",
+  "devDependencies": {
+    "prettier": "^3.9.10",
+    "turbo": "^2.11.8"
+  }
+}
