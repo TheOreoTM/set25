@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   turbopack: {
     rules: {
+      "*.svg": {
+        type: "asset",
+      },
       "*.css": {
         loaders: ["@tailwindcss/turbopack"],
         as: "*.css",
