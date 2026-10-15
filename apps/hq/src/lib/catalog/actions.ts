@@ -10,6 +10,7 @@ import {
   type FormState,
 } from "./validation";
 import { applyInventoryMovement, InventoryRuleError } from "./inventory";
+import { requireOperationalAccess } from "@/lib/auth/session";
 
 function databaseError(error: unknown): FormState {
   if (
@@ -32,6 +33,7 @@ export async function createProductAction(
   _previous: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  await requireOperationalAccess();
   const result = validateProduct(formData);
   if (!result.success)
     return {
@@ -59,6 +61,7 @@ export async function updateProductAction(
   _previous: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  await requireOperationalAccess();
   const result = validateProduct(formData);
   if (!result.success)
     return {
@@ -81,6 +84,7 @@ export async function createVariantAction(
   _previous: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  await requireOperationalAccess();
   const result = validateVariant(formData);
   if (!result.success)
     return {
@@ -105,6 +109,7 @@ export async function updateVariantAction(
   _previous: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  await requireOperationalAccess();
   const result = validateVariant(formData);
   if (!result.success)
     return {
@@ -132,6 +137,7 @@ export async function adjustStockAction(
   _previous: FormState,
   formData: FormData,
 ): Promise<FormState> {
+  const staff = await requireOperationalAccess();
   const result = validateStockAdjustment(formData);
   if (!result.success)
     return {
@@ -142,7 +148,7 @@ export async function adjustStockAction(
   const input = result.data;
 
   try {
-    await applyInventoryMovement(input);
+    await applyInventoryMovement(input, staff.id);
   } catch (error) {
     if (error instanceof InventoryRuleError)
       return { status: "error", message: error.message };

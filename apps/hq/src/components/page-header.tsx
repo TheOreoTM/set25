@@ -1,4 +1,5 @@
 import { Search } from "lucide-react";
+import { AccountMenu } from "./account-menu";
 
 type PageHeaderProps = {
   eyebrow: string;
@@ -24,17 +25,7 @@ export function PageHeader({ eyebrow, title, description }: PageHeaderProps) {
           <span>Search HQ</span>
           <kbd>⌘ K</kbd>
         </button>
-        <button
-          className="account-trigger"
-          type="button"
-          aria-label="Staff account menu (coming soon)"
-        >
-          <span className="avatar">AM</span>
-          <span className="account-copy">
-            <strong>Aishath</strong>
-            <small>HQ staff</small>
-          </span>
-        </button>
+        <AccountMenu />
       </div>
     </header>
   );

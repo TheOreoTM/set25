@@ -1,36 +1,33 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SET25 HQ
 
-## Getting Started
+Private staff operations for SET25.
 
-First, run the development server:
+## Local setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp apps/hq/.env.example apps/hq/.env.local
+cp packages/database/.env.example packages/database/.env
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Set the same `DATABASE_URL` in both files. Generate a strong `AUTH_SECRET` of at least 32 random bytes for `apps/hq/.env.local`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Apply migrations, then create the first Owner explicitly. Temporarily add `SET25_OWNER_NAME`, `SET25_OWNER_EMAIL`, and `SET25_OWNER_PASSWORD` to `packages/database/.env`, using a password of 12–128 characters.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+pnpm --filter @set25/database exec prisma migrate deploy
+pnpm --filter @set25/database db:bootstrap-owner
+```
 
-## Learn More
+The bootstrap refuses to overwrite an existing Owner and never logs the password. Remove the three Owner variables from the environment file after use.
 
-To learn more about Next.js, take a look at the following resources:
+Start HQ:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+pnpm --filter hq dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Open [http://localhost:3001](http://localhost:3001). Unauthenticated requests are redirected to `/sign-in`.
 
-## Deploy on Vercel
+## Rapid-development checks
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Run `pnpm lint`, `pnpm typecheck`, and `pnpm build` from the repository root. Automated tests are intentionally deferred during rapid development.

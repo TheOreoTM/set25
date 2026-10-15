@@ -1,13 +1,20 @@
 import { Suspense, type ReactNode } from "react";
 import Image from "next/image";
 import wordmark from "@set25/brand/assets/SET25_Primary_Wordmark_White.svg";
+import type { StaffIdentity } from "@/lib/auth/types";
 import { Navigation } from "./navigation";
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({
+  children,
+  staff,
+}: {
+  children: ReactNode;
+  staff: StaffIdentity;
+}) {
   return (
     <div className="app-shell">
       <Suspense fallback={<NavigationFallback />}>
-        <Navigation />
+        <Navigation staff={staff} />
       </Suspense>
       <div className="app-main">{children}</div>
     </div>

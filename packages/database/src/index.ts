@@ -6,6 +6,7 @@ export {
   InventoryMovementType,
   ProductCategory,
   ProductStatus,
+  StaffRole,
 } from "../generated/prisma/enums";
 
 const connectionString = process.env.DATABASE_URL;

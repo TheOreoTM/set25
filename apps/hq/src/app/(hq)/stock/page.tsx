@@ -11,6 +11,7 @@ import {
 import { PageHeader } from "@/components/page-header";
 import { StockAdjustment } from "@/components/catalog/stock-adjustment";
 import { getStock } from "@/lib/catalog/data";
+import { requireStaff } from "@/lib/auth/session";
 
 export const metadata = { title: "Stock" };
 
@@ -42,7 +43,10 @@ async function StockList({
   const value = (key: string) =>
     typeof params[key] === "string" ? params[key] : "";
   const filters = { search: value("search"), status: value("status") };
-  const variants = await getStock(filters);
+  const [variants, staff] = await Promise.all([
+    getStock(filters),
+    requireStaff(),
+  ]);
   const adjustmentVariants = variants
     .filter((variant) => variant.active)
     .map((variant) => ({
@@ -85,11 +89,13 @@ async function StockList({
             <SlidersHorizontal aria-hidden="true" /> Apply
           </button>
         </form>
-        <StockAdjustment
-          variants={adjustmentVariants}
-          returnTo="/stock"
-          submissionKey={randomUUID()}
-        />
+        {staff.role !== "STAFF" ? (
+          <StockAdjustment
+            variants={adjustmentVariants}
+            returnTo="/stock"
+            submissionKey={randomUUID()}
+          />
+        ) : null}
       </div>
       <section className="resource-panel" aria-labelledby="stock-list-title">
         <div className="resource-panel-head">

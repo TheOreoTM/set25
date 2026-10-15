@@ -1,14 +1,14 @@
-export type StaffRole = "owner" | "operator" | "viewer";
+import type { StaffRole } from "@set25/database";
+
+export const staffRoleLabels: Record<StaffRole, string> = {
+  OWNER: "Owner",
+  MANAGER: "Manager",
+  STAFF: "Staff",
+};
 
 export type StaffIdentity = {
   id: string;
   name: string;
   email: string;
   role: StaffRole;
-};
-
-/** Provider-neutral contract for the future server-side authentication boundary. */
-export type StaffSession = {
-  staff: StaffIdentity;
-  expiresAt: Date;
 };

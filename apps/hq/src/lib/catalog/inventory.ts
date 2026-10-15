@@ -3,8 +3,24 @@ import type { StockAdjustmentInput } from "./validation";
 
 export class InventoryRuleError extends Error {}
 
-export async function applyInventoryMovement(input: StockAdjustmentInput) {
+export async function applyInventoryMovement(
+  input: StockAdjustmentInput,
+  createdById: string,
+) {
   return db.$transaction(async (transaction) => {
+    const actor = await transaction.staffUser.findFirst({
+      where: {
+        id: createdById,
+        active: true,
+        role: { in: ["OWNER", "MANAGER"] },
+      },
+      select: { id: true },
+    });
+    if (!actor)
+      throw new InventoryRuleError(
+        "Your staff access no longer allows stock adjustments.",
+      );
+
     const duplicate = await transaction.inventoryMovement.findUnique({
       where: { idempotencyKey: input.idempotencyKey },
       select: { id: true },
@@ -45,6 +61,7 @@ export async function applyInventoryMovement(input: StockAdjustmentInput) {
         notes: input.notes,
         reference: input.reference,
         idempotencyKey: input.idempotencyKey,
+        createdById,
       },
     });
     return { duplicate: false };

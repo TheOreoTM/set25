@@ -15,6 +15,7 @@ import {
 import { PageHeader } from "@/components/page-header";
 import { StockAdjustment } from "@/components/catalog/stock-adjustment";
 import { getProductWithMovements } from "@/lib/catalog/data";
+import { requireStaff } from "@/lib/auth/session";
 
 export default function ProductDetailPage({
   params,
@@ -40,7 +41,10 @@ async function ProductDetail({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const [{ id }, query] = await Promise.all([params, searchParams]);
-  const product = await getProductWithMovements(id);
+  const [product, staff] = await Promise.all([
+    getProductWithMovements(id),
+    requireStaff(),
+  ]);
   if (!product) notFound();
   const movements = product.variants
     .flatMap((variant) =>
@@ -83,24 +87,28 @@ async function ProductDetail({
           <ArrowLeft aria-hidden="true" /> All products
         </Link>
         <div>
-          <StockAdjustment
-            variants={adjustmentVariants}
-            returnTo={`/products/${product.id}`}
-            submissionKey={randomUUID()}
-            compact
-          />
-          <Link
-            className="button button--secondary"
-            href={`/products/${product.id}/edit`}
-          >
-            <Edit3 aria-hidden="true" /> Edit product
-          </Link>
-          <Link
-            className="button button--dark"
-            href={`/products/${product.id}/variants/new`}
-          >
-            <Plus aria-hidden="true" /> Add variant
-          </Link>
+          {staff.role !== "STAFF" ? (
+            <>
+              <StockAdjustment
+                variants={adjustmentVariants}
+                returnTo={`/products/${product.id}`}
+                submissionKey={randomUUID()}
+                compact
+              />
+              <Link
+                className="button button--secondary"
+                href={`/products/${product.id}/edit`}
+              >
+                <Edit3 aria-hidden="true" /> Edit product
+              </Link>
+              <Link
+                className="button button--dark"
+                href={`/products/${product.id}/variants/new`}
+              >
+                <Plus aria-hidden="true" /> Add variant
+              </Link>
+            </>
+          ) : null}
         </div>
       </div>
       <section className="product-identity">
@@ -211,13 +219,15 @@ async function ProductDetail({
                     </span>
                   </span>
                   <span>
-                    <Link
-                      className="row-link"
-                      href={`/products/${product.id}/variants/${variant.id}/edit`}
-                      aria-label={`Edit ${variant.sku}`}
-                    >
-                      <Edit3 aria-hidden="true" />
-                    </Link>
+                    {staff.role !== "STAFF" ? (
+                      <Link
+                        className="row-link"
+                        href={`/products/${product.id}/variants/${variant.id}/edit`}
+                        aria-label={`Edit ${variant.sku}`}
+                      >
+                        <Edit3 aria-hidden="true" />
+                      </Link>
+                    ) : null}
                   </span>
                 </div>
               );
@@ -260,7 +270,8 @@ async function ProductDetail({
                 <span>
                   <strong>{inventoryMovementLabels[movement.type]}</strong>
                   <small>
-                    {movement.variant.sku} · {movement.notes}
+                    {movement.variant.sku} · {movement.notes} · Adjusted by{" "}
+                    {movement.createdBy?.name || "Earlier SET25 record"}
                   </small>
                 </span>
                 <span>{movement.reference || "No reference"}</span>

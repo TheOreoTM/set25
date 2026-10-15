@@ -11,6 +11,7 @@ import {
 import { PageHeader } from "@/components/page-header";
 import { ProductListSkeleton } from "@/components/catalog/product-list-skeleton";
 import { getProducts } from "@/lib/catalog/data";
+import { requireStaff } from "@/lib/auth/session";
 
 export const metadata = { title: "Products" };
 
@@ -46,9 +47,20 @@ async function ProductList({
     status: value("status"),
     category: value("category"),
   };
-  const products = await getProducts(filters);
+  const [products, staff] = await Promise.all([
+    getProducts(filters),
+    requireStaff(),
+  ]);
   return (
     <>
+      {params.forbidden === "write" ? (
+        <div
+          className="form-message form-message--error staff-page-message"
+          role="alert"
+        >
+          Your Staff role has read-only access to Products and Stock.
+        </div>
+      ) : null}
       <div className="resource-toolbar">
         <form className="filter-bar">
           <label className="search-field">
@@ -89,9 +101,11 @@ async function ProductList({
             <SlidersHorizontal aria-hidden="true" /> Apply
           </button>
         </form>
-        <Link className="button button--dark" href="/products/new">
-          <Plus aria-hidden="true" /> New product
-        </Link>
+        {staff.role !== "STAFF" ? (
+          <Link className="button button--dark" href="/products/new">
+            <Plus aria-hidden="true" /> New product
+          </Link>
+        ) : null}
       </div>
       <section className="resource-panel" aria-labelledby="product-list-title">
         <div className="resource-panel-head">
@@ -162,9 +176,13 @@ async function ProductList({
         ) : (
           <div className="inline-empty">
             <p>No products match these filters.</p>
-            <Link href="/products/new">
-              Create the first product <ArrowRight aria-hidden="true" />
-            </Link>
+            {staff.role !== "STAFF" ? (
+              <Link href="/products/new">
+                Create the first product <ArrowRight aria-hidden="true" />
+              </Link>
+            ) : (
+              <span>Ask a Manager or Owner to create a product.</span>
+            )}
           </div>
         )}
       </section>

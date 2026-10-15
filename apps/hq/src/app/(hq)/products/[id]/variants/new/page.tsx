@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/page-header";
 import { VariantForm } from "@/components/catalog/variant-form";
 import { createVariantAction } from "@/lib/catalog/actions";
 import { getProduct } from "@/lib/catalog/data";
+import { requireOperationalPageAccess } from "@/lib/auth/session";
 
 export default function NewVariantPage({
   params,
@@ -19,6 +20,7 @@ export default function NewVariantPage({
   );
 }
 async function NewVariant({ params }: { params: Promise<{ id: string }> }) {
+  await requireOperationalPageAccess();
   const { id } = await params;
   const product = await getProduct(id);
   if (!product) notFound();

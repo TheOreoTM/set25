@@ -124,7 +124,12 @@ const tasks = [
   },
 ];
 
-export default function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const query = await searchParams;
   return (
     <main className="page-wrap">
       <PageHeader
@@ -132,6 +137,15 @@ export default function DashboardPage() {
         title="Good morning, team."
         description="Here’s what needs your attention today."
       />
+      {query.forbidden === "staff-role" ? (
+        <div
+          className="form-message form-message--error staff-page-message"
+          role="alert"
+        >
+          Your Staff role currently includes Dashboard, Products, and Stock
+          access.
+        </div>
+      ) : null}
       <div className="demo-notice" role="note">
         <span>Demo data</span> Dashboard values are illustrative until
         operational workflows are connected.

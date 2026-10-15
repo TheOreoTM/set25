@@ -35,14 +35,14 @@ HQ and Store must use this one schema and PostgreSQL database. Application permi
 
 ## Eventual entity map
 
-The following is a direction for later milestones, not a Milestone 1 implementation.
+The following map records implemented foundations and the direction for later milestones.
 
-### Identity and access
+### Identity and access (implemented foundation)
 
-- `StaffUser`
-- `Role` / permissions (or a deliberately small role enum initially)
-- `Session` / auth-provider account records as required by the chosen auth system
-- `AuditEvent`
+- `StaffUser` stores a unique normalised email, Argon2id password hash, OWNER / MANAGER / STAFF role, active status, and last successful login.
+- Auth.js uses secure JWT session cookies containing the immutable staff ID. Privileged boundaries always reload `StaffUser`, so a stale cookie cannot preserve a removed role or bypass deactivation.
+- `InventoryMovement.createdById` is a nullable relation to `StaffUser`; earlier/demo movements remain readable without an actor.
+- A general `AuditEvent` remains deferred. Future operations can follow the same nullable actor-relation pattern where appropriate.
 
 ### Catalogue (implemented foundation)
 
@@ -109,3 +109,5 @@ Financial naming in the interface remains plain English even where the model use
 ## Database client boundary
 
 `@set25/database` currently validates `DATABASE_URL` at module evaluation and exports a singleton Prisma client. This is appropriate for server runtime use, but application code should import it only from server-only data modules. Future work should add a `server-only` guard at the app/service boundary and avoid importing the client in static/demo screens or client bundles.
+
+Password hashing is exported from the server-only database package through `@set25/database/password`. Password hashes are selected only inside authentication and staff-management server code and are never returned to client components.
