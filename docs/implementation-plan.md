@@ -17,13 +17,15 @@ Deliver:
 
 Exit criteria: all requested Milestone 1 UI and documentation are complete; every reserved navigation route works; root validation commands pass.
 
-## Milestone 2 — Identity and access
-
-Select and implement authentication based on deployment constraints. Add staff users, sessions, minimal roles, protected HQ routes, server-side authorization helpers, sign-in/out, and audit identity. Do not rely on navigation visibility for authorization.
-
-## Milestone 3 — Catalogue and stock foundation
+## Milestone 2 — Catalogue and stock foundation (current)
 
 Evolve Product and ProductVariant deliberately. Add publication rules, locations, inventory movements, balances, reservations, stock counts, product management, and mobile-first stock checks. Migrate the temporary aggregate stock field safely.
+
+The current milestone implements the shared catalogue, product variants, audited inventory movements, a transactional current balance, product management, and mobile-first stock checks. Locations, reservations, and formal stock-count workflows remain later inventory extensions.
+
+## Milestone 3 — Identity and access
+
+Select and implement authentication based on deployment constraints. Add staff users, sessions, minimal roles, protected HQ routes, server-side authorization helpers, sign-in/out, and audit identity. Do not rely on navigation visibility for authorization.
 
 ## Milestone 4 — Commerce operations
 

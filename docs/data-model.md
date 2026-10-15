@@ -11,7 +11,19 @@ The current schema contains:
 
 This is a valid seed for a shared catalogue, but the integer `stock` field is only a temporary aggregate. It cannot eventually explain where units are, why a balance changed, or which units are reserved or incoming.
 
-No schema changes are required for Milestone 1. The dashboard uses labelled demonstration data and does not force premature entities into the database.
+Milestone 1 made no schema changes. Milestone 2 evolves this foundation into the shared catalogue and inventory source of truth described below.
+
+## Milestone 2 inventory strategy
+
+SET25 uses a **transactional cached balance plus an append-only movement ledger**:
+
+- `ProductVariant.stockOnHand` is the fast balance used by HQ and future Store availability reads.
+- `InventoryMovement` records every increase or decrease, including its type, signed quantity, required reason, optional reference, future staff identity, and idempotency key.
+- Application code never exposes a direct stock edit. A stock transaction performs a guarded balance update and movement insert atomically.
+- Negative movements use a conditional update requiring enough current stock, preventing concurrent adjustments from taking the balance below zero.
+- The unique idempotency key makes repeated form submission safe; a duplicate transaction rolls back its balance update.
+
+This approach avoids summing a potentially large ledger on every stock screen while retaining a complete audit trail. Periodic reconciliation can compare `stockOnHand` with the movement sum later.
 
 ## One source of truth
 
@@ -32,21 +44,21 @@ The following is a direction for later milestones, not a Milestone 1 implementat
 - `Session` / auth-provider account records as required by the chosen auth system
 - `AuditEvent`
 
-### Catalogue
+### Catalogue (implemented foundation)
 
 - `Product`
 - `ProductVariant`
-- `ProductMedia`
+- `ProductMedia` (later)
 - `ProductCollection` / category if merchandising requires it
 - publication fields and public descriptions separated from internal notes
 
-### Inventory
+### Inventory (implemented foundation)
 
-- `Location` (for example Maldives stock, China warehouse)
-- `InventoryBalance`
-- `StockMovement` as the append-only explanation for quantity changes
-- `StockReservation`
-- `StockCount` / adjustment record
+- `InventoryMovement` as the append-only explanation for quantity changes
+- cached `ProductVariant.stockOnHand` balance
+- `Location` and per-location balances (later)
+- `StockReservation` (later)
+- `StockCount` workflow (later)
 
 The eventual available-to-sell value should be derived from on-hand quantities and reservations. Incoming stock should not count as available stock until received.
 

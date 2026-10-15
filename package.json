@@ -5,11 +5,13 @@
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",
-    "typecheck": "turbo typecheck"
+    "typecheck": "turbo typecheck",
+    "test": "tsx --test apps/hq/src/lib/catalog/*.test.ts"
   },
   "packageManager": "pnpm@10.18.2",
   "devDependencies": {
     "prettier": "^3.9.10",
+    "tsx": "^4.23.15",
     "turbo": "^2.11.8"
   }
 }

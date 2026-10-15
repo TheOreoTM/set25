@@ -8,14 +8,6 @@ const sections = {
     "Orders",
     "Order processing, payment status, and fulfilment will be introduced in a later commerce milestone.",
   ],
-  products: [
-    "Products",
-    "Catalogue management will be built with publication rules shared safely with the Store.",
-  ],
-  stock: [
-    "Stock",
-    "Location-aware stock balances and movement history will replace the temporary aggregate model.",
-  ],
   preorders: [
     "Preorders",
     "Deposits, balance tracking, and preorder allocations belong to the commerce milestone.",
