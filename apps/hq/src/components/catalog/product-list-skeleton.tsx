@@ -1,7 +1,14 @@
 export function ProductListSkeleton() {
   return (
-    <div className="catalog-loading" aria-busy="true" aria-label="Loading products">
-      <div className="resource-toolbar resource-toolbar--loading" aria-hidden="true">
+    <div
+      className="catalog-loading"
+      aria-busy="true"
+      aria-label="Loading products"
+    >
+      <div
+        className="resource-toolbar resource-toolbar--loading"
+        aria-hidden="true"
+      >
         <div className="filter-bar">
           <div className="skeleton skeleton--filter skeleton--search" />
           <div className="skeleton skeleton--filter" />

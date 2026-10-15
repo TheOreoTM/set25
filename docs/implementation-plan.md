@@ -1,6 +1,6 @@
 # SET25 Platform Implementation Plan
 
-## Milestone 1 — HQ foundation (current)
+## Milestone 1 — HQ foundation (complete)
 
 Deliver:
 
@@ -17,15 +17,15 @@ Deliver:
 
 Exit criteria: all requested Milestone 1 UI and documentation are complete; every reserved navigation route works; root validation commands pass.
 
-## Milestone 2 — Catalogue and stock foundation (current)
+## Milestone 2 — Catalogue and stock foundation (complete)
 
 Evolve Product and ProductVariant deliberately. Add publication rules, locations, inventory movements, balances, reservations, stock counts, product management, and mobile-first stock checks. Migrate the temporary aggregate stock field safely.
 
 The current milestone implements the shared catalogue, product variants, audited inventory movements, a transactional current balance, product management, and mobile-first stock checks. Locations, reservations, and formal stock-count workflows remain later inventory extensions.
 
-## Milestone 3 — Identity and access
+## Milestone 3 — Identity and access (implemented)
 
-Select and implement authentication based on deployment constraints. Add staff users, sessions, minimal roles, protected HQ routes, server-side authorization helpers, sign-in/out, and audit identity. Do not rely on navigation visibility for authorization.
+Auth.js Credentials provides private email/password access using Argon2id password hashes and encrypted, HTTP-only JWT session cookies. Every protected request and privileged mutation resolves the immutable session user ID back to an active `StaffUser`; database role and active status remain authoritative. OWNER, MANAGER, and STAFF implement the first deliberately small role policy. Owners manage staff access, Managers operate Products and Stock, and Staff currently have read-only operational access. Inventory movements retain a nullable relation to the acting staff member.
 
 ## Milestone 4 — Commerce operations
 
@@ -47,7 +47,7 @@ Implement ambassadors, content planning, and secure file attachments with explic
 
 Build the public storefront, published catalogue, availability, cart, checkout, customer communications, and post-purchase experience against the same shared database and controlled server services.
 
-## Cross-cutting quality gates
+## Rapid-development quality gates
 
 Every milestone must include:
 
@@ -56,5 +56,7 @@ Every milestone must include:
 - authorization and public/private data review;
 - schema migration and rollback consideration when data changes;
 - loading, empty, error, and success states;
-- lint, typecheck, tests appropriate to the change, and production build;
+- lint, typecheck, production build, and focused manual verification;
 - no work from a later milestone unless it is strictly required to support the current one.
+
+Automated tests are intentionally deferred until the product architecture and workflows stabilise.

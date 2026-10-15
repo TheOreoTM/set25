@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/page-header";
 import { VariantForm } from "@/components/catalog/variant-form";
 import { updateVariantAction } from "@/lib/catalog/actions";
 import { getVariant } from "@/lib/catalog/data";
+import { requireOperationalPageAccess } from "@/lib/auth/session";
 
 export default function EditVariantPage({
   params,
@@ -23,6 +24,7 @@ async function EditVariant({
 }: {
   params: Promise<{ id: string; variantId: string }>;
 }) {
+  await requireOperationalPageAccess();
   const { id, variantId } = await params;
   const variant = await getVariant(id, variantId);
   if (!variant) notFound();

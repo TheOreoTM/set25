@@ -19,6 +19,7 @@ import {
   Settings,
   Shirt,
   ShoppingBag,
+  LogOut,
   Sparkles,
   Truck,
   Users,
@@ -26,6 +27,8 @@ import {
 } from "lucide-react";
 import wordmark from "@set25/brand/assets/SET25_Primary_Wordmark_White.svg";
 import monogram from "@set25/brand/assets/S25_Monogram.svg";
+import { signOutAction } from "@/lib/auth/actions";
+import { staffRoleLabels, type StaffIdentity } from "@/lib/auth/types";
 
 const groups = [
   {
@@ -63,42 +66,70 @@ const groups = [
   },
   {
     label: "System",
-    items: [{ label: "Settings", href: "/settings", icon: Settings }],
+    items: [
+      { label: "Settings", href: "/settings", icon: Settings },
+      {
+        label: "Staff Access",
+        href: "/settings/staff",
+        icon: Users,
+        ownerOnly: true,
+      },
+    ],
   },
 ];
 
-function NavigationLinks({ mobile = false }: { mobile?: boolean }) {
+const staffRoutes = new Set(["/", "/products", "/stock"]);
+
+function NavigationLinks({
+  staff,
+  mobile = false,
+}: {
+  staff: StaffIdentity;
+  mobile?: boolean;
+}) {
   const pathname = usePathname();
   return (
     <nav className="nav-groups" aria-label="HQ navigation">
-      {groups.map((group) => (
-        <div className="nav-group" key={group.label}>
-          <p>{group.label}</p>
-          {group.items.map((item) => {
-            const Icon = item.icon;
-            const active = pathname === item.href;
-            return (
-              <Link
-                className={active ? "nav-link is-active" : "nav-link"}
-                href={item.href}
-                key={item.href}
-                aria-current={active ? "page" : undefined}
-              >
-                <Icon aria-hidden="true" />
-                <span>{item.label}</span>
-                {mobile ? (
-                  <ChevronRight className="nav-chevron" aria-hidden="true" />
-                ) : null}
-              </Link>
-            );
-          })}
-        </div>
-      ))}
+      {groups.map((group) => {
+        const items = group.items.filter(
+          (item) =>
+            (!("ownerOnly" in item) ||
+              !item.ownerOnly ||
+              staff.role === "OWNER") &&
+            (staff.role !== "STAFF" || staffRoutes.has(item.href)),
+        );
+        if (!items.length) return null;
+        return (
+          <div className="nav-group" key={group.label}>
+            <p>{group.label}</p>
+            {items.map((item) => {
+              const Icon = item.icon;
+              const active =
+                pathname === item.href ||
+                (item.href !== "/" && pathname.startsWith(`${item.href}/`));
+              return (
+                <Link
+                  className={active ? "nav-link is-active" : "nav-link"}
+                  href={item.href}
+                  key={item.href}
+                  aria-current={active ? "page" : undefined}
+                >
+                  <Icon aria-hidden="true" />
+                  <span>{item.label}</span>
+                  {mobile ? (
+                    <ChevronRight className="nav-chevron" aria-hidden="true" />
+                  ) : null}
+                </Link>
+              );
+            })}
+          </div>
+        );
+      })}
     </nav>
   );
 }
 
-export function Navigation() {
+export function Navigation({ staff }: { staff: StaffIdentity }) {
   return (
     <>
       <aside className="sidebar">
@@ -110,14 +141,14 @@ export function Navigation() {
           <Image src={wordmark} alt="SET25" width={132} height={44} priority />
           <span>HQ / OPERATIONS</span>
         </Link>
-        <NavigationLinks />
+        <NavigationLinks staff={staff} />
         <div className="sidebar-footer">
           <span className="monogram-frame">
             <Image src={monogram} alt="" width={38} height={38} />
           </span>
           <div>
-            <strong>SET25 HQ</strong>
-            <span>Built for the next point.</span>
+            <strong>{staff.name}</strong>
+            <span>{staffRoleLabels[staff.role]}</span>
           </div>
         </div>
       </aside>
@@ -137,7 +168,21 @@ export function Navigation() {
               <span>HQ / NAVIGATION</span>
               <span>SET25</span>
             </div>
-            <NavigationLinks mobile />
+            <NavigationLinks staff={staff} mobile />
+            <div className="mobile-account">
+              <div>
+                <strong>{staff.name}</strong>
+                <span>{staffRoleLabels[staff.role]}</span>
+              </div>
+              <div className="mobile-account-actions">
+                <Link href="/account">Account</Link>
+                <form action={signOutAction}>
+                  <button type="submit">
+                    <LogOut aria-hidden="true" /> Sign out
+                  </button>
+                </form>
+              </div>
+            </div>
           </div>
         </details>
       </header>

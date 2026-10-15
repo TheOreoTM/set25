@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
+import { requireStaff } from "@/lib/auth/session";
 
 const sections = {
   orders: [
@@ -82,6 +83,8 @@ export default async function SectionPage({
   const { section } = await params;
   const config = sections[section as Section];
   if (!config) notFound();
+  const staff = await requireStaff();
+  if (staff.role === "STAFF") redirect("/?forbidden=staff-role");
   return (
     <main className="page-wrap page-wrap--placeholder">
       <PageHeader

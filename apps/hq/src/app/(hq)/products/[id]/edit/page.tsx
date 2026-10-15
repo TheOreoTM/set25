@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/page-header";
 import { ProductForm } from "@/components/catalog/product-form";
 import { updateProductAction } from "@/lib/catalog/actions";
 import { getProduct } from "@/lib/catalog/data";
+import { requireOperationalPageAccess } from "@/lib/auth/session";
 
 export default function EditProductPage({
   params,
@@ -20,6 +21,7 @@ export default function EditProductPage({
 }
 
 async function EditProduct({ params }: { params: Promise<{ id: string }> }) {
+  await requireOperationalPageAccess();
   const { id } = await params;
   const product = await getProduct(id);
   if (!product) notFound();

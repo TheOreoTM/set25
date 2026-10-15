@@ -70,6 +70,9 @@ export async function getProductWithMovements(id: string) {
           inventoryMovements: {
             orderBy: { createdAt: "desc" },
             take: 8,
+            include: {
+              createdBy: { select: { name: true } },
+            },
           },
         },
       },

@@ -56,9 +56,11 @@ Unimplemented destinations render safe, branded empty states. They do not contai
 
 HQ uses direct, plain English. Prefer labels such as Money In, Money Out, Profit, Cost Each, Sell Price, Stock, Incoming, Amount Paid, Balance Left, Shipping Cost, Product Cost, Low Stock, Needs Attention, Cost of Items Sold, and Actual Cost to SET25.
 
-## Access and security direction
+## Access and security
 
-HQ is private by design. A later authentication milestone will establish staff identity, session handling, and role-based authorization at server boundaries. UI visibility is not authorization. Every privileged read or mutation must eventually be protected on the server.
+HQ is private by design. Auth.js Credentials provides staff-only email/password sign-in with no public registration. Secure session cookies identify a staff record by immutable ID, while server authorization reloads the active database record before access or mutation. Navigation visibility is not authorization: Product, Variant, Stock, and staff-access mutations enforce roles on the server.
+
+Owners have complete HQ and staff-management access. Managers can perform ordinary Product and Stock operations. Staff currently have read access to Dashboard, Products, and Stock; write access can be broadened later through the shared authorization helpers. Deactivated staff immediately fail the database-backed request boundary even if an older session cookie remains.
 
 The Store must never import or expose HQ route handlers or privileged operations. Shared code belongs in packages only when it is safe and genuinely shared; public DTOs must exclude internal cost, supplier, margin, and operational fields.
 
