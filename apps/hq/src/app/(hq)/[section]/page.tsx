@@ -5,22 +5,6 @@ import { PageHeader } from "@/components/page-header";
 import { requireStaff } from "@/lib/auth/session";
 
 const sections = {
-  orders: [
-    "Orders",
-    "Order processing, payment status, and fulfilment will be introduced in a later commerce milestone.",
-  ],
-  preorders: [
-    "Preorders",
-    "Deposits, balance tracking, and preorder allocations belong to the commerce milestone.",
-  ],
-  customers: [
-    "Customers",
-    "Customer records will share one source of truth across HQ and the Store.",
-  ],
-  teams: [
-    "Teams",
-    "Team contacts, fittings, and grouped orders will be designed as a focused workflow.",
-  ],
   suppliers: [
     "Suppliers",
     "Supplier records and terms will arrive with supply operations.",

@@ -93,3 +93,122 @@ export function slugify(value: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
+
+export const TEAM_TYPES = [
+  "SCHOOL",
+  "CLUB",
+  "ISLAND",
+  "RESORT",
+  "TOURNAMENT",
+  "OTHER",
+] as const;
+export type TeamTypeValue = (typeof TEAM_TYPES)[number];
+export const teamTypeLabels: Record<TeamTypeValue, string> = {
+  SCHOOL: "School",
+  CLUB: "Club",
+  ISLAND: "Island Team",
+  RESORT: "Resort",
+  TOURNAMENT: "Tournament Team",
+  OTHER: "Other",
+};
+
+export const ORDER_SOURCES = [
+  "ONLINE",
+  "INSTAGRAM",
+  "WHATSAPP",
+  "MANUAL",
+  "TEAM",
+] as const;
+export type OrderSourceValue = (typeof ORDER_SOURCES)[number];
+export const orderSourceLabels: Record<OrderSourceValue, string> = {
+  ONLINE: "Online",
+  INSTAGRAM: "Instagram",
+  WHATSAPP: "WhatsApp",
+  MANUAL: "Manual",
+  TEAM: "Team",
+};
+
+export const FULFILMENT_STATUSES = [
+  "NEW",
+  "PREPARING",
+  "READY",
+  "OUT_FOR_DELIVERY",
+  "COMPLETED",
+  "CANCELLED",
+] as const;
+export type FulfilmentStatusValue = (typeof FULFILMENT_STATUSES)[number];
+export const fulfilmentStatusLabels: Record<FulfilmentStatusValue, string> = {
+  NEW: "New",
+  PREPARING: "Preparing",
+  READY: "Ready",
+  OUT_FOR_DELIVERY: "Out for Delivery",
+  COMPLETED: "Completed",
+  CANCELLED: "Cancelled",
+};
+
+export const PAYMENT_METHODS = [
+  "CASH",
+  "BANK_TRANSFER",
+  "ONLINE",
+  "OTHER",
+] as const;
+export type PaymentMethodValue = (typeof PAYMENT_METHODS)[number];
+export const paymentMethodLabels: Record<PaymentMethodValue, string> = {
+  CASH: "Cash",
+  BANK_TRANSFER: "Bank Transfer",
+  ONLINE: "Online",
+  OTHER: "Other",
+};
+
+export const PAYMENT_TYPES = ["PAYMENT", "REFUND"] as const;
+export type PaymentTypeValue = (typeof PAYMENT_TYPES)[number];
+export const paymentTypeLabels: Record<PaymentTypeValue, string> = {
+  PAYMENT: "Payment",
+  REFUND: "Refund",
+};
+
+export const PREORDER_STATUSES = [
+  "OPEN",
+  "DEPOSIT_PAID",
+  "ORDERED",
+  "IN_TRANSIT",
+  "ARRIVED",
+  "READY",
+  "COMPLETED",
+  "CANCELLED",
+] as const;
+export type PreorderStatusValue = (typeof PREORDER_STATUSES)[number];
+export const preorderStatusLabels: Record<PreorderStatusValue, string> = {
+  OPEN: "Open",
+  DEPOSIT_PAID: "Deposit Paid",
+  ORDERED: "Ordered",
+  IN_TRANSIT: "In Transit",
+  ARRIVED: "Arrived",
+  READY: "Ready",
+  COMPLETED: "Completed",
+  CANCELLED: "Cancelled",
+};
+
+export type PaymentStatus = "UNPAID" | "PART_PAID" | "PAID" | "REFUNDED";
+export const paymentStatusLabels: Record<PaymentStatus, string> = {
+  UNPAID: "Unpaid",
+  PART_PAID: "Part Paid",
+  PAID: "Paid",
+  REFUNDED: "Refunded",
+};
+
+export function getPaymentStatus(
+  total: MoneyValue,
+  paid: MoneyValue,
+): PaymentStatus {
+  const totalValue = Number(total.toString());
+  const paidValue = Number(paid.toString());
+  if (paidValue < 0) return "REFUNDED";
+  if (paidValue <= 0) return "UNPAID";
+  if (paidValue < totalValue) return "PART_PAID";
+  return "PAID";
+}
+
+export function formatOrderNumber(value: number) {
+  return `S25-${String(value).padStart(6, "0")}`;
+}

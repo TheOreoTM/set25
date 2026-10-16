@@ -4,9 +4,16 @@ import { PrismaClient } from "../generated/prisma/client";
 export { Prisma } from "../generated/prisma/client";
 export {
   InventoryMovementType,
+  FulfilmentStatus,
+  OrderSource,
+  OrderType,
+  PaymentMethod,
+  PaymentType,
+  PreorderStatus,
   ProductCategory,
   ProductStatus,
   StaffRole,
+  TeamType,
 } from "../generated/prisma/enums";
 
 const connectionString = process.env.DATABASE_URL;

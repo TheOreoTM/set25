@@ -44,9 +44,11 @@ export function requireOperationalAccess() {
   return requireRole("OWNER", "MANAGER");
 }
 
-export async function requireOperationalPageAccess() {
+export async function requireOperationalPageAccess(
+  fallback = "/products?forbidden=write",
+) {
   const staff = await requireStaff();
-  if (staff.role === "STAFF") redirect("/products?forbidden=write");
+  if (staff.role === "STAFF") redirect(fallback);
   return staff;
 }
 

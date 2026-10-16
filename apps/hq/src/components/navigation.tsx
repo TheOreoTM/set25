@@ -78,7 +78,15 @@ const groups = [
   },
 ];
 
-const staffRoutes = new Set(["/", "/products", "/stock"]);
+const staffRoutes = new Set([
+  "/",
+  "/orders",
+  "/products",
+  "/stock",
+  "/preorders",
+  "/customers",
+  "/teams",
+]);
 
 function NavigationLinks({
   staff,

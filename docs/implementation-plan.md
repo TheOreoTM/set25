@@ -27,9 +27,22 @@ The current milestone implements the shared catalogue, product variants, audited
 
 Auth.js Credentials provides private email/password access using Argon2id password hashes and encrypted, HTTP-only JWT session cookies. Every protected request and privileged mutation resolves the immutable session user ID back to an active `StaffUser`; database role and active status remain authoritative. OWNER, MANAGER, and STAFF implement the first deliberately small role policy. Owners manage staff access, Managers operate Products and Stock, and Staff currently have read-only operational access. Inventory movements retain a nullable relation to the acting staff member.
 
-## Milestone 4 — Commerce operations
+## Milestone 4 — Commerce operations (complete)
 
-Implement customers, teams, orders, payments, fulfilment, and preorders. Expose only controlled Store operations and public product projections. Preserve immutable order facts.
+Implemented:
+
+- responsive Customer and Team directories, details, create, and edit flows;
+- standard Orders with sequence-backed human order numbers and immutable line snapshots;
+- server-calculated Decimal subtotal, discount, delivery, and total values;
+- append-only Payment / Refund transactions with derived payment state;
+- forward-only fulfilment, explicit cancellation rules, and protected completion;
+- atomic inventory deduction and idempotent SALE movements at completion only;
+- Preorders as a one-to-one Order extension sharing lines and payments;
+- live dashboard order, sales, payment-attention, and stock-value information;
+- Owner / Manager commerce mutations and Staff read-only commerce access;
+- responsive operational lists, forms, detail views, loading, empty, and confirmation states.
+
+Returns, reservations, supplier/import links, shipment tracking, Store checkout, CRM automation, team rosters, and profitability remain later milestones.
 
 ## Milestone 5 — Supply operations
 

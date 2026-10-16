@@ -60,9 +60,27 @@ HQ uses direct, plain English. Prefer labels such as Money In, Money Out, Profit
 
 HQ is private by design. Auth.js Credentials provides staff-only email/password sign-in with no public registration. Secure session cookies identify a staff record by immutable ID, while server authorization reloads the active database record before access or mutation. Navigation visibility is not authorization: Product, Variant, Stock, and staff-access mutations enforce roles on the server.
 
-Owners have complete HQ and staff-management access. Managers can perform ordinary Product and Stock operations. Staff currently have read access to Dashboard, Products, and Stock; write access can be broadened later through the shared authorization helpers. Deactivated staff immediately fail the database-backed request boundary even if an older session cookie remains.
+Owners have complete HQ and staff-management access. Managers can perform ordinary Product, Stock, and Commerce operations. Staff currently have read access to Dashboard, Products, Stock, Orders, Preorders, Customers, and Teams; write access can be broadened later through the shared authorization helpers. Deactivated staff immediately fail the database-backed request boundary even if an older session cookie remains.
+
+Milestone 4 extends read access for Staff to Orders, Preorders, Customers, and Teams while keeping every commerce mutation restricted to Owners and Managers on the server. Order creators, payment recorders, and inventory sale movements retain the acting staff identity.
 
 The Store must never import or expose HQ route handlers or privileged operations. Shared code belongs in packages only when it is safe and genuinely shared; public DTOs must exclude internal cost, supplier, margin, and operational fields.
+
+## Milestone 4: commerce operations
+
+HQ now records real operational sales through one shared commerce foundation:
+
+- Customers retain practical contact details and order history without introducing CRM automation.
+- Teams represent organisations while remaining separate from the individual customer/contact on an order.
+- Standard orders and preorders share sequence-backed order numbers, immutable item snapshots, Decimal totals, payments, and fulfilment.
+- Payments are append-only transactions. Amount Paid, Balance Left, and payment status are derived from payments less refunds.
+- Product prices seed a new order line, but an authorised sale-price override changes only that immutable order snapshot.
+- Physical stock changes only when an order is completed. Completion checks every line, deducts every quantity, writes SALE movements, and marks the order completed in one transaction.
+- Preorders add deposit, estimated arrival, and preorder status to an ordinary order. They do not reserve or create available stock.
+
+Completed orders cannot return to an earlier fulfilment state or be cancelled. Returns, refund workflows, incoming supply, and profitability reporting remain intentionally deferred so historical commerce facts are not weakened by partial workflows.
+
+The dashboard now uses live data for completed sales this month, order count, recent orders, payment attention, and stock value. Profit remains explicitly deferred until its accounting definition is implemented; supply and task examples remain visibly labelled as planned/demo content.
 
 ## Success criteria for Milestone 1
 

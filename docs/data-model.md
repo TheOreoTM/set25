@@ -72,14 +72,37 @@ The eventual available-to-sell value should be derived from on-hand quantities a
 
 ### Commerce
 
-- `Customer`
-- `Team` and membership/contact relationships
-- `Order` and immutable `OrderLine` snapshots
-- `Payment`
-- `Fulfilment` / shipment
-- `Preorder` or preorder allocation records where behaviour differs from ordinary orders
+Milestone 4 implements:
 
-Orders should snapshot product naming, SKU, price, discount, and tax/currency facts so history does not change when catalogue records change.
+- `Customer`: name and required phone with optional email, Instagram handle, and internal notes.
+- `Team`: organisation identity, a deliberately small type enum, and optional contact details. A Team augments rather than replaces the Customer on an Order.
+- `Order`: a standard or preorder sale with a PostgreSQL-backed autoincrementing `orderNumber`, source, Decimal totals, fulfilment timestamps, actor, and idempotency key.
+- `OrderLine`: an optional variant relation plus immutable product name, code, SKU, size, colour, unit price, unit cost, quantity, and line-total snapshots.
+- `Payment`: an append-only PAYMENT / REFUND ledger with positive Decimal amounts, method, optional reference/notes, actor, and unique submission key.
+- `PreorderDetail`: a one-to-one extension of Order with required deposit, optional ETA, supplier-ordered signal, notes, and focused status.
+
+The display form `S25-000001` is formatted from the database-assigned integer. It is not generated with `count() + 1`, so concurrent inserts cannot collide.
+
+Payment status is derived from the signed net of the append-only ledger rather than stored as mutable state. A normal payment cannot exceed Balance Left, and a refund cannot exceed the amount currently paid. Serializable payment transactions and unique submission keys prevent concurrent or repeated overpayment.
+
+Orders snapshot all sale facts so catalogue changes cannot rewrite history. The ProductVariant relation uses `SetNull`; historical lines remain readable if a catalogue relationship is removed. No order-line edit or deletion workflow is exposed after creation.
+
+### Order inventory completion
+
+Creating an Order or Preorder does not reserve or deduct stock. Completion runs one database transaction that:
+
+1. verifies the order is active and every line still has a variant;
+2. verifies sufficient `stockOnHand` for every line;
+3. conditionally decrements every variant without allowing a negative balance;
+4. writes one SALE `InventoryMovement` per line with the acting staff member and a unique `order:{orderId}:line:{lineId}:completion` key;
+5. records `inventoryAppliedAt` and moves the order to COMPLETED;
+6. moves an attached preorder detail to COMPLETED.
+
+Any failure rolls back all line deductions and movements. Repeated or concurrent completion cannot apply inventory twice. Completed orders cannot be moved backwards or directly cancelled; returns are intentionally deferred.
+
+### Commerce query indexes
+
+Indexes support the current operational queries: order date, fulfilment/date, type/date, customer/date, team/date, line variant, payment order/date, and preorder status/ETA. Customer name, phone, and email plus Team name/type support their current directory filters without adding speculative indexes.
 
 ### Money
 
