@@ -2396,8 +2396,13 @@ td strong {
   border: 1px solid var(--line);
   background: #fafaf8;
 }
-.order-line-index {
+.order-line-editor > * {
   align-self: start;
+}
+.order-line-editor > .field {
+  margin: 0;
+}
+.order-line-index {
   margin-top: 29px;
   color: var(--steel);
   font-family: Rajdhani, sans-serif;
@@ -2407,26 +2412,26 @@ td strong {
 .order-line-total {
   display: grid;
   gap: 9px;
-  min-height: 58px;
   align-content: start;
-  padding-top: 1px;
+  padding-top: 0;
   text-align: right;
 }
 .order-line-total span {
   color: var(--steel);
   font-size: 8px;
   font-weight: 650;
+  line-height: 12px;
   letter-spacing: 0.07em;
   text-transform: uppercase;
 }
 .order-line-total strong {
   font-family: var(--font-display);
   font-size: 18px;
-  line-height: 1;
+  line-height: 44px;
   font-variant-numeric: tabular-nums;
 }
 .order-line-editor > .icon-button {
-  margin-top: 22px;
+  margin-top: 19px;
 }
 .order-add-line {
   justify-self: start;
