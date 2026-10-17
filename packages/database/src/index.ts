@@ -29,6 +29,9 @@ export {
   ProductStatus,
   StaffRole,
   TeamType,
+  StockReservationStatus,
+  CheckoutPaymentMethod,
+  DiscountSource,
 } from "../generated/prisma/enums";
 
 const connectionString = process.env.DATABASE_URL;

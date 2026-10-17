@@ -2,6 +2,10 @@ import "server-only";
 
 import { db } from "@set25/database";
 import {
+  availableToSell,
+  getReservedQuantities,
+} from "@set25/database/inventory";
+import {
   PRODUCT_CATEGORIES,
   PRODUCT_STATUSES,
   type ProductCategoryValue,
@@ -65,6 +69,11 @@ export async function getProductWithMovements(id: string) {
   const product = await db.product.findUnique({
     where: { id },
     include: {
+      media: {
+        where: { status: "AVAILABLE" },
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+        select: { id: true, storageKey: true, altText: true, isPrimary: true },
+      },
       variants: {
         orderBy: [{ active: "desc" }, { sku: "asc" }],
         include: {
@@ -119,13 +128,20 @@ export async function getStock(filters: StockFilters = {}) {
     orderBy: [{ product: { name: "asc" } }, { sku: "asc" }],
   });
 
-  const incoming = await getIncomingByVariant(
-    variants.map((variant) => variant.id),
-  );
-  const withIncoming = variants.map((variant) => ({
-    ...variant,
-    incoming: incoming.get(variant.id) ?? 0,
-  }));
+  const ids = variants.map((variant) => variant.id);
+  const [incoming, reserved] = await Promise.all([
+    getIncomingByVariant(ids),
+    getReservedQuantities(db, ids),
+  ]);
+  const withIncoming = variants.map((variant) => {
+    const held = reserved.get(variant.id) ?? 0;
+    return {
+      ...variant,
+      incoming: incoming.get(variant.id) ?? 0,
+      reserved: held,
+      available: availableToSell(variant.stockOnHand, held),
+    };
+  });
 
   if (!filters.status || filters.status === "ALL") return withIncoming;
   return withIncoming.filter((variant) => {

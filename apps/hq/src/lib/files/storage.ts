@@ -28,16 +28,21 @@ export class StorageNotConfiguredError extends Error {
   }
 }
 
-function storageConfig() {
+function credentials() {
   const accountId = process.env.R2_ACCOUNT_ID;
   const accessKeyId = process.env.R2_ACCESS_KEY_ID;
   const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
-  const bucket = process.env.R2_BUCKET_NAME;
   const endpoint =
     process.env.R2_ENDPOINT ||
     (accountId ? `https://${accountId}.r2.cloudflarestorage.com` : "");
-  if (!accessKeyId || !secretAccessKey || !bucket || !endpoint) return null;
-  return { accessKeyId, secretAccessKey, bucket, endpoint };
+  if (!accessKeyId || !secretAccessKey || !endpoint) return null;
+  return { accessKeyId, secretAccessKey, endpoint };
+}
+
+function storageConfig() {
+  const base = credentials();
+  const bucket = process.env.R2_BUCKET_NAME;
+  return base && bucket ? { ...base, bucket } : null;
 }
 
 export function isStorageConfigured() {
@@ -57,9 +62,12 @@ function storage() {
   if (cached) return cached;
   const config = storageConfig();
   if (!config) throw new StorageNotConfiguredError();
-  cached = {
-    bucket: config.bucket,
-    client: new S3Client({
+  cached = { bucket: config.bucket, client: createClient(config) };
+  return cached;
+}
+
+function createClient(config: NonNullable<ReturnType<typeof credentials>>) {
+  return new S3Client({
       region: "auto",
       endpoint: config.endpoint,
       // <endpoint>/<bucket>/<key>: works with any S3-compatible endpoint and
@@ -73,9 +81,7 @@ function storage() {
       // plain browser upload cannot satisfy.
       requestChecksumCalculation: "WHEN_REQUIRED",
       responseChecksumValidation: "WHEN_REQUIRED",
-    }),
-  };
-  return cached;
+  });
 }
 
 /** Generated object key. User filenames never become part of the key. */
@@ -87,7 +93,14 @@ export function buildStorageKey(fileId: string) {
 }
 
 export async function createUploadUrl(key: string, contentType: string) {
-  const { client, bucket } = storage();
+  return presignPut(storage(), key, contentType);
+}
+
+function presignPut(
+  { client, bucket }: { client: S3Client; bucket: string },
+  key: string,
+  contentType: string,
+) {
   return getSignedUrl(
     client,
     new PutObjectCommand({
@@ -101,7 +114,13 @@ export async function createUploadUrl(key: string, contentType: string) {
 
 /** Returns object size/type, or null when the object does not exist. */
 export async function inspectObject(key: string) {
-  const { client, bucket } = storage();
+  return headObject(storage(), key);
+}
+
+async function headObject(
+  { client, bucket }: { client: S3Client; bucket: string },
+  key: string,
+) {
   try {
     const result = await client.send(
       new HeadObjectCommand({ Bucket: bucket, Key: key }),
@@ -146,6 +165,57 @@ export async function createDownloadUrl(input: {
 /** Idempotent: deleting a missing object succeeds. */
 export async function deleteObject(key: string) {
   const { client, bucket } = storage();
+  await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
+}
+
+// ---------------------------------------------------------------------------
+// Public Store product media.
+//
+// A separate, deliberately public bucket (R2_PUBLIC_BUCKET_NAME) served from
+// PUBLIC_MEDIA_BASE_URL. Only product images uploaded through the Store media
+// panel go here. Private HQ files never do, and this bucket is never used for
+// FileAsset objects.
+
+let cachedPublic: { client: S3Client; bucket: string } | null = null;
+
+function publicMediaStorage() {
+  if (cachedPublic) return cachedPublic;
+  const base = credentials();
+  const bucket = process.env.R2_PUBLIC_BUCKET_NAME;
+  if (!base || !bucket || !publicMediaBaseUrl())
+    throw new StorageNotConfiguredError();
+  cachedPublic = { bucket, client: createClient(base) };
+  return cachedPublic;
+}
+
+export function publicMediaBaseUrl() {
+  return (process.env.PUBLIC_MEDIA_BASE_URL ?? "").replace(/\/+$/, "");
+}
+
+export function isPublicMediaConfigured() {
+  return Boolean(
+    credentials() && process.env.R2_PUBLIC_BUCKET_NAME && publicMediaBaseUrl(),
+  );
+}
+
+/** Generated key; product media filenames never become part of the key. */
+export function buildPublicMediaKey(productId: string) {
+  const prefix =
+    process.env.R2_PUBLIC_KEY_PREFIX ||
+    `set25/${process.env.VERCEL_ENV ?? process.env.NODE_ENV ?? "development"}/products`;
+  return `${prefix}/${productId}/${randomUUID()}`;
+}
+
+export function createPublicMediaUploadUrl(key: string, contentType: string) {
+  return presignPut(publicMediaStorage(), key, contentType);
+}
+
+export function inspectPublicMediaObject(key: string) {
+  return headObject(publicMediaStorage(), key);
+}
+
+export async function deletePublicMediaObject(key: string) {
+  const { client, bucket } = publicMediaStorage();
   await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
 }
 

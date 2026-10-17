@@ -5,6 +5,7 @@ import {
   PAYMENT_TYPES,
   PREORDER_STATUSES,
   TEAM_TYPES,
+  normalizePhone,
   type FulfilmentStatusValue,
   type OrderSourceValue,
   type PaymentMethodValue,
@@ -83,6 +84,7 @@ export function validateCustomer(formData: FormData) {
     data: {
       name,
       phone,
+      phoneKey: optional(normalizePhone(phone)),
       email: optional(email),
       instagramHandle: optional(instagramHandle),
       notes: optional(notes),

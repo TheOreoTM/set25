@@ -20,6 +20,7 @@ import {
   Settings,
   Shirt,
   ShoppingBag,
+  Store,
   LogOut,
   Sparkles,
   Truck,
@@ -70,6 +71,7 @@ const groups = [
     label: "System",
     items: [
       { label: "Settings", href: "/settings", icon: Settings },
+      { label: "Store", href: "/settings/store", icon: Store },
       {
         label: "Staff Access",
         href: "/settings/staff",
