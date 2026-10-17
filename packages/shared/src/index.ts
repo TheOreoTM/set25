@@ -297,3 +297,93 @@ export const sampleStatusLabels: Record<SampleStatusValue, string> = {
   REJECTED: "Rejected",
   RETEST: "Retest",
 };
+
+export const MONEY_DIRECTIONS = ["IN", "OUT"] as const;
+export type MoneyDirectionValue = (typeof MONEY_DIRECTIONS)[number];
+export const moneyDirectionLabels: Record<MoneyDirectionValue, string> = {
+  IN: "Money In",
+  OUT: "Money Out",
+};
+
+export const MONEY_IN_CATEGORIES = [
+  "OWNER_FUNDING",
+  "OTHER_INCOME",
+  "REFUND_RECEIVED",
+] as const;
+export const MONEY_OUT_CATEGORIES = [
+  "SUPPLIER_PAYMENT",
+  "CHINA_SHIPPING",
+  "INTERNATIONAL_SHIPPING",
+  "TAX_FEES",
+  "PACKAGING",
+  "MARKETING",
+  "DELIVERY",
+  "SOFTWARE",
+  "EQUIPMENT",
+  "OTHER",
+] as const;
+export const MONEY_CATEGORIES = [
+  ...MONEY_IN_CATEGORIES,
+  ...MONEY_OUT_CATEGORIES,
+] as const;
+export type MoneyCategoryValue = (typeof MONEY_CATEGORIES)[number];
+export const moneyCategoryLabels: Record<MoneyCategoryValue, string> = {
+  OWNER_FUNDING: "Owner Funding",
+  OTHER_INCOME: "Other Income",
+  REFUND_RECEIVED: "Refund Received",
+  SUPPLIER_PAYMENT: "Supplier Payment",
+  CHINA_SHIPPING: "China Shipping",
+  INTERNATIONAL_SHIPPING: "International Shipping / ICL",
+  TAX_FEES: "Tax / Customs",
+  PACKAGING: "Packaging",
+  MARKETING: "Marketing",
+  DELIVERY: "Delivery",
+  SOFTWARE: "Software",
+  EQUIPMENT: "Equipment",
+  OTHER: "Other",
+};
+
+export const OPERATING_EXPENSE_CATEGORIES = [
+  "PACKAGING",
+  "MARKETING",
+  "DELIVERY",
+  "SOFTWARE",
+  "OTHER",
+] as const satisfies readonly MoneyCategoryValue[];
+
+export const TASK_STATUSES = ["TODO", "DOING", "WAITING", "DONE"] as const;
+export type TaskStatusValue = (typeof TASK_STATUSES)[number];
+export const taskStatusLabels: Record<TaskStatusValue, string> = {
+  TODO: "To Do",
+  DOING: "Doing",
+  WAITING: "Waiting",
+  DONE: "Done",
+};
+
+export const TASK_PRIORITIES = ["LOW", "MEDIUM", "HIGH"] as const;
+export type TaskPriorityValue = (typeof TASK_PRIORITIES)[number];
+export const taskPriorityLabels: Record<TaskPriorityValue, string> = {
+  LOW: "Low",
+  MEDIUM: "Medium",
+  HIGH: "High",
+};
+
+export const TASK_RELATED_TYPES = [
+  "ORDER",
+  "PURCHASE_ORDER",
+  "IMPORT",
+  "SUPPLIER",
+  "SAMPLE",
+  "CUSTOMER",
+  "TEAM",
+] as const;
+export type TaskRelatedTypeValue = (typeof TASK_RELATED_TYPES)[number];
+export const taskRelatedTypeLabels: Record<TaskRelatedTypeValue, string> = {
+  ORDER: "Order / Preorder",
+  PURCHASE_ORDER: "Purchase Order",
+  IMPORT: "Import",
+  SUPPLIER: "Supplier",
+  SAMPLE: "Sample",
+  CUSTOMER: "Customer",
+  TEAM: "Team",
+};

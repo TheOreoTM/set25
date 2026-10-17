@@ -2,8 +2,8 @@ import {
   ArrowRight,
   Box,
   Check,
+  ClipboardList,
   CircleDollarSign,
-  Clock3,
   PackageCheck,
   ShoppingBag,
   Truck,
@@ -17,28 +17,17 @@ import {
   formatOrderNumber,
   importShipmentStatusLabels,
   paymentStatusLabels,
+  taskPriorityLabels,
+  taskStatusLabels,
 } from "@set25/shared";
 import { PageHeader } from "@/components/page-header";
 import { getCommerceDashboard } from "@/lib/commerce/data";
 import { paymentSummary } from "@/lib/commerce/money";
+import { getProfitSummary } from "@/lib/money/data";
+import { getDateRange, getTodayRange } from "@/lib/planning/date-range";
 import { getSupplyDashboard } from "@/lib/supply/data";
 import { formatDate as formatSupplyDate } from "@/lib/supply/presentation";
-
-const tasks = [
-  {
-    day: "16",
-    month: "OCT",
-    title: "Approve CORE reorder",
-    meta: "Demo · Stock",
-  },
-  {
-    day: "17",
-    month: "OCT",
-    title: "Check import documents",
-    meta: "Demo · Supply",
-  },
-  { day: "19", month: "OCT", title: "Team fitting", meta: "Demo · Teams" },
-];
+import { getDashboardTasks } from "@/lib/tasks/data";
 
 export default async function DashboardPage({
   searchParams,
@@ -46,11 +35,20 @@ export default async function DashboardPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   await connection();
-  const [query, commerce, supply] = await Promise.all([
+  const monthRange = getDateRange({ preset: "this-month" });
+  const [query, commerce, supply, tasks, profit] = await Promise.all([
     searchParams,
     getCommerceDashboard(),
     getSupplyDashboard(),
+    getDashboardTasks(),
+    getProfitSummary(monthRange.start, monthRange.end),
   ]);
+  const { start: today } = getTodayRange();
+  const taskAttention = tasks.filter(
+    (task) =>
+      task.priority === "HIGH" ||
+      (task.dueAt !== null && new Date(task.dueAt) < today),
+  );
   const openOrders = commerce.monthOrders.filter(
     (order) => !["COMPLETED", "CANCELLED"].includes(order.fulfilmentStatus),
   ).length;
@@ -58,7 +56,8 @@ export default async function DashboardPage({
     commerce.attention.length +
     commerce.lowStock.length +
     supply.attention.length +
-    supply.unassignedPurchaseOrders.length;
+    supply.unassignedPurchaseOrders.length +
+    taskAttention.length;
   const monthName = new Intl.DateTimeFormat("en", {
     month: "long",
     timeZone: "Indian/Maldives",
@@ -66,27 +65,27 @@ export default async function DashboardPage({
   const metrics = [
     {
       label: "Sales this month",
-      value: formatMVR(commerce.sales),
+      value: formatMVR(profit.salesRevenue),
       detail: "Completed orders",
-      live: true,
     },
     {
-      label: "Profit this month",
-      value: "Deferred",
-      detail: "Defined in the Money milestone",
-      live: false,
+      label: "Sales Profit this month",
+      value: profit.salesProfit ? formatMVR(profit.salesProfit) : "Incomplete",
+      detail: profit.missingCostLines
+        ? `${profit.missingCostLines} sold ${profit.missingCostLines === 1 ? "line is" : "lines are"} missing cost`
+        : "Revenue less Cost of Items Sold",
     },
     {
       label: "Orders this month",
       value: String(commerce.monthOrders.length),
       detail: `${openOrders} need fulfilment`,
-      live: true,
     },
     {
       label: "Stock value",
       value: formatMVR(commerce.stockValue),
-      detail: "At current product cost",
-      live: true,
+      detail: commerce.unknownCostUnits
+        ? `${commerce.unknownCostUnits} ${commerce.unknownCostUnits === 1 ? "unit is" : "units are"} missing Cost Each`
+        : "At current product cost",
     },
   ];
 
@@ -107,9 +106,8 @@ export default async function DashboardPage({
         </div>
       ) : null}
       <div className="demo-notice" role="note">
-        <span>Live commerce</span> Orders, payments, sales, and stock are live.
-        Incoming supply is live. Profit and tasks remain marked as deferred or
-        demo.
+        <span>Live operations</span> Commerce, supply, Sales Profit, stock, and
+        tasks now use current HQ records.
       </div>
 
       <section aria-labelledby="month-summary-title">
@@ -123,11 +121,7 @@ export default async function DashboardPage({
               <p>{metric.label}</p>
               <strong>{metric.value}</strong>
               <span>
-                {metric.live ? (
-                  <Check aria-hidden="true" />
-                ) : (
-                  <Clock3 aria-hidden="true" />
-                )}
+                <Check aria-hidden="true" />
                 {metric.detail}
               </span>
             </article>
@@ -233,6 +227,32 @@ export default async function DashboardPage({
                   <span>Not assigned to an import</span>
                   <strong>{po.supplier.name}</strong>
                   <small>Placed purchase order</small>
+                </span>
+                <ArrowRight className="row-arrow" aria-hidden="true" />
+              </Link>
+            ))}
+            {taskAttention.slice(0, 4).map((task) => (
+              <Link
+                className="attention-item attention-item--attention"
+                href="/tasks?view=attention"
+                key={task.id}
+              >
+                <span className="attention-icon">
+                  <ClipboardList aria-hidden="true" />
+                </span>
+                <span className="attention-copy">
+                  <span>
+                    {task.dueAt && new Date(task.dueAt) < today
+                      ? "Overdue task"
+                      : `${taskPriorityLabels[task.priority]} priority`}
+                  </span>
+                  <strong>{task.title}</strong>
+                  <small>
+                    {task.assignedTo?.name ?? "Unassigned"}
+                    {task.dueAt
+                      ? ` · Due ${formatSupplyDate(new Date(task.dueAt))}`
+                      : " · No due date"}
+                  </small>
                 </span>
                 <ArrowRight className="row-arrow" aria-hidden="true" />
               </Link>
@@ -376,27 +396,41 @@ export default async function DashboardPage({
         <section className="panel" aria-labelledby="tasks-title">
           <div className="section-heading">
             <div>
-              <p className="kicker">Plan · Demo</p>
+              <p className="kicker">Planning · Live</p>
               <h2 id="tasks-title">Upcoming tasks</h2>
             </div>
             <Link className="text-link" href="/tasks">
-              Planned area <ArrowRight aria-hidden="true" />
+              View tasks <ArrowRight aria-hidden="true" />
             </Link>
           </div>
           <div className="task-list">
-            {tasks.map((task) => (
-              <Link className="task-item" href="/tasks" key={task.title}>
-                <span className="task-date">
-                  <strong>{task.day}</strong>
-                  <small>{task.month}</small>
-                </span>
-                <span>
-                  <strong>{task.title}</strong>
-                  <small>{task.meta}</small>
-                </span>
-                <ArrowRight aria-hidden="true" />
-              </Link>
-            ))}
+            {tasks.map((task) => {
+              const date = dashboardTaskDate(task.dueAt);
+              return (
+                <Link className="task-item" href="/tasks" key={task.id}>
+                  <span className="task-date">
+                    <strong>{date.day}</strong>
+                    <small>{date.month}</small>
+                  </span>
+                  <span>
+                    <strong>{task.title}</strong>
+                    <small>
+                      {taskPriorityLabels[task.priority]} ·{" "}
+                      {taskStatusLabels[task.status]}
+                      {task.assignedTo
+                        ? ` · ${task.assignedTo.name}`
+                        : " · Unassigned"}
+                    </small>
+                  </span>
+                  <ArrowRight aria-hidden="true" />
+                </Link>
+              );
+            })}
+            {!tasks.length ? (
+              <div className="inline-empty inline-empty--panel">
+                <p>No open tasks right now.</p>
+              </div>
+            ) : null}
           </div>
         </section>
         <section className="panel" aria-labelledby="activity-title">
@@ -447,4 +481,18 @@ function formatDate(value: Date) {
     minute: "2-digit",
     timeZone: "Indian/Maldives",
   }).format(value);
+}
+
+function dashboardTaskDate(value: string | null) {
+  if (!value) return { day: "—", month: "OPEN" };
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    timeZone: "Indian/Maldives",
+  }).formatToParts(new Date(value));
+  return {
+    day: parts.find((part) => part.type === "day")?.value ?? "—",
+    month:
+      parts.find((part) => part.type === "month")?.value.toUpperCase() ?? "—",
+  };
 }

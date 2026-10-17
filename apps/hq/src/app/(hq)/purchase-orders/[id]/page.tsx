@@ -6,6 +6,7 @@ import { PurchaseOrderStatusButtons } from "@/components/supply/operational-cont
 import { requireStaff } from "@/lib/auth/session";
 import { changePurchaseOrderStatusAction } from "@/lib/supply/actions";
 import { decimalTotal, getPurchaseOrder } from "@/lib/supply/data";
+import { getRecordedMoneyOut } from "@/lib/money/data";
 import { formatDate } from "@/lib/supply/presentation";
 import {
   formatImportNumber,
@@ -21,12 +22,19 @@ export default async function PurchaseOrderPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [staff, po] = await Promise.all([requireStaff(), getPurchaseOrder(id)]);
+  const [staff, po, recordedPayments] = await Promise.all([
+    requireStaff(),
+    getPurchaseOrder(id),
+    getRecordedMoneyOut({ purchaseOrderId: id }),
+  ]);
   if (!po) notFound();
 
   const canWrite = staff.role !== "STAFF";
   const supplierTotal = decimalTotal(po.lines);
   const productCostMvr = supplierTotal.mul(po.exchangeRateToMvr);
+  const unrecordedAgainstCost = productCostMvr.greaterThan(recordedPayments)
+    ? productCostMvr.minus(recordedPayments)
+    : productCostMvr.sub(productCostMvr);
   const ordered = po.lines.reduce((sum, line) => sum + line.quantityOrdered, 0);
   const received = po.lines.reduce(
     (sum, line) => sum + line.quantityReceived,
@@ -192,6 +200,14 @@ export default async function PurchaseOrderPage({
               <div>
                 <dt>Product Cost</dt>
                 <dd>{formatMVR(productCostMvr)}</dd>
+              </div>
+              <div>
+                <dt>Recorded Payments</dt>
+                <dd>{formatMVR(recordedPayments)}</dd>
+              </div>
+              <div>
+                <dt>Unrecorded Against Cost</dt>
+                <dd>{formatMVR(unrecordedAgainstCost)}</dd>
               </div>
             </dl>
             <dl className="rail-stat-list rail-stat-list--compact">

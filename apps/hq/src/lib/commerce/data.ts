@@ -9,6 +9,7 @@ import {
   type PaymentStatus,
 } from "@set25/shared";
 import { paymentSummary } from "./money";
+import { getDateRange } from "@/lib/planning/date-range";
 
 export async function getCustomers(search = "") {
   const query = search.trim();
@@ -199,10 +200,7 @@ export async function getOrder(id: string) {
 }
 
 export async function getCommerceDashboard() {
-  const now = new Date();
-  const monthStart = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
-  );
+  const month = getDateRange({ preset: "this-month" });
   const [
     monthOrders,
     completedSales,
@@ -212,13 +210,13 @@ export async function getCommerceDashboard() {
     lowStock,
   ] = await Promise.all([
     db.order.findMany({
-      where: { createdAt: { gte: monthStart } },
+      where: { createdAt: { gte: month.start, lt: month.end } },
       select: { total: true, fulfilmentStatus: true, payments: true },
     }),
     db.order.findMany({
       where: {
         fulfilmentStatus: "COMPLETED",
-        completedAt: { gte: monthStart },
+        completedAt: { gte: month.start, lt: month.end },
       },
       select: { total: true },
     }),
@@ -259,6 +257,9 @@ export async function getCommerceDashboard() {
       variant.cost ? sum.plus(variant.cost.mul(variant.stockOnHand)) : sum,
     new Prisma.Decimal(0),
   );
+  const unknownCostStock = stock.filter(
+    (variant) => variant.stockOnHand > 0 && variant.cost === null,
+  );
   const attention = attentionOrders
     .map((order) => ({
       order,
@@ -274,6 +275,11 @@ export async function getCommerceDashboard() {
     monthOrders,
     sales,
     stockValue,
+    unknownCostVariants: unknownCostStock.length,
+    unknownCostUnits: unknownCostStock.reduce(
+      (sum, variant) => sum + variant.stockOnHand,
+      0,
+    ),
     recentOrders,
     attention,
     lowStock: lowStock

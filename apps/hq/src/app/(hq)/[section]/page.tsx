@@ -5,14 +5,6 @@ import { PageHeader } from "@/components/page-header";
 import { requireStaff } from "@/lib/auth/session";
 
 const sections = {
-  money: [
-    "Money",
-    "Money In, Money Out, and profitability will be implemented after commerce foundations.",
-  ],
-  tasks: [
-    "Tasks",
-    "Operational tasks will later connect directly to orders, stock, shipments, and company work.",
-  ],
   ambassadors: [
     "Ambassadors",
     "Ambassador relationships and activity will be introduced in a later milestone.",

@@ -4549,3 +4549,444 @@ td strong {
     grid-template-columns: 1fr;
   }
 }
+
+/* Milestone 6 — Money + Planning */
+.money-page-actions,
+.tasks-page > .detail-actions {
+  margin-bottom: 14px;
+}
+.money-range-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+.money-range-bar nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.money-range-bar nav a {
+  min-height: 36px;
+  padding: 10px 12px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 650;
+}
+.money-range-bar nav a.is-active {
+  background: var(--onyx);
+  color: var(--white);
+}
+.money-custom-range {
+  display: flex;
+  align-items: end;
+  gap: 8px;
+}
+.money-custom-range label {
+  display: grid;
+  gap: 3px;
+}
+.money-custom-range label span {
+  color: var(--steel);
+  font-family: var(--font-display);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.money-custom-range input {
+  height: 36px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  padding: 0 9px;
+}
+.money-custom-range .button {
+  min-height: 36px;
+}
+.money-summary-strip,
+.task-summary-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 14px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+.money-summary-strip article,
+.task-summary-strip > a {
+  display: grid;
+  min-height: 104px;
+  align-content: center;
+  gap: 6px;
+  padding: 15px 17px;
+  border-right: 1px solid var(--line);
+}
+.money-summary-strip article:last-child,
+.task-summary-strip > a:last-child {
+  border-right: 0;
+}
+.money-summary-strip span,
+.task-summary-strip span,
+.profitability-grid span {
+  color: var(--steel);
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.money-summary-strip strong,
+.task-summary-strip strong {
+  font-family: var(--font-display);
+  font-size: clamp(23px, 2.2vw, 31px);
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.money-summary-strip small,
+.profitability-grid small {
+  color: var(--steel);
+  font-size: 8.5px;
+  line-height: 1.4;
+}
+.task-summary-strip > a.is-urgent {
+  box-shadow: inset 3px 0 0 var(--volt);
+}
+.money-page .detail-section,
+.tasks-page .detail-section {
+  margin-top: 0;
+  margin-bottom: 14px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+.profitability-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+}
+.profitability-grid > div {
+  display: grid;
+  min-height: 112px;
+  align-content: center;
+  gap: 7px;
+  padding: 14px;
+  border-right: 1px solid var(--line);
+}
+.profitability-grid > div:last-child {
+  border-right: 0;
+}
+.profitability-grid strong {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.profitability-grid .is-emphasized {
+  background: #f7f7f3;
+}
+.profitability-grid .is-emphasized strong {
+  font-size: 24px;
+}
+.profit-warning {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-left: 2px solid #a98024;
+  background: #fffdf0;
+  color: var(--muted);
+  font-size: 9.5px;
+}
+.money-filter-bar,
+.task-filter-bar {
+  display: grid;
+  grid-template-columns: minmax(210px, 1.5fr) repeat(
+      2,
+      minmax(140px, 0.7fr)
+    ) auto;
+  align-items: end;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.task-filter-bar {
+  grid-template-columns: minmax(210px, 1.5fr) repeat(
+      3,
+      minmax(125px, 0.65fr)
+    ) auto;
+}
+.money-filter-bar .field,
+.task-filter-bar .field {
+  gap: 0;
+}
+.money-filter-bar input,
+.money-filter-bar select,
+.task-filter-bar input,
+.task-filter-bar select {
+  height: 42px;
+}
+.money-activity-list,
+.task-list {
+  border-top: 1px solid var(--line);
+}
+.money-activity-row {
+  display: grid;
+  grid-template-columns: 95px minmax(220px, 1.6fr) minmax(
+      110px,
+      0.75fr
+    ) 105px 105px 110px;
+  align-items: center;
+  gap: 13px;
+  min-height: 64px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 9.5px;
+}
+.money-activity-head,
+.task-row--head {
+  min-height: 36px !important;
+  color: var(--steel);
+  font-family: var(--font-display);
+  font-size: 8px !important;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.money-activity-copy,
+.task-row-copy {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+.money-activity-copy strong,
+.task-row-copy strong {
+  overflow: hidden;
+  color: var(--onyx);
+  font-size: 10.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.money-activity-copy small,
+.task-row-copy small {
+  overflow: hidden;
+  color: var(--steel);
+  font-size: 8.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.money-in-value,
+.money-out-value {
+  color: var(--onyx);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.money-entry-form .money-input {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+}
+.money-entry-form .money-input > span {
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-right: 0;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+}
+.task-summary-strip > a {
+  min-height: 86px;
+}
+.task-row {
+  display: grid;
+  grid-template-columns: 76px minmax(220px, 1.5fr) minmax(100px, 0.65fr) minmax(
+      100px,
+      0.65fr
+    ) 105px 195px 38px;
+  align-items: center;
+  gap: 12px;
+  min-height: 68px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 9.5px;
+}
+.task-row.is-overdue {
+  box-shadow: inset 3px 0 0 #a82d2d;
+}
+.task-priority {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 5px;
+  font-size: 9px;
+  font-weight: 650;
+}
+.task-priority::before {
+  width: 6px;
+  height: 6px;
+  background: var(--steel);
+  content: "";
+}
+.task-priority--high::before {
+  background: #a82d2d;
+}
+.task-priority--medium::before {
+  background: #a98024;
+}
+.task-due-overdue {
+  color: #8b2222;
+  font-weight: 650;
+}
+.task-status-control {
+  display: grid;
+  grid-template-columns: minmax(100px, 1fr) auto;
+  gap: 5px;
+}
+.task-status-control select {
+  width: 100%;
+  height: 34px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  padding: 0 7px;
+  font-size: 9px;
+}
+.task-status-control .button {
+  min-height: 34px;
+  padding: 0 9px;
+  font-size: 8.5px;
+}
+.status--doing,
+.status--waiting {
+  border-color: #c4b55d;
+  background: #fffdf0;
+}
+.status--done {
+  border-color: var(--onyx);
+  background: var(--onyx);
+  color: var(--white);
+}
+
+@media (max-width: 1180px) {
+  .profitability-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .profitability-grid > div:nth-child(3) {
+    border-right: 0;
+  }
+  .profitability-grid > div:nth-child(n + 4) {
+    border-top: 1px solid var(--line);
+  }
+  .money-activity-head,
+  .task-row--head {
+    display: none;
+  }
+  .money-activity-row,
+  .task-row {
+    position: relative;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 20px;
+    padding: 16px;
+  }
+  .money-activity-copy,
+  .task-row-copy {
+    grid-column: 1 / -1;
+  }
+  .money-activity-row > span:not(.money-activity-copy)::before,
+  .task-row > span:not(.task-row-copy)::before {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--steel);
+    content: attr(data-label);
+    font-family: var(--font-display);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .task-row > span:last-child {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+  }
+}
+
+@media (max-width: 900px) {
+  .money-range-bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .money-custom-range {
+    align-items: stretch;
+  }
+  .money-filter-bar,
+  .task-filter-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .money-filter-bar .search-field,
+  .task-filter-bar .search-field {
+    grid-column: 1 / -1;
+  }
+  .money-summary-strip,
+  .task-summary-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .money-summary-strip article:nth-child(2),
+  .money-summary-strip article:nth-child(4),
+  .task-summary-strip > a:nth-child(2),
+  .task-summary-strip > a:nth-child(4) {
+    border-right: 0;
+  }
+  .money-summary-strip article:nth-child(n + 3),
+  .task-summary-strip > a:nth-child(n + 3) {
+    border-top: 1px solid var(--line);
+  }
+}
+
+@media (max-width: 620px) {
+  .money-page-actions > div,
+  .money-page-actions .button {
+    width: 100%;
+  }
+  .money-range-bar nav {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .money-range-bar nav a {
+    text-align: center;
+  }
+  .money-custom-range,
+  .money-filter-bar,
+  .task-filter-bar,
+  .money-activity-row,
+  .task-row {
+    grid-template-columns: 1fr;
+  }
+  .money-custom-range {
+    display: grid;
+  }
+  .money-summary-strip,
+  .task-summary-strip,
+  .profitability-grid {
+    grid-template-columns: 1fr;
+  }
+  .money-summary-strip article,
+  .task-summary-strip > a,
+  .profitability-grid > div,
+  .profitability-grid > div:nth-child(3) {
+    border-top: 1px solid var(--line);
+    border-right: 0;
+  }
+  .money-summary-strip article:first-child,
+  .task-summary-strip > a:first-child,
+  .profitability-grid > div:first-child {
+    border-top: 0;
+  }
+  .task-status-control {
+    grid-template-columns: 1fr auto;
+  }
+}
