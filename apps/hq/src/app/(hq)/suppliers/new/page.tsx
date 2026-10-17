@@ -3,6 +3,8 @@ import { SupplierForm } from "@/components/supply/supplier-forms";
 import { requireOperationalPageAccess } from "@/lib/auth/session";
 import { createSupplierAction } from "@/lib/supply/actions";
 
+export const instant = false;
+
 export const metadata = { title: "New Supplier" };
 export default async function NewSupplierPage() {
   await requireOperationalPageAccess("/suppliers?forbidden=write");

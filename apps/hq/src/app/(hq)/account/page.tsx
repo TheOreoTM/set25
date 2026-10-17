@@ -2,6 +2,8 @@ import { PageHeader } from "@/components/page-header";
 import { requireStaff } from "@/lib/auth/session";
 import { staffRoleLabels } from "@/lib/auth/types";
 
+export const instant = false;
+
 export const metadata = { title: "Account" };
 
 export default async function AccountPage() {
@@ -30,7 +32,9 @@ export default async function AccountPage() {
           </div>
           <div>
             <dt>Status</dt>
-            <dd><span className="status status--active">Active</span></dd>
+            <dd>
+              <span className="status status--active">Active</span>
+            </dd>
           </div>
         </dl>
       </section>

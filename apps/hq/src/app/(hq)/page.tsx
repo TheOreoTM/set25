@@ -29,6 +29,8 @@ import { getSupplyDashboard } from "@/lib/supply/data";
 import { formatDate as formatSupplyDate } from "@/lib/supply/presentation";
 import { getDashboardTasks } from "@/lib/tasks/data";
 
+export const instant = false;
+
 export default async function DashboardPage({
   searchParams,
 }: {

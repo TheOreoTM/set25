@@ -3,6 +3,8 @@ import { ProductForm } from "@/components/catalog/product-form";
 import { createProductAction } from "@/lib/catalog/actions";
 import { requireOperationalPageAccess } from "@/lib/auth/session";
 
+export const instant = false;
+
 export const metadata = { title: "New Product" };
 
 export default async function NewProductPage() {

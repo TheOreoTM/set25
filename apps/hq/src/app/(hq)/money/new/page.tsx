@@ -6,6 +6,8 @@ import { createMoneyEntryAction } from "@/lib/money/actions";
 import { getMoneyFormOptions } from "@/lib/money/data";
 import { maldivesDateKey } from "@/lib/planning/date-range";
 
+export const instant = false;
+
 export const metadata = { title: "Record Money" };
 
 export default async function NewMoneyEntryPage({

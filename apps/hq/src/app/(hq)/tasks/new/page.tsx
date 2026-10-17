@@ -4,6 +4,8 @@ import { requireOperationalPageAccess } from "@/lib/auth/session";
 import { createTaskAction } from "@/lib/tasks/actions";
 import { getTaskFormOptions } from "@/lib/tasks/data";
 
+export const instant = false;
+
 export const metadata = { title: "New Task" };
 
 export default async function NewTaskPage() {

@@ -5,6 +5,8 @@ import { createSampleAction } from "@/lib/supply/actions";
 import { getActiveSuppliers, getSupplyProducts } from "@/lib/supply/data";
 import { toSampleProductDto, toSupplierOptionDto } from "@/lib/supply/dto";
 
+export const instant = false;
+
 export const metadata = { title: "New Sample" };
 export default async function NewSamplePage() {
   await requireOperationalPageAccess("/samples?forbidden=write");

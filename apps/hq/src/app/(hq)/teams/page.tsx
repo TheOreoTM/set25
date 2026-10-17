@@ -5,6 +5,8 @@ import { PageHeader } from "@/components/page-header";
 import { getTeams } from "@/lib/commerce/data";
 import { requireStaff } from "@/lib/auth/session";
 
+export const instant = false;
+
 export const metadata = { title: "Teams" };
 
 export default async function TeamsPage({

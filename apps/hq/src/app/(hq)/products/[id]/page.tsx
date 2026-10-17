@@ -17,6 +17,8 @@ import { StockAdjustment } from "@/components/catalog/stock-adjustment";
 import { getProductWithMovements } from "@/lib/catalog/data";
 import { requireStaff } from "@/lib/auth/session";
 
+export const instant = false;
+
 export default function ProductDetailPage({
   params,
   searchParams,

@@ -11,6 +11,8 @@ import {
 import { dateInput } from "@/lib/supply/presentation";
 import { toSupplierOptionDto } from "@/lib/supply/dto";
 
+export const instant = false;
+
 export const metadata = { title: "Edit Purchase Order" };
 export default async function EditPurchaseOrderPage({
   params,

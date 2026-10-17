@@ -4,6 +4,8 @@ import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { requireStaff } from "@/lib/auth/session";
 
+export const instant = false;
+
 const sections = {
   ambassadors: [
     "Ambassadors",

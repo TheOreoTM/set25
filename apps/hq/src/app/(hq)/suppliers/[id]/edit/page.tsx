@@ -6,6 +6,8 @@ import { updateSupplierAction } from "@/lib/supply/actions";
 import { getSupplier } from "@/lib/supply/data";
 import { toSupplierFormDto } from "@/lib/supply/dto";
 
+export const instant = false;
+
 export const metadata = { title: "Edit Supplier" };
 export default async function EditSupplierPage({
   params,

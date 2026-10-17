@@ -15,6 +15,8 @@ import { getSample } from "@/lib/supply/data";
 import { formatDate, formatDateTime } from "@/lib/supply/presentation";
 import { formatSampleNumber, sampleStatusLabels } from "@set25/shared";
 
+export const instant = false;
+
 const criteria = [
   "quality",
   "comfort",

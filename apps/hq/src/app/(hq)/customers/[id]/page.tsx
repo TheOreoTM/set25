@@ -11,6 +11,8 @@ import { getCustomer } from "@/lib/commerce/data";
 import { requireStaff } from "@/lib/auth/session";
 import { paymentSummary } from "@/lib/commerce/money";
 
+export const instant = false;
+
 export default async function CustomerDetailPage({
   params,
 }: {

@@ -6,6 +6,8 @@ import { maldivesDateKey } from "@/lib/planning/date-range";
 import { updateTaskAction } from "@/lib/tasks/actions";
 import { getTask, getTaskFormOptions } from "@/lib/tasks/data";
 
+export const instant = false;
+
 export const metadata = { title: "Edit Task" };
 
 export default async function EditTaskPage({

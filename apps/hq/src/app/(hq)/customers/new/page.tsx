@@ -3,6 +3,8 @@ import { CustomerForm } from "@/components/commerce/contact-form";
 import { createCustomerAction } from "@/lib/commerce/actions";
 import { requireOperationalPageAccess } from "@/lib/auth/session";
 
+export const instant = false;
+
 export const metadata = { title: "New Customer" };
 
 export default async function NewCustomerPage() {

@@ -26,6 +26,8 @@ import {
   importShipmentStatusLabels,
 } from "@set25/shared";
 
+export const instant = false;
+
 const journey = [
   "PLANNING",
   "SUPPLIER_SHIPPING",
