@@ -173,8 +173,9 @@ export default async function FilePage({
               </p>
               <FileDeleteButton
                 action={deleteFileAction.bind(null, file.id)}
+                fileName={file.originalName}
                 returnTo="/files"
-                label="Delete file"
+                variant="button"
               />
             </section>
           </aside>

@@ -2,8 +2,14 @@
 
 import { Select } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
-import { useActionState, useState } from "react";
-import { Save, Trash2 } from "lucide-react";
+import {
+  useActionState,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { FileText, Save, Trash2 } from "lucide-react";
 import {
   fileAccessLevelLabels,
   type FileAccessLevelValue,
@@ -19,53 +25,152 @@ type Action = (
   formData: FormData,
 ) => Promise<FileFormState>;
 
-/** Two-step delete so a stray click cannot remove a file. */
+/**
+ * Two-step delete: the trigger opens a small confirmation anchored to it (top
+ * layer, so the surrounding row or panel never changes layout).
+ */
 export function FileDeleteButton({
   action,
+  fileName,
   returnTo,
-  label = "Delete",
+  variant = "icon",
 }: {
   action: Action;
+  fileName: string;
   returnTo?: string;
-  label?: string;
+  /** "icon" for compact file rows, "button" for the file detail page. */
+  variant?: "icon" | "button";
 }) {
-  const [confirming, setConfirming] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(
     action,
     initialFileFormState,
   );
-  if (!confirming)
-    return (
-      <button
-        className="text-link file-delete-link"
-        type="button"
-        onClick={() => setConfirming(true)}
-      >
-        <Trash2 aria-hidden="true" /> {label}
-      </button>
+
+  const place = useCallback(() => {
+    const trigger = triggerRef.current;
+    const popover = popoverRef.current;
+    if (!trigger || !popover) return;
+    const rect = trigger.getBoundingClientRect();
+    const width = popover.offsetWidth;
+    const height = popover.offsetHeight;
+    const below = rect.bottom + 6;
+    const top =
+      below + height > window.innerHeight - 8 && rect.top - height - 6 > 8
+        ? rect.top - height - 6
+        : below;
+    // Right-align to the trigger, kept on screen.
+    const left = Math.max(
+      8,
+      Math.min(rect.right - width, window.innerWidth - width - 8),
     );
+    popover.style.top = `${top}px`;
+    popover.style.left = `${left}px`;
+  }, []);
+
+  useEffect(() => {
+    const popover = popoverRef.current;
+    if (!popover) return;
+    const onToggle = (event: Event) => {
+      const isOpen = (event as ToggleEvent).newState === "open";
+      setOpen(isOpen);
+      if (!isOpen) triggerRef.current?.focus({ preventScroll: true });
+    };
+    popover.addEventListener("toggle", onToggle);
+    return () => popover.removeEventListener("toggle", onToggle);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    place();
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
+  }, [open, place]);
+
+  const toggle = () =>
+    open
+      ? popoverRef.current?.hidePopover()
+      : popoverRef.current?.showPopover();
+
   return (
-    <form action={formAction} className="file-delete-confirm">
-      {returnTo ? (
-        <input type="hidden" name="returnTo" value={returnTo} />
-      ) : null}
-      <button className="button button--dark" type="submit" disabled={pending}>
-        {pending ? "Deleting…" : "Confirm delete"}
-      </button>
-      <button
-        className="text-link"
-        type="button"
-        onClick={() => setConfirming(false)}
-        disabled={pending}
+    <>
+      {variant === "icon" ? (
+        <button
+          ref={triggerRef}
+          className="icon-button file-delete-trigger"
+          type="button"
+          aria-label={`Delete ${fileName}`}
+          aria-expanded={open}
+          title="Delete"
+          onClick={toggle}
+        >
+          <Trash2 aria-hidden="true" />
+        </button>
+      ) : (
+        <button
+          ref={triggerRef}
+          className="button button--danger file-delete-trigger--button"
+          type="button"
+          aria-expanded={open}
+          onClick={toggle}
+        >
+          <Trash2 aria-hidden="true" /> Delete file
+        </button>
+      )}
+      <div
+        ref={popoverRef}
+        popover="auto"
+        role="dialog"
+        aria-label={`Delete ${fileName}`}
+        className="file-delete-popover"
       >
-        Keep
-      </button>
-      {state.status === "error" ? (
-        <small className="field-error" role="alert">
-          {state.message}
-        </small>
-      ) : null}
-    </form>
+        <form action={formAction}>
+          {returnTo ? (
+            <input type="hidden" name="returnTo" value={returnTo} />
+          ) : null}
+          <div className="file-delete-body">
+            <p className="kicker">Private file</p>
+            <h3>Delete file</h3>
+            <div className="file-delete-target">
+              <FileText aria-hidden="true" />
+              <span>{fileName}</span>
+            </div>
+            <p className="file-delete-copy">
+              Removed from private storage. The record stays for audit.
+            </p>
+            {state.status === "error" ? (
+              <small className="field-error" role="alert">
+                {state.message}
+              </small>
+            ) : null}
+          </div>
+          <div className="file-delete-actions">
+            <button
+              className="button button--secondary"
+              type="button"
+              onClick={() => popoverRef.current?.hidePopover()}
+              disabled={pending}
+            >
+              Keep
+            </button>
+            <button
+              className="button button--danger-solid"
+              type="submit"
+              disabled={pending}
+            >
+              <Trash2 aria-hidden="true" />
+              {pending ? "Deleting…" : "Delete"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </>
   );
 }
 

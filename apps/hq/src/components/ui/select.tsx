@@ -210,7 +210,7 @@ export function Select({
     } else if (event.key === "Tab") hide();
     else if (!searchable && event.key.length === 1) {
       // Type-ahead when there is no search box.
-      const now = Date.now();
+      const now = event.timeStamp;
       const state = typeahead.current;
       state.text =
         (now - state.at < 600 ? state.text : "") + event.key.toLowerCase();
@@ -231,8 +231,6 @@ export function Select({
       show();
     }
   }
-
-  let lastGroup: string | undefined;
 
   return (
     <span className="select">
@@ -310,8 +308,9 @@ export function Select({
         >
           {visible.map((option, index) => {
             const heading =
-              option.group && option.group !== lastGroup ? option.group : null;
-            lastGroup = option.group;
+              option.group && option.group !== visible[index - 1]?.group
+                ? option.group
+                : null;
             const isSelected = option.value === value;
             return (
               <Fragment key={`${option.group ?? ""}:${option.value}:${index}`}>

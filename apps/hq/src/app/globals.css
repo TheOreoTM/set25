@@ -5393,34 +5393,100 @@ td strong {
 .file-row-actions .icon-button svg {
   width: 14px;
 }
-.file-delete-link {
-  display: inline-flex;
+.file-row-actions .button {
+  margin: 0;
+}
+.file-delete-trigger:hover,
+.file-delete-trigger[aria-expanded="true"] {
+  border-color: #a82d2d;
+  color: #8b2222;
+}
+.file-delete-popover {
+  position: fixed;
+  inset: auto;
+  width: min(300px, calc(100vw - 16px));
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--onyx);
+  border-top: 3px solid #8b2222;
+  border-radius: 0;
+  background: var(--paper);
+  box-shadow: 0 18px 40px rgb(10 10 10 / 18%);
+  color: var(--onyx);
+  font-family: var(--font-interface);
+  font-size: var(--text-body);
+}
+.file-delete-body {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px 16px;
+}
+.file-delete-body .kicker {
+  margin: 0;
+}
+.file-delete-body h3 {
+  margin: -6px 0 0;
+  font-family: var(--font-display);
+  font-size: var(--text-section);
+  font-weight: 600;
+  line-height: 1;
+}
+.file-delete-target {
+  display: flex;
+  min-width: 0;
   align-items: center;
-  gap: 4px;
-  border: 0;
-  background: none;
+  gap: 8px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  background: #f7f7f3;
+}
+.file-delete-target svg {
+  width: 14px;
+  flex: none;
+  color: var(--steel);
+}
+.file-delete-target span {
+  overflow: hidden;
+  font-size: var(--text-small);
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.file-delete-popover .file-delete-copy {
+  margin: 0;
   color: var(--muted);
   font-size: var(--text-label);
-  cursor: pointer;
+  line-height: 1.55;
 }
-.file-delete-link svg {
-  width: 13px;
-}
-.file-delete-confirm {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 6px;
-}
-.file-delete-confirm .button {
-  min-height: 32px;
-  padding: 0 10px;
+.file-delete-popover .field-error {
   font-size: var(--text-label);
 }
-.file-delete-confirm .field-error {
-  flex-basis: 100%;
-  text-align: right;
+.file-delete-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--line);
+}
+.file-delete-actions .button {
+  width: 100%;
+  min-height: 36px;
+  margin: 0;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  font-size: var(--text-label);
+}
+.file-delete-actions .button--secondary {
+  border-color: var(--line);
+}
+.file-delete-actions .button--danger-solid {
+  border-color: #8b2222;
+}
+.file-delete-actions .button svg {
+  width: 13px;
+}
+.file-delete-trigger--button {
+  margin: 0;
 }
 .file-delete-copy {
   margin: 0 0 12px;
@@ -5461,10 +5527,6 @@ td strong {
 }
 .file-upload-target strong {
   font-size: var(--text-small);
-}
-.file-upload-dialog input[type="file"] {
-  padding: 9px;
-  font-size: var(--text-label);
 }
 .file-upload-progress {
   display: grid;
@@ -5978,4 +6040,83 @@ td strong {
   padding: 12px 14px;
   color: var(--steel);
   font-size: var(--text-label);
+}
+
+/* Selects and date pickers inside .field labels must not inherit the
+   field-label typography from `.field > span`. */
+.field > .select,
+.field > .date-picker {
+  color: var(--onyx);
+  font-size: var(--text-body);
+  font-weight: 400;
+}
+
+/* File drop zone (upload dialog) */
+.file-drop {
+  position: relative;
+}
+.file-drop .file-drop-input {
+  position: absolute;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.file-drop-zone {
+  display: flex;
+  min-height: 76px;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px dashed #c8c9c5;
+  background: #f7f7f3;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
+}
+.file-drop-zone:hover,
+.file-drop.is-dragging .file-drop-zone {
+  border-color: var(--onyx);
+  background: var(--paper);
+}
+.file-drop-input:focus-visible + .file-drop-zone {
+  border-style: solid;
+  border-color: var(--onyx);
+  box-shadow: 0 0 0 2px var(--volt);
+}
+.file-drop.has-file .file-drop-zone {
+  border-style: solid;
+  border-color: var(--line);
+  background: var(--paper);
+  box-shadow: inset 3px 0 0 var(--volt);
+}
+.file-drop-input:disabled + .file-drop-zone {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.file-drop-zone > svg {
+  width: 22px;
+  flex: none;
+  color: var(--steel);
+}
+.file-drop-zone > span {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+.file-drop-zone strong {
+  overflow: hidden;
+  color: var(--onyx);
+  font-size: var(--text-body);
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.file-drop-zone small {
+  color: var(--steel);
+  font-size: var(--text-meta);
 }

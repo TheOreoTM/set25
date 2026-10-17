@@ -75,7 +75,10 @@ export function FileRow({
           </>
         ) : null}
         {file.canManage ? (
-          <FileDeleteButton action={deleteFileAction.bind(null, file.id)} />
+          <FileDeleteButton
+            action={deleteFileAction.bind(null, file.id)}
+            fileName={file.originalName}
+          />
         ) : null}
       </span>
     </article>

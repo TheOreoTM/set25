@@ -2,9 +2,9 @@
 
 import { Select } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, X } from "lucide-react";
+import { FileUp, Upload, X } from "lucide-react";
 import {
   fileAccessLevelLabels,
   formatFileSize,
@@ -52,6 +52,8 @@ export function FileUploadDialog({
   const [file, setFile] = useState<File | null>(null);
   const [retention, setRetention] = useState("PERMANENT");
   const [phase, setPhase] = useState<Phase>({ name: "idle" });
+  const [dragging, setDragging] = useState(false);
+  const titleId = useId();
   const busy = phase.name === "uploading" || phase.name === "finalizing";
   const groups = (targetOptions ?? []).reduce(
     (map, option) =>
@@ -155,25 +157,58 @@ export function FileUploadDialog({
               </button>
             </div>
             <form className="dialog-body" ref={form} onSubmit={submit}>
-              <label className="field">
+              <div className="field">
                 <span>File</span>
-                <input
-                  type="file"
-                  name="file"
-                  accept={ACCEPT_ATTRIBUTE}
-                  required
-                  disabled={busy}
-                  onChange={(event) => {
-                    setFile(event.currentTarget.files?.[0] ?? null);
-                    setPhase({ name: "idle" });
+                <div
+                  className={`file-drop${dragging ? " is-dragging" : ""}${file ? " has-file" : ""}`}
+                  onDragOver={(event) => {
+                    event.preventDefault();
+                    if (!busy) setDragging(true);
                   }}
-                />
-                <small>
-                  {file
-                    ? `${file.name} · ${formatFileSize(file.size)}`
-                    : `${ALLOWED_TYPES_LABEL} · up to ${formatFileSize(maxBytes)}`}
-                </small>
-              </label>
+                  onDragLeave={() => setDragging(false)}
+                  onDrop={(event) => {
+                    event.preventDefault();
+                    setDragging(false);
+                    const dropped = event.dataTransfer.files?.[0];
+                    if (!busy && dropped) {
+                      setFile(dropped);
+                      setPhase({ name: "idle" });
+                    }
+                  }}
+                >
+                  <input
+                    id={`${titleId}-file`}
+                    className="file-drop-input"
+                    type="file"
+                    name="file"
+                    accept={ACCEPT_ATTRIBUTE}
+                    disabled={busy}
+                    onChange={(event) => {
+                      setFile(event.currentTarget.files?.[0] ?? null);
+                      setPhase({ name: "idle" });
+                    }}
+                  />
+                  <label className="file-drop-zone" htmlFor={`${titleId}-file`}>
+                    <FileUp aria-hidden="true" />
+                    {file ? (
+                      <span>
+                        <strong>{file.name}</strong>
+                        <small>
+                          {formatFileSize(file.size)} · Choose a different file
+                        </small>
+                      </span>
+                    ) : (
+                      <span>
+                        <strong>Choose a file or drag it here</strong>
+                        <small>
+                          {ALLOWED_TYPES_LABEL} · up to{" "}
+                          {formatFileSize(maxBytes)}
+                        </small>
+                      </span>
+                    )}
+                  </label>
+                </div>
+              </div>
               {target ? (
                 <div className="file-upload-target">
                   <span>Attach to</span>
