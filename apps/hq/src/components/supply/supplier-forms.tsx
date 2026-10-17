@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/ui/select";
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { ArrowLeft, Pencil, Plus, Save, X } from "lucide-react";
@@ -94,13 +95,13 @@ export function SupplierForm({
           />
           <label className="field">
             <span>Status</span>
-            <select
+            <Select
               name="active"
               defaultValue={defaults.active === false ? "false" : "true"}
             >
               <option value="true">Active</option>
               <option value="false">Inactive</option>
-            </select>
+            </Select>
           </label>
         </div>
       </section>
@@ -235,7 +236,7 @@ function SupplierProductForm({
       <div className="form-grid">
         <label className="field">
           <span>SET25 product</span>
-          <select
+          <Select
             name="productId"
             required
             defaultValue={defaults?.productId ?? ""}
@@ -248,7 +249,7 @@ function SupplierProductForm({
                 {product.code} · {product.name}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         <Field
           name="productUrl"

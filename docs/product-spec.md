@@ -118,6 +118,55 @@ Tasks are a small planning layer rather than a project-management system. A Task
 
 The dashboard uses live monthly Sales Profit and real open Tasks. Formal bookkeeping, bank reconciliation, double entry, tax reporting, payroll, balance sheets, professional profit-and-loss statements, reversals, and equipment accounting remain deferred.
 
+## Milestone 7: relationships, content, and files
+
+HQ now manages ambassadors, plans social content, and stores private files. These connect to existing records rather than living as separate tools.
+
+### Ambassadors
+
+Ambassadors are the players who represent SET25. Each has a status (Prospect, Active, Paused, Ended), contact details, and optional reference terms: a discount code, discount %, and commission %. The terms are recorded for reference only. Store discount redemption and commission payouts are not built yet.
+
+**Give Product** gives real stock to an ambassador. It deducts stock once, records a Giveaway inventory movement by the acting staff member, and adds an append-only grant to the ambassador's history. The giveaway is blocked if stock is insufficient, the variant is archived, or the relationship has Ended. A double submission cannot deduct twice. Grants cannot be edited or deleted; a correction is a separate stock adjustment.
+
+### Content
+
+Content is a production queue for Instagram and TikTok, not a publishing tool. Items move between Idea, Creating, Ready, Scheduled, and Posted (or Cancelled). The rules:
+
+- Scheduled requires a publish date and time, entered in Maldives time.
+- Ready does not require a date.
+- Marking Posted records `postedAt` the first time.
+- The detail page offers only the status moves that change something (Start creating, Mark ready, Schedule, Mark posted, Unschedule, Cancel, Restore).
+
+The planner groups open content into Overdue, Today, This Week, Upcoming, and Unscheduled, with recent Posted items after them. Content is overdue when its publish time has passed and it is not Posted. A content item may reference one product and one ambassador, and has a responsible owner separate from whoever created the record. Working assets go in Files; `externalUrl` is the final public post link.
+
+### Files
+
+Files are private SET25 HQ documents and assets: supplier paperwork, customs documents, receipts, sample photos, agreements, and content assets.
+
+- **Storage:** private S3-compatible object storage (Cloudflare R2 by default) behind a small adapter (`lib/files/storage.ts`). The bucket is never public, credentials never reach the browser, and object keys are generated (`<prefix>/<fileId>/<uuid>`), never derived from filenames.
+- **Upload:** HQ authorises the request (role, MIME allowlist, size, access level, retention, target existence), creates a Pending record, and returns a 10-minute presigned PUT URL. The browser uploads directly to storage, so large files never pass through Next.js or Vercel. HQ then finalises: it inspects the stored object and makes the file Available only if the object exists and its size and type match what was authorised. Otherwise the object is removed. Failed uploads are abandoned and never listed.
+- **Allowed types:** PDF, JPEG, PNG, WEBP, DOCX, XLSX, PPTX, CSV, TXT, MP4, and MOV. A file is accepted only when its extension and declared MIME type agree. The maximum size is 100 MB by default (`FILE_MAX_UPLOAD_BYTES`).
+- **Download:** `/files/[id]/download` re-checks the session, the current database role, the file status, and retention on every request, then redirects to a 60-second signed URL. Images, PDFs, and video may open inline; everything else downloads. No permanent object URL is ever exposed.
+- **Access levels:** All Staff, Managers & Owner, and Owner Only, enforced server-side for metadata, lists, downloads, edits, and deletes. Files a viewer cannot access are not listed and behave as not found.
+- **Retention:** Permanent, or Until date. Once the date has passed, the file is marked retention-expired, normal download is blocked, and only the Owner can remove it.
+- **Deletion:** HQ removes the object from storage first and only then marks the record Deleted, keeping who deleted it and when for audit. If storage deletion fails, the file stays Available and the user sees an error. Object deletion is idempotent, so retries are safe.
+
+A reusable Files panel appears on Product, Customer, Team, Order/Preorder, Supplier, Purchase Order, Import, Sample, Ambassador, and Content detail pages. `/files` is a small searchable library filtered by access, type, and retention.
+
+### Milestone 7 permissions
+
+| Area        | Owner                                                                                          | Manager                                                                                                                    | Staff                                  |
+| ----------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| Ambassadors | Full                                                                                           | Full                                                                                                                       | Read-only                              |
+| Content     | Full                                                                                           | Full                                                                                                                       | Read-only                              |
+| Files       | Upload; see, download, edit, and delete everything, including removing retention-expired files | Upload (All Staff or Managers & Owner); download, edit, and delete those levels until retention ends; no Owner Only access | View and download All Staff files only |
+
+The Store must never query `FileAsset` or expose file metadata; Store projections exclude it.
+
+The dashboard adds overdue content and (for the Owner) retention-expired files to Needs Attention, and content planned for the next seven days to Upcoming.
+
+Deferred deliberately: Store discount redemption, commission calculation and payouts, social posting APIs and automatic publishing, campaign analytics, content calendar drag-and-drop, file versioning, virus scanning, a scheduled cleanup job for abandoned pending uploads, and a generic audit log.
+
 ## Success criteria for Milestone 1
 
 - The dashboard feels recognizably SET25 rather than like a generic admin template.

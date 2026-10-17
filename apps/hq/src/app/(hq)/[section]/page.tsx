@@ -7,18 +7,6 @@ import { requireStaff } from "@/lib/auth/session";
 export const instant = false;
 
 const sections = {
-  ambassadors: [
-    "Ambassadors",
-    "Ambassador relationships and activity will be introduced in a later milestone.",
-  ],
-  content: [
-    "Content",
-    "Content planning will be introduced after core operations are stable.",
-  ],
-  files: [
-    "Files",
-    "Secure attachments and retention rules will be designed before file storage is enabled.",
-  ],
   settings: [
     "Settings",
     "Staff access, business preferences, and system configuration will live here.",

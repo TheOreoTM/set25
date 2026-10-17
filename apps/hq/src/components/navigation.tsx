@@ -94,6 +94,9 @@ const staffRoutes = new Set([
   "/samples",
   "/money",
   "/tasks",
+  "/ambassadors",
+  "/content",
+  "/files",
 ]);
 
 function NavigationLinks({

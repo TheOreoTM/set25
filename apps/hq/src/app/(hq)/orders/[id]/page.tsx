@@ -3,6 +3,8 @@ import { notFound, redirect } from "next/navigation";
 import { OrderDetail } from "@/components/commerce/order-detail";
 import { getOrder } from "@/lib/commerce/data";
 import { requireStaff } from "@/lib/auth/session";
+import { FileAttachmentsPanel } from "@/components/files/file-attachments-panel";
+import { formatOrderNumber } from "@set25/shared";
 
 export const instant = false;
 
@@ -25,6 +27,13 @@ export default async function OrderPage({
     <OrderDetail
       order={order}
       staff={staff}
+      files={
+        <FileAttachmentsPanel
+          staff={staff}
+          target={{ type: "ORDER", id: order.id }}
+          targetLabel={formatOrderNumber(order.orderNumber)}
+        />
+      }
       paymentKey={randomUUID()}
       saved={typeof query.saved === "string" ? query.saved : undefined}
     />

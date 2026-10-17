@@ -5,6 +5,8 @@ import { getOrder } from "@/lib/commerce/data";
 import { requireStaff } from "@/lib/auth/session";
 import { getOpenPurchaseOrdersForPreorder } from "@/lib/supply/data";
 import { formatPurchaseOrderNumber } from "@set25/shared";
+import { FileAttachmentsPanel } from "@/components/files/file-attachments-panel";
+import { formatOrderNumber } from "@set25/shared";
 
 export const instant = false;
 
@@ -29,6 +31,13 @@ export default async function PreorderPage({
       preorder
       order={order}
       staff={staff}
+      files={
+        <FileAttachmentsPanel
+          staff={staff}
+          target={{ type: "ORDER", id: order.id }}
+          targetLabel={formatOrderNumber(order.orderNumber)}
+        />
+      }
       paymentKey={randomUUID()}
       saved={typeof query.saved === "string" ? query.saved : undefined}
       purchaseOrders={purchaseOrders.map((po) => ({

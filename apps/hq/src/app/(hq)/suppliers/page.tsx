@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Select } from "@/components/ui/select";
 import { ArrowRight, Plus, Search, SlidersHorizontal } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { requireStaff } from "@/lib/auth/session";
@@ -42,11 +43,11 @@ export default async function SuppliersPage({
           </label>
           <label>
             <span className="sr-only">Status</span>
-            <select name="active" defaultValue={filters.active}>
+            <Select name="active" defaultValue={filters.active}>
               <option value="">All suppliers</option>
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
-            </select>
+            </Select>
           </label>
           <button
             className="button button--secondary filter-submit"

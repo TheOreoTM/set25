@@ -1,5 +1,7 @@
 "use client";
 
+import { Select } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker";
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { ArrowLeft, Check, Plus, RotateCcw, Save, X, XCircle } from "lucide-react";
@@ -50,7 +52,7 @@ export function SampleForm({
                     </label>
                     <label className="field">
                         <span>Supplier</span>
-                        <select name="supplierId" required defaultValue="">
+                        <Select name="supplierId" required defaultValue="">
                             <option value="" disabled>
                                 Choose a supplier
                             </option>
@@ -59,22 +61,22 @@ export function SampleForm({
                                     {supplier.name}
                                 </option>
                             ))}
-                        </select>
+                        </Select>
                     </label>
                     <label className="field">
                         <span>Related product</span>
-                        <select name="productId" defaultValue="">
+                        <Select name="productId" defaultValue="">
                             <option value="">Not linked</option>
                             {products.map((product) => (
                                 <option value={product.id} key={product.id}>
                                     {product.code} · {product.name}
                                 </option>
                             ))}
-                        </select>
+                        </Select>
                     </label>
                     <label className="field">
                         <span>Related variant</span>
-                        <select name="variantId" defaultValue="">
+                        <Select name="variantId" defaultValue="">
                             <option value="">Not linked</option>
                             {variants.map((variant) => (
                                 <option value={variant.id} key={variant.id}>
@@ -82,7 +84,7 @@ export function SampleForm({
                                     {[variant.color, variant.size].filter(Boolean).join(" / ") || variant.sku}
                                 </option>
                             ))}
-                        </select>
+                        </Select>
                     </label>
                     <label className="field">
                         <span>Sample cost</span>
@@ -94,11 +96,11 @@ export function SampleForm({
                     </label>
                     <label className="field">
                         <span>Ordered date</span>
-                        <input name="orderedAt" type="date" />
+                        <DatePicker name="orderedAt" />
                     </label>
                     <label className="field">
                         <span>Received date</span>
-                        <input name="receivedAt" type="date" />
+                        <DatePicker name="receivedAt" />
                     </label>
                 </div>
             </section>
@@ -177,13 +179,13 @@ function EvaluationForm({ action }: { action: Action }) {
                 {scores.map((score) => (
                     <label className="field" key={score}>
                         <span>{score[0].toUpperCase() + score.slice(1)}</span>
-                        <select name={score} defaultValue="5">
+                        <Select name={score} defaultValue="5">
                             {[1, 2, 3, 4, 5].map((value) => (
                                 <option value={value} key={value}>
                                     {value}
                                 </option>
                             ))}
-                        </select>
+                        </Select>
                     </label>
                 ))}
             </div>
@@ -270,14 +272,14 @@ export function PreorderSupplyForm({
         <form action={formAction} className="compact-action-form">
             <label className="field">
                 <span>Purchase order</span>
-                <select name="purchaseOrderId" defaultValue={current ?? ""}>
+                <Select name="purchaseOrderId" defaultValue={current ?? ""}>
                     <option value="">Not linked</option>
                     {purchaseOrders.map((po) => (
                         <option value={po.id} key={po.id}>
                             {po.label}
                         </option>
                     ))}
-                </select>
+                </Select>
             </label>
             <button className="button button--secondary" type="submit" disabled={pending}>
                 {pending ? "Saving…" : "Save supply link"}

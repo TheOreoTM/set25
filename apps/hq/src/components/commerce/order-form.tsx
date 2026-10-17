@@ -1,5 +1,7 @@
 "use client";
 
+import { Select } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker";
 import Link from "next/link";
 import { useActionState, useMemo, useState } from "react";
 import { ArrowLeft, Plus, Save, Trash2 } from "lucide-react";
@@ -94,7 +96,7 @@ export function OrderForm({
         <div className="form-grid">
           <label className="field">
             <span>Customer {preorder ? "" : "(optional)"}</span>
-            <select name="customerId" defaultValue="" required={preorder}>
+            <Select name="customerId" defaultValue="" required={preorder}>
               <option value="">
                 {customers.length ? "Select customer" : "No customers yet"}
               </option>
@@ -103,7 +105,7 @@ export function OrderForm({
                   {customer.name}
                 </option>
               ))}
-            </select>
+            </Select>
             {state.errors?.customerId ? (
               <small className="field-error">
                 {state.errors.customerId[0]}
@@ -112,21 +114,21 @@ export function OrderForm({
           </label>
           <label className="field">
             <span>Team (optional)</span>
-            <select name="teamId" defaultValue="">
+            <Select name="teamId" defaultValue="">
               <option value="">No team</option>
               {teams.map((team) => (
                 <option value={team.id} key={team.id}>
                   {team.name}
                 </option>
               ))}
-            </select>
+            </Select>
             {state.errors?.teamId ? (
               <small className="field-error">{state.errors.teamId[0]}</small>
             ) : null}
           </label>
           <label className="field">
             <span>Order source</span>
-            <select
+            <Select
               name="source"
               defaultValue={preorder ? "INSTAGRAM" : "MANUAL"}
             >
@@ -135,7 +137,7 @@ export function OrderForm({
                   {orderSourceLabels[source]}
                 </option>
               ))}
-            </select>
+            </Select>
             {state.errors?.source ? (
               <small className="field-error">{state.errors.source[0]}</small>
             ) : null}
@@ -162,7 +164,7 @@ export function OrderForm({
                 </span>
                 <label className="field order-line-variant">
                   <span>Variant</span>
-                  <select
+                  <Select
                     name="variantId"
                     value={line.variantId}
                     required
@@ -183,7 +185,7 @@ export function OrderForm({
                         {item.stockOnHand} available
                       </option>
                     ))}
-                  </select>
+                  </Select>
                   {variant ? (
                     <small>
                       {variant.stockOnHand} currently available · catalogue{" "}
@@ -366,7 +368,7 @@ export function OrderForm({
             </label>
             <label className="field">
               <span>Estimated arrival (optional)</span>
-              <input name="estimatedArrival" type="date" />
+              <DatePicker name="estimatedArrival" />
               {state.errors?.estimatedArrival ? (
                 <small className="field-error">
                   {state.errors.estimatedArrival[0]}

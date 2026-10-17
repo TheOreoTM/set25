@@ -81,9 +81,22 @@ Implemented:
 
 Deferred deliberately: bank reconciliation, formal bookkeeping, double entry, tax filing, payroll, invoice generation, reversal tooling, original-currency ledgers, equipment accounting treatment, task comments, notifications, recurring tasks, Kanban, and Milestone 7 entities.
 
-## Milestone 7 — Relationships, content, and files
+## Milestone 7 — Relationships, content, and files (implemented, awaiting manual verification)
 
-Implement ambassadors, content planning, and secure file attachments with explicit permissions and retention rules.
+Implemented:
+
+- Ambassadors with status, contact details, uppercase-unique discount codes, and validated discount/commission reference terms;
+- transactional, idempotent Give Product: conditional stock decrement, `GIVEAWAY` movement, and append-only grants with product snapshots;
+- a Content planner grouped by Overdue/Today/This Week/Upcoming/Unscheduled/Posted, with status, platform, owner, product, and search filters;
+- content status rules (Scheduled needs a publish time; Posted sets `postedAt`) enforced in actions and database checks, with contextual status actions;
+- private S3-compatible file storage (Cloudflare R2) behind an adapter: presigned direct uploads, Pending → verified Available finalisation, and role-checked 60-second signed downloads;
+- file access levels, retention dates with download blocking, and storage-first audited deletion;
+- one reusable Files panel on ten record types, plus `/files` and `/files/[id]`;
+- dashboard overdue content, retention-expired files (Owner), and next-seven-days content.
+
+Requires the `R2_*` variables (see `apps/hq/.env.example`) and a private bucket with CORS allowing `PUT` from the HQ origin. Without them, HQ runs normally and file uploads explain that storage is not configured.
+
+Deferred deliberately: Store discount redemption, commission payouts, social posting integrations, campaign analytics, file versioning, virus scanning, abandoned-upload cleanup jobs, and a generic audit log.
 
 ## Milestone 8 — Store and checkout
 

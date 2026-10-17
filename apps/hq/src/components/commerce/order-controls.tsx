@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/ui/select";
 import { useActionState, useRef } from "react";
 import { Check, CircleDollarSign, PackageCheck, X } from "lucide-react";
 import {
@@ -81,10 +82,10 @@ export function PaymentControl({
             <div className="form-grid form-grid--dialog">
               <label className="field">
                 <span>Transaction</span>
-                <select name="type" defaultValue="PAYMENT">
+                <Select name="type" defaultValue="PAYMENT">
                   <option value="PAYMENT">Payment</option>
                   <option value="REFUND">Refund</option>
-                </select>
+                </Select>
               </label>
               <label className="field">
                 <span>Amount</span>
@@ -105,13 +106,13 @@ export function PaymentControl({
               </label>
               <label className="field">
                 <span>Method</span>
-                <select name="method" defaultValue="BANK_TRANSFER">
+                <Select name="method" defaultValue="BANK_TRANSFER">
                   {PAYMENT_METHODS.map((method) => (
                     <option value={method} key={method}>
                       {paymentMethodLabels[method]}
                     </option>
                   ))}
-                </select>
+                </Select>
               </label>
               <label className="field">
                 <span>Reference (optional)</span>
@@ -180,13 +181,13 @@ export function FulfilmentControl({
       <input type="hidden" name="returnTo" value={returnTo} />
       <label className="field">
         <span>Fulfilment</span>
-        <select name="status" defaultValue={current}>
+        <Select name="status" defaultValue={current}>
           {options.map((status) => (
             <option value={status} key={status}>
               {fulfilmentStatusLabels[status]}
             </option>
           ))}
-        </select>
+        </Select>
       </label>
       <button
         className="button button--secondary"
@@ -220,7 +221,7 @@ export function PreorderStatusControl({
     <form action={action} className="workflow-inline">
       <label className="field">
         <span>Preorder status</span>
-        <select name="status" defaultValue={current}>
+        <Select name="status" defaultValue={current}>
           {PREORDER_STATUSES.filter(
             (status) => !["COMPLETED", "CANCELLED"].includes(status),
           ).map((status) => (
@@ -228,7 +229,7 @@ export function PreorderStatusControl({
               {preorderStatusLabels[status]}
             </option>
           ))}
-        </select>
+        </Select>
       </label>
       <button
         className="button button--secondary"

@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/ui/select";
 import { useActionState } from "react";
 import Link from "next/link";
 import {
@@ -76,7 +77,7 @@ export function ProductForm({
           />
           <label className="field">
             <span>Category</span>
-            <select
+            <Select
               name="category"
               defaultValue={defaults.category ?? "OTHER"}
               aria-invalid={Boolean(error("category"))}
@@ -86,7 +87,7 @@ export function ProductForm({
                   {productCategoryLabels[category]}
                 </option>
               ))}
-            </select>
+            </Select>
             {error("category") ? (
               <small className="field-error">{error("category")}</small>
             ) : null}
@@ -163,7 +164,7 @@ export function ProductForm({
         <div className="form-stack">
           <label className="field">
             <span>Product status</span>
-            <select
+            <Select
               name="status"
               defaultValue={defaults.status ?? "DRAFT"}
               aria-invalid={Boolean(error("status"))}
@@ -173,7 +174,7 @@ export function ProductForm({
                   {productStatusLabels[status]}
                 </option>
               ))}
-            </select>
+            </Select>
             {error("status") ? (
               <small className="field-error">{error("status")}</small>
             ) : null}

@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { Select } from "@/components/ui/select";
 import { randomUUID } from "node:crypto";
 import Link from "next/link";
 import { ArrowRight, Search, SlidersHorizontal } from "lucide-react";
@@ -77,12 +78,12 @@ async function StockList({
           </label>
           <label>
             <span className="sr-only">Filter by stock status</span>
-            <select name="status" defaultValue={filters.status}>
+            <Select name="status" defaultValue={filters.status}>
               <option value="ALL">All stock statuses</option>
               <option value="HEALTHY">Healthy</option>
               <option value="LOW">Low</option>
               <option value="OUT_OF_STOCK">Out of Stock</option>
-            </select>
+            </Select>
           </label>
           <button
             className="button button--secondary filter-submit"

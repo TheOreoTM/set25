@@ -1,5 +1,7 @@
 "use client";
 
+import { Select } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker";
 import Link from "next/link";
 import { useActionState } from "react";
 import { ArrowLeft, Save } from "lucide-react";
@@ -80,7 +82,7 @@ export function MoneyEntryForm({
           </label>
           <label className="field">
             <span>Category</span>
-            <select
+            <Select
               name="category"
               required
               defaultValue=""
@@ -94,19 +96,18 @@ export function MoneyEntryForm({
                   {moneyCategoryLabels[category]}
                 </option>
               ))}
-            </select>
+            </Select>
             {error("category") ? (
               <small className="field-error">{error("category")}</small>
             ) : null}
           </label>
           <label className="field">
             <span>Date</span>
-            <input
+            <DatePicker
               name="occurredAt"
-              type="date"
               required
               defaultValue={occurredAt}
-              aria-invalid={Boolean(error("occurredAt"))}
+              invalid={Boolean(error("occurredAt"))}
             />
             {error("occurredAt") ? (
               <small className="field-error">{error("occurredAt")}</small>
@@ -114,7 +115,7 @@ export function MoneyEntryForm({
           </label>
           <label className="field">
             <span>Related to</span>
-            <select name="related" defaultValue="">
+            <Select name="related" defaultValue="">
               <option value="">No related record</option>
               {[...groups.entries()].map(([group, options]) => (
                 <optgroup label={group} key={group}>
@@ -125,7 +126,7 @@ export function MoneyEntryForm({
                   ))}
                 </optgroup>
               ))}
-            </select>
+            </Select>
             {error("related") ? (
               <small className="field-error">{error("related")}</small>
             ) : null}

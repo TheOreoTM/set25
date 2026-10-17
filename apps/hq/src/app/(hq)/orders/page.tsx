@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Select } from "@/components/ui/select";
 import { ArrowRight, Plus, Search, SlidersHorizontal } from "lucide-react";
 import {
   FULFILMENT_STATUSES,
@@ -57,36 +58,36 @@ export default async function OrdersPage({
           </label>
           <label>
             <span className="sr-only">Fulfilment</span>
-            <select name="fulfilment" defaultValue={filters.fulfilment}>
+            <Select name="fulfilment" defaultValue={filters.fulfilment}>
               <option value="">All fulfilment</option>
               {FULFILMENT_STATUSES.map((status) => (
                 <option value={status} key={status}>
                   {fulfilmentStatusLabels[status]}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <label>
             <span className="sr-only">Payment</span>
-            <select name="payment" defaultValue={filters.payment}>
+            <Select name="payment" defaultValue={filters.payment}>
               <option value="">All payments</option>
               {Object.entries(paymentStatusLabels).map(([status, label]) => (
                 <option value={status} key={status}>
                   {label}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <label>
             <span className="sr-only">Source</span>
-            <select name="source" defaultValue={filters.source}>
+            <Select name="source" defaultValue={filters.source}>
               <option value="">All sources</option>
               {ORDER_SOURCES.map((source) => (
                 <option value={source} key={source}>
                   {orderSourceLabels[source]}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <button
             className="button button--secondary filter-submit"

@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/ui/select";
 import { useActionState, useState } from "react";
 import { Check, PackageCheck, X } from "lucide-react";
 import {
@@ -93,13 +94,13 @@ export function ShipmentStatusForm({
       <div className="form-grid">
         <label className="field">
           <span>New status</span>
-          <select name="status" defaultValue={options[0]}>
+          <Select name="status" defaultValue={options[0]}>
             {options.map((status) => (
               <option value={status} key={status}>
                 {importShipmentStatusLabels[status]}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         <label className="field">
           <span>Status note</span>

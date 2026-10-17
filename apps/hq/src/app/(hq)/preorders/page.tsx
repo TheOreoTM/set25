@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Select } from "@/components/ui/select";
 import { ArrowRight, Plus, Search, SlidersHorizontal } from "lucide-react";
 import {
   PREORDER_STATUSES,
@@ -57,25 +58,25 @@ export default async function PreordersPage({
           </label>
           <label>
             <span className="sr-only">Preorder status</span>
-            <select name="status" defaultValue={requestedStatus}>
+            <Select name="status" defaultValue={requestedStatus}>
               <option value="">All statuses</option>
               {PREORDER_STATUSES.map((status) => (
                 <option value={status} key={status}>
                   {preorderStatusLabels[status]}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <label>
             <span className="sr-only">Payment status</span>
-            <select name="payment" defaultValue={paymentFilter}>
+            <Select name="payment" defaultValue={paymentFilter}>
               <option value="">All payments</option>
               {Object.entries(paymentStatusLabels).map(([status, label]) => (
                 <option value={status} key={status}>
                   {label}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <button
             className="button button--secondary filter-submit"

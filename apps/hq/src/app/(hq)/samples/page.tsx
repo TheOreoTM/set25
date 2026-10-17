@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Select } from "@/components/ui/select";
 import { ArrowRight, Plus, Search, SlidersHorizontal } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { requireStaff } from "@/lib/auth/session";
@@ -47,14 +48,14 @@ export default async function SamplesPage({
           </label>
           <label>
             <span className="sr-only">Status</span>
-            <select name="status" defaultValue={filters.status}>
+            <Select name="status" defaultValue={filters.status}>
               <option value="">All statuses</option>
               {SAMPLE_STATUSES.map((status) => (
                 <option value={status} key={status}>
                   {sampleStatusLabels[status]}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <button
             className="button button--secondary filter-submit"

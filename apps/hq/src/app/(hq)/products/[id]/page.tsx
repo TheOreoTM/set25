@@ -16,6 +16,7 @@ import { PageHeader } from "@/components/page-header";
 import { StockAdjustment } from "@/components/catalog/stock-adjustment";
 import { getProductWithMovements } from "@/lib/catalog/data";
 import { requireStaff } from "@/lib/auth/session";
+import { FileAttachmentsPanel } from "@/components/files/file-attachments-panel";
 
 export const instant = false;
 
@@ -297,6 +298,11 @@ async function ProductDetail({
           </div>
         )}
       </section>
+      <FileAttachmentsPanel
+        staff={staff}
+        target={{ type: "PRODUCT", id: product.id }}
+        targetLabel={`${product.code} · ${product.name}`}
+      />
     </>
   );
 }

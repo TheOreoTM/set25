@@ -387,3 +387,91 @@ export const taskRelatedTypeLabels: Record<TaskRelatedTypeValue, string> = {
   CUSTOMER: "Customer",
   TEAM: "Team",
 };
+
+export const AMBASSADOR_STATUSES = [
+  "PROSPECT",
+  "ACTIVE",
+  "PAUSED",
+  "ENDED",
+] as const;
+export type AmbassadorStatusValue = (typeof AMBASSADOR_STATUSES)[number];
+export const ambassadorStatusLabels: Record<AmbassadorStatusValue, string> = {
+  PROSPECT: "Prospect",
+  ACTIVE: "Active",
+  PAUSED: "Paused",
+  ENDED: "Ended",
+};
+
+export const CONTENT_PLATFORMS = ["INSTAGRAM", "TIKTOK", "BOTH"] as const;
+export type ContentPlatformValue = (typeof CONTENT_PLATFORMS)[number];
+export const contentPlatformLabels: Record<ContentPlatformValue, string> = {
+  INSTAGRAM: "Instagram",
+  TIKTOK: "TikTok",
+  BOTH: "Instagram + TikTok",
+};
+
+export const CONTENT_TYPES = [
+  "REEL",
+  "POST",
+  "CAROUSEL",
+  "STORY",
+  "PHOTO",
+  "OTHER",
+] as const;
+export type ContentTypeValue = (typeof CONTENT_TYPES)[number];
+export const contentTypeLabels: Record<ContentTypeValue, string> = {
+  REEL: "Reel",
+  POST: "Post",
+  CAROUSEL: "Carousel",
+  STORY: "Story",
+  PHOTO: "Photo",
+  OTHER: "Other",
+};
+
+export const CONTENT_STATUSES = [
+  "IDEA",
+  "CREATING",
+  "READY",
+  "SCHEDULED",
+  "POSTED",
+  "CANCELLED",
+] as const;
+export type ContentStatusValue = (typeof CONTENT_STATUSES)[number];
+export const contentStatusLabels: Record<ContentStatusValue, string> = {
+  IDEA: "Idea",
+  CREATING: "Creating",
+  READY: "Ready",
+  SCHEDULED: "Scheduled",
+  POSTED: "Posted",
+  CANCELLED: "Cancelled",
+};
+
+export const FILE_ACCESS_LEVELS = [
+  "ALL_STAFF",
+  "MANAGER_AND_OWNER",
+  "OWNER_ONLY",
+] as const;
+export type FileAccessLevelValue = (typeof FILE_ACCESS_LEVELS)[number];
+export const fileAccessLevelLabels: Record<FileAccessLevelValue, string> = {
+  ALL_STAFF: "All Staff",
+  MANAGER_AND_OWNER: "Managers & Owner",
+  OWNER_ONLY: "Owner Only",
+};
+
+export const FILE_RETENTION_POLICIES = ["PERMANENT", "UNTIL_DATE"] as const;
+export type FileRetentionPolicyValue = (typeof FILE_RETENTION_POLICIES)[number];
+export const fileRetentionPolicyLabels: Record<
+  FileRetentionPolicyValue,
+  string
+> = {
+  PERMANENT: "Permanent",
+  UNTIL_DATE: "Until date",
+};
+
+export function formatFileSize(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  if (bytes < 1024 * 1024 * 1024)
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+}

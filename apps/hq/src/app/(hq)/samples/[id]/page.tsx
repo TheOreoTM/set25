@@ -14,6 +14,7 @@ import {
 import { getSample } from "@/lib/supply/data";
 import { formatDate, formatDateTime } from "@/lib/supply/presentation";
 import { formatSampleNumber, sampleStatusLabels } from "@set25/shared";
+import { FileAttachmentsPanel } from "@/components/files/file-attachments-panel";
 
 export const instant = false;
 
@@ -221,6 +222,11 @@ export default async function SamplePage({
           </section>
         </aside>
       </div>
+      <FileAttachmentsPanel
+        staff={staff}
+        target={{ type: "SAMPLE", id: id }}
+        targetLabel={`${formatSampleNumber(sample.sampleNumber)} · ${sample.name}`}
+      />
     </main>
   );
 }

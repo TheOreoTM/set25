@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/ui/select";
 import { useActionState, useRef, useState } from "react";
 import { Minus, PackagePlus, Plus, X } from "lucide-react";
 import {
@@ -123,7 +124,7 @@ export function StockAdjustment({
           <div className="dialog-body" hidden={Boolean(reviewing)}>
             <label className="field">
               <span>Variant</span>
-              <select
+              <Select
                 name="variantId"
                 defaultValue={defaultVariantId ?? variants[0]?.id}
                 required
@@ -134,7 +135,7 @@ export function StockAdjustment({
                     available
                   </option>
                 ))}
-              </select>
+              </Select>
               {errors.variantId ? (
                 <small className="field-error">{errors.variantId[0]}</small>
               ) : null}
@@ -171,13 +172,13 @@ export function StockAdjustment({
             <div className="form-grid form-grid--dialog">
               <label className="field">
                 <span>Adjustment type</span>
-                <select name="type" defaultValue="OPENING_STOCK" required>
+                <Select name="type" defaultValue="OPENING_STOCK" required>
                   {INVENTORY_MOVEMENT_TYPES.map((type) => (
                     <option value={type} key={type}>
                       {inventoryMovementLabels[type]}
                     </option>
                   ))}
-                </select>
+                </Select>
                 {errors.type ? (
                   <small className="field-error">{errors.type[0]}</small>
                 ) : null}

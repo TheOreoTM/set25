@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/page-header";
 import { getTeam } from "@/lib/commerce/data";
 import { requireStaff } from "@/lib/auth/session";
 import { paymentSummary } from "@/lib/commerce/money";
+import { FileAttachmentsPanel } from "@/components/files/file-attachments-panel";
 
 export const instant = false;
 
@@ -139,6 +140,11 @@ export default async function TeamDetailPage({
           </div>
         )}
       </section>
+      <FileAttachmentsPanel
+        staff={staff}
+        target={{ type: "TEAM", id: id }}
+        targetLabel={team.name}
+      />
     </main>
   );
 }

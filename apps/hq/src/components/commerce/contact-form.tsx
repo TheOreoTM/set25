@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/ui/select";
 import Link from "next/link";
 import { useActionState } from "react";
 import { ArrowLeft, Save } from "lucide-react";
@@ -140,13 +141,13 @@ export function TeamForm({
           />
           <label className="field">
             <span>Team type</span>
-            <select name="type" defaultValue={defaults.type ?? "OTHER"}>
+            <Select name="type" defaultValue={defaults.type ?? "OTHER"}>
               {TEAM_TYPES.map((type) => (
                 <option value={type} key={type}>
                   {teamTypeLabels[type]}
                 </option>
               ))}
-            </select>
+            </Select>
             {error("type") ? (
               <small className="field-error">{error("type")}</small>
             ) : null}

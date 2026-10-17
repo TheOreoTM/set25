@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { Select } from "@/components/ui/select";
 import Link from "next/link";
 import { ArrowRight, Plus, Search, SlidersHorizontal } from "lucide-react";
 import {
@@ -76,25 +77,25 @@ async function ProductList({
           </label>
           <label>
             <span className="sr-only">Filter by status</span>
-            <select name="status" defaultValue={filters.status}>
+            <Select name="status" defaultValue={filters.status}>
               <option value="">All statuses</option>
               {PRODUCT_STATUSES.map((status) => (
                 <option value={status} key={status}>
                   {productStatusLabels[status]}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <label>
             <span className="sr-only">Filter by category</span>
-            <select name="category" defaultValue={filters.category}>
+            <Select name="category" defaultValue={filters.category}>
               <option value="">All categories</option>
               {PRODUCT_CATEGORIES.map((category) => (
                 <option value={category} key={category}>
                   {productCategoryLabels[category]}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <button
             className="button button--secondary filter-submit"

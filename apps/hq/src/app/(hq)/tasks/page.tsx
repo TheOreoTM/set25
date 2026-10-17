@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Select } from "@/components/ui/select";
 import { Pencil, Plus, Search, SlidersHorizontal } from "lucide-react";
 import {
   TASK_PRIORITIES,
@@ -125,36 +126,36 @@ export default async function TasksPage({
           </label>
           <label className="field">
             <span className="sr-only">Status</span>
-            <select name="status" defaultValue={query.status ?? ""}>
+            <Select name="status" defaultValue={query.status ?? ""}>
               <option value="">All statuses</option>
               {TASK_STATUSES.map((status) => (
                 <option value={status} key={status}>
                   {taskStatusLabels[status]}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <label className="field">
             <span className="sr-only">Priority</span>
-            <select name="priority" defaultValue={query.priority ?? ""}>
+            <Select name="priority" defaultValue={query.priority ?? ""}>
               <option value="">All priorities</option>
               {TASK_PRIORITIES.map((priority) => (
                 <option value={priority} key={priority}>
                   {taskPriorityLabels[priority]}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <label className="field">
             <span className="sr-only">Assignee</span>
-            <select name="assignee" defaultValue={query.assignee ?? ""}>
+            <Select name="assignee" defaultValue={query.assignee ?? ""}>
               <option value="">All assignees</option>
               {result.staff.map((person) => (
                 <option value={person.id} key={person.id}>
                   {person.name}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <button className="button button--secondary" type="submit">
             <SlidersHorizontal aria-hidden="true" /> Apply

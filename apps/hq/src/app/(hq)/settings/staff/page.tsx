@@ -1,4 +1,5 @@
 import { LockKeyhole, ShieldAlert } from "lucide-react";
+import { Select } from "@/components/ui/select";
 import { db } from "@set25/database";
 import { PageHeader } from "@/components/page-header";
 import { CreateStaffForm } from "@/components/staff/create-staff-form";
@@ -122,7 +123,7 @@ export default async function StaffPage({
                   className="inline-role-form"
                 >
                   <input type="hidden" name="staffId" value={member.id} />
-                  <select
+                  <Select
                     name="role"
                     defaultValue={member.role}
                     aria-label={`Role for ${member.name}`}
@@ -130,7 +131,7 @@ export default async function StaffPage({
                     <option value="OWNER">Owner</option>
                     <option value="MANAGER">Manager</option>
                     <option value="STAFF">Staff</option>
-                  </select>
+                  </Select>
                   <button type="submit">Save</button>
                 </form>
               </span>

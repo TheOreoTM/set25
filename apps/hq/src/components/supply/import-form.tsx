@@ -1,5 +1,7 @@
 "use client";
 
+import { Select } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker";
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { ArrowLeft, Pencil, Plus, Save, Trash2, X } from "lucide-react";
@@ -75,21 +77,21 @@ export function ImportForm({
           </label>
           <label className="field">
             <span>Estimated departure</span>
-            <input name="estimatedDeparture" type="date" />
+            <DatePicker name="estimatedDeparture" />
           </label>
           <label className="field">
             <span>Estimated arrival</span>
-            <input name="estimatedArrival" type="date" />
+            <DatePicker name="estimatedArrival" />
           </label>
           <label className="field">
             <span>Cost allocation</span>
-            <select name="costAllocationMethod" defaultValue="BY_QUANTITY">
+            <Select name="costAllocationMethod" defaultValue="BY_QUANTITY">
               {COST_ALLOCATION_METHODS.map((method) => (
                 <option key={method} value={method}>
                   {costAllocationMethodLabels[method]}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
         </div>
       </section>
@@ -114,7 +116,7 @@ export function ImportForm({
                 </span>
                 <label className="field">
                   <span>Purchase order item</span>
-                  <select
+                  <Select
                     name="purchaseOrderLineId"
                     value={line.purchaseOrderLineId}
                     required
@@ -133,7 +135,7 @@ export function ImportForm({
                         left
                       </option>
                     ))}
-                  </select>
+                  </Select>
                   {selected ? (
                     <small>
                       {selected.sku} · maximum {selected.remaining}{" "}
@@ -318,7 +320,7 @@ function ShipmentCostForm({
         />
         <label className="field">
           <span>Allocation method</span>
-          <select
+          <Select
             name="costAllocationMethod"
             defaultValue={defaults.costAllocationMethod}
           >
@@ -327,7 +329,7 @@ function ShipmentCostForm({
                 {costAllocationMethodLabels[method]}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
       </div>
       <FormResult state={state} />

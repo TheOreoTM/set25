@@ -1,5 +1,6 @@
 "use client";
 
+import { Select } from "@/components/ui/select";
 import { useActionState } from "react";
 import { UserPlus } from "lucide-react";
 import { createStaffAction } from "@/lib/staff/actions";
@@ -53,10 +54,10 @@ export function CreateStaffForm() {
         </label>
         <label className="field">
           <span>Role</span>
-          <select name="role" defaultValue="STAFF" required>
+          <Select name="role" defaultValue="STAFF" required>
             <option value="MANAGER">Manager</option>
             <option value="STAFF">Staff</option>
-          </select>
+          </Select>
           {state.errors?.role ? (
             <small className="field-error">{state.errors.role[0]}</small>
           ) : null}

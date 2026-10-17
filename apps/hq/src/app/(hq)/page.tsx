@@ -4,7 +4,9 @@ import {
   Check,
   ClipboardList,
   CircleDollarSign,
+  FileArchive,
   PackageCheck,
+  Sparkles,
   ShoppingBag,
   Truck,
 } from "lucide-react";
@@ -15,12 +17,19 @@ import {
   formatMVR,
   formatImportNumber,
   formatOrderNumber,
+  contentPlatformLabels,
+  contentStatusLabels,
+  contentTypeLabels,
   importShipmentStatusLabels,
   paymentStatusLabels,
   taskPriorityLabels,
   taskStatusLabels,
 } from "@set25/shared";
 import { PageHeader } from "@/components/page-header";
+import { requireStaff } from "@/lib/auth/session";
+import { getDashboardContent } from "@/lib/content/data";
+import { formatPublishAt, publishTile } from "@/lib/content/presentation";
+import { getExpiredFileCount } from "@/lib/files/data";
 import { getCommerceDashboard } from "@/lib/commerce/data";
 import { paymentSummary } from "@/lib/commerce/money";
 import { getProfitSummary } from "@/lib/money/data";
@@ -38,13 +47,17 @@ export default async function DashboardPage({
 }) {
   await connection();
   const monthRange = getDateRange({ preset: "this-month" });
-  const [query, commerce, supply, tasks, profit] = await Promise.all([
-    searchParams,
-    getCommerceDashboard(),
-    getSupplyDashboard(),
-    getDashboardTasks(),
-    getProfitSummary(monthRange.start, monthRange.end),
-  ]);
+  const staff = await requireStaff();
+  const [query, commerce, supply, tasks, profit, content, expiredFiles] =
+    await Promise.all([
+      searchParams,
+      getCommerceDashboard(),
+      getSupplyDashboard(),
+      getDashboardTasks(),
+      getProfitSummary(monthRange.start, monthRange.end),
+      getDashboardContent(),
+      getExpiredFileCount(staff.role),
+    ]);
   const { start: today, end: tomorrow } = getTodayRange();
   const taskAttention = tasks.filter(
     (task) =>
@@ -59,7 +72,9 @@ export default async function DashboardPage({
     commerce.lowStock.length +
     supply.attention.length +
     supply.unassignedPurchaseOrders.length +
-    taskAttention.length;
+    taskAttention.length +
+    content.overdue.length +
+    (expiredFiles ? 1 : 0);
   const monthName = new Intl.DateTimeFormat("en", {
     month: "long",
     timeZone: "Indian/Maldives",
@@ -259,6 +274,42 @@ export default async function DashboardPage({
                 <ArrowRight className="row-arrow" aria-hidden="true" />
               </Link>
             ))}
+            {content.overdue.slice(0, 4).map((item) => (
+              <Link
+                className="attention-item attention-item--attention"
+                href={`/content/${item.id}`}
+                key={item.id}
+              >
+                <span className="attention-icon">
+                  <Sparkles aria-hidden="true" />
+                </span>
+                <span className="attention-copy">
+                  <span>Content not posted</span>
+                  <strong>{item.title}</strong>
+                  <small>
+                    Planned {formatPublishAt(item.publishAt!)} ·{" "}
+                    {item.owner ?? "No owner"}
+                  </small>
+                </span>
+                <ArrowRight className="row-arrow" aria-hidden="true" />
+              </Link>
+            ))}
+            {expiredFiles ? (
+              <Link className="attention-item" href="/files?retention=expired">
+                <span className="attention-icon">
+                  <FileArchive aria-hidden="true" />
+                </span>
+                <span className="attention-copy">
+                  <span>File retention ended</span>
+                  <strong>
+                    {expiredFiles} {expiredFiles === 1 ? "file" : "files"} to
+                    review
+                  </strong>
+                  <small>Blocked from download until removed</small>
+                </span>
+                <ArrowRight className="row-arrow" aria-hidden="true" />
+              </Link>
+            ) : null}
             {!attentionCount ? (
               <div className="inline-empty inline-empty--panel">
                 <p>Nothing needs attention right now.</p>
@@ -399,7 +450,7 @@ export default async function DashboardPage({
           <div className="section-heading">
             <div>
               <p className="kicker">Planning · Live</p>
-              <h2 id="tasks-title">Upcoming tasks</h2>
+              <h2 id="tasks-title">Upcoming</h2>
             </div>
             <Link className="text-link" href="/tasks">
               View tasks <ArrowRight aria-hidden="true" />
@@ -435,6 +486,38 @@ export default async function DashboardPage({
               </div>
             ) : null}
           </div>
+          {content.upcoming.length ? (
+            <>
+              <p className="dashboard-subhead">Content · next 7 days</p>
+              <div className="task-list">
+                {content.upcoming.map((item) => {
+                  const tile = publishTile(item.publishAt);
+                  return (
+                    <Link
+                      className="task-item"
+                      href={`/content/${item.id}`}
+                      key={item.id}
+                    >
+                      <span className="task-date">
+                        <strong>{tile.day}</strong>
+                        <small>{tile.month}</small>
+                      </span>
+                      <span>
+                        <strong>{item.title}</strong>
+                        <small>
+                          {contentPlatformLabels[item.platform]} ·{" "}
+                          {contentTypeLabels[item.type]} ·{" "}
+                          {contentStatusLabels[item.status]}
+                          {item.owner ? ` · ${item.owner}` : ""}
+                        </small>
+                      </span>
+                      <ArrowRight aria-hidden="true" />
+                    </Link>
+                  );
+                })}
+              </div>
+            </>
+          ) : null}
         </section>
         <section className="panel" aria-labelledby="activity-title">
           <div className="section-heading">

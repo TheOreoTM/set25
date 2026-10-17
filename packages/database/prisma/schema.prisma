@@ -157,6 +157,54 @@ enum TaskPriority {
   HIGH
 }
 
+enum AmbassadorStatus {
+  PROSPECT
+  ACTIVE
+  PAUSED
+  ENDED
+}
+
+enum ContentPlatform {
+  INSTAGRAM
+  TIKTOK
+  BOTH
+}
+
+enum ContentType {
+  REEL
+  POST
+  CAROUSEL
+  STORY
+  PHOTO
+  OTHER
+}
+
+enum ContentStatus {
+  IDEA
+  CREATING
+  READY
+  SCHEDULED
+  POSTED
+  CANCELLED
+}
+
+enum FileStatus {
+  PENDING
+  AVAILABLE
+  DELETED
+}
+
+enum FileAccessLevel {
+  ALL_STAFF
+  MANAGER_AND_OWNER
+  OWNER_ONLY
+}
+
+enum FileRetentionPolicy {
+  PERMANENT
+  UNTIL_DATE
+}
+
 model StaffUser {
   id           String    @id @default(cuid())
   name         String
@@ -169,16 +217,22 @@ model StaffUser {
   updatedAt    DateTime  @updatedAt
 
   inventoryMovements InventoryMovement[]
-  createdOrders      Order[]               @relation("OrderCreatedBy")
-  recordedPayments   Payment[]             @relation("PaymentRecordedBy")
-  purchaseOrders     PurchaseOrder[]       @relation("PurchaseOrderCreatedBy")
-  importShipments    ImportShipment[]      @relation("ImportShipmentCreatedBy")
-  importEvents       ImportShipmentEvent[] @relation("ImportEventCreatedBy")
-  samples            Sample[]              @relation("SampleCreatedBy")
-  sampleEvaluations  SampleEvaluation[]    @relation("SampleEvaluationRecordedBy")
-  moneyEntries       MoneyEntry[]          @relation("MoneyEntryCreatedBy")
-  createdTasks       Task[]                @relation("TaskCreatedBy")
-  assignedTasks      Task[]                @relation("TaskAssignedTo")
+  createdOrders      Order[]                  @relation("OrderCreatedBy")
+  recordedPayments   Payment[]                @relation("PaymentRecordedBy")
+  purchaseOrders     PurchaseOrder[]          @relation("PurchaseOrderCreatedBy")
+  importShipments    ImportShipment[]         @relation("ImportShipmentCreatedBy")
+  importEvents       ImportShipmentEvent[]    @relation("ImportEventCreatedBy")
+  samples            Sample[]                 @relation("SampleCreatedBy")
+  sampleEvaluations  SampleEvaluation[]       @relation("SampleEvaluationRecordedBy")
+  moneyEntries       MoneyEntry[]             @relation("MoneyEntryCreatedBy")
+  createdTasks       Task[]                   @relation("TaskCreatedBy")
+  assignedTasks      Task[]                   @relation("TaskAssignedTo")
+  ambassadors        Ambassador[]             @relation("AmbassadorCreatedBy")
+  ambassadorGrants   AmbassadorProductGrant[] @relation("AmbassadorGrantCreatedBy")
+  createdContent     ContentItem[]            @relation("ContentCreatedBy")
+  ownedContent       ContentItem[]            @relation("ContentOwner")
+  uploadedFiles      FileAsset[]              @relation("FileCreatedBy")
+  deletedFiles       FileAsset[]              @relation("FileDeletedBy")
 
   @@index([role, active])
 }
@@ -201,6 +255,8 @@ model Product {
   variants         ProductVariant[]
   supplierProducts SupplierProduct[]
   samples          Sample[]
+  contentItems     ContentItem[]
+  files            FileAsset[]
 
   @@index([status])
   @@index([category])
@@ -224,11 +280,12 @@ model ProductVariant {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  product            Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product            Product                  @relation(fields: [productId], references: [id], onDelete: Cascade)
   inventoryMovements InventoryMovement[]
   orderLines         OrderLine[]
   purchaseOrderLines PurchaseOrderLine[]
   samples            Sample[]
+  ambassadorGrants   AmbassadorProductGrant[]
 
   @@index([productId])
   @@index([active])
@@ -246,8 +303,9 @@ model InventoryMovement {
   idempotencyKey String?               @unique
   createdAt      DateTime              @default(now())
 
-  variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Restrict)
-  createdBy StaffUser?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  variant         ProductVariant          @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  createdBy       StaffUser?              @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  ambassadorGrant AmbassadorProductGrant?
 
   @@index([variantId, createdAt])
   @@index([createdById, createdAt])
@@ -266,6 +324,7 @@ model Customer {
 
   orders Order[]
   tasks  Task[]
+  files  FileAsset[]
 
   @@index([name])
   @@index([phone])
@@ -285,6 +344,7 @@ model Team {
 
   orders Order[]
   tasks  Task[]
+  files  FileAsset[]
 
   @@index([name])
   @@index([type])
@@ -320,6 +380,7 @@ model Order {
   preorder     PreorderDetail?
   moneyEntries MoneyEntry[]
   tasks        Task[]
+  files        FileAsset[]
 
   @@index([createdAt])
   @@index([fulfilmentStatus, createdAt])
@@ -407,6 +468,7 @@ model Supplier {
   samples        Sample[]
   moneyEntries   MoneyEntry[]
   tasks          Task[]
+  files          FileAsset[]
 
   @@index([name])
   @@index([active])
@@ -457,6 +519,7 @@ model PurchaseOrder {
   preorders    PreorderDetail[]
   moneyEntries MoneyEntry[]
   tasks        Task[]
+  files        FileAsset[]
 
   @@index([supplierId, createdAt])
   @@index([status, expectedAt])
@@ -512,6 +575,7 @@ model ImportShipment {
   events       ImportShipmentEvent[]
   moneyEntries MoneyEntry[]
   tasks        Task[]
+  files        FileAsset[]
 
   @@index([status, estimatedArrival])
   @@index([createdAt])
@@ -572,6 +636,7 @@ model Sample {
   createdBy   StaffUser          @relation("SampleCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
   evaluations SampleEvaluation[]
   tasks       Task[]
+  files       FileAsset[]
 
   @@index([supplierId, createdAt])
   @@index([status, createdAt])
@@ -675,4 +740,156 @@ model Task {
   @@index([sampleId])
   @@index([customerId])
   @@index([teamId])
+}
+
+model Ambassador {
+  id                String           @id @default(cuid())
+  name              String
+  team              String?
+  position          String?
+  instagramHandle   String?
+  phone             String?
+  email             String?
+  status            AmbassadorStatus @default(PROSPECT)
+  // Stored uppercase so the unique index is case-insensitive in practice.
+  discountCode      String?          @unique
+  discountPercent   Decimal?         @db.Decimal(5, 2)
+  commissionPercent Decimal?         @db.Decimal(5, 2)
+  startedAt         DateTime?
+  endedAt           DateTime?
+  notes             String?
+  createdById       String
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  createdBy    StaffUser                @relation("AmbassadorCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  grants       AmbassadorProductGrant[]
+  contentItems ContentItem[]
+  files        FileAsset[]
+
+  @@index([status, name])
+  @@index([name])
+}
+
+// Append-only record of stock given to an ambassador. Product identity is
+// snapshotted so later catalogue edits do not rewrite history.
+model AmbassadorProductGrant {
+  id                  String   @id @default(cuid())
+  ambassadorId        String
+  variantId           String
+  inventoryMovementId String   @unique
+  quantity            Int
+  productName         String
+  productCode         String
+  sku                 String
+  size                String?
+  color               String?
+  notes               String?
+  givenAt             DateTime
+  createdById         String
+  idempotencyKey      String   @unique
+  createdAt           DateTime @default(now())
+
+  ambassador        Ambassador        @relation(fields: [ambassadorId], references: [id], onDelete: Restrict)
+  variant           ProductVariant    @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  inventoryMovement InventoryMovement @relation(fields: [inventoryMovementId], references: [id], onDelete: Restrict)
+  createdBy         StaffUser         @relation("AmbassadorGrantCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([ambassadorId, givenAt])
+  @@index([variantId])
+  @@index([createdById, createdAt])
+}
+
+model ContentItem {
+  id           String          @id @default(cuid())
+  title        String
+  platform     ContentPlatform
+  type         ContentType
+  status       ContentStatus   @default(IDEA)
+  hook         String?
+  caption      String?
+  notes        String?
+  publishAt    DateTime?
+  postedAt     DateTime?
+  externalUrl  String?
+  productId    String?
+  ambassadorId String?
+  ownerId      String?
+  createdById  String
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  product    Product?    @relation(fields: [productId], references: [id], onDelete: SetNull)
+  ambassador Ambassador? @relation(fields: [ambassadorId], references: [id], onDelete: SetNull)
+  owner      StaffUser?  @relation("ContentOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  createdBy  StaffUser   @relation("ContentCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  files      FileAsset[]
+
+  @@index([status, publishAt])
+  @@index([publishAt])
+  @@index([platform])
+  @@index([ownerId, status])
+  @@index([productId])
+  @@index([ambassadorId])
+}
+
+// Private HQ file metadata. Bytes live in private object storage under a
+// generated storageKey; access is always re-checked server-side.
+model FileAsset {
+  id              String              @id @default(cuid())
+  originalName    String
+  description     String?
+  storageKey      String              @unique
+  mimeType        String
+  sizeBytes       Int
+  status          FileStatus          @default(PENDING)
+  accessLevel     FileAccessLevel     @default(MANAGER_AND_OWNER)
+  retentionPolicy FileRetentionPolicy @default(PERMANENT)
+  retentionUntil  DateTime?
+
+  // At most one attachment target (database check).
+  productId        String?
+  customerId       String?
+  teamId           String?
+  orderId          String?
+  supplierId       String?
+  purchaseOrderId  String?
+  importShipmentId String?
+  sampleId         String?
+  ambassadorId     String?
+  contentItemId    String?
+
+  createdById String
+  createdAt   DateTime  @default(now())
+  finalizedAt DateTime?
+  deletedAt   DateTime?
+  deletedById String?
+
+  product        Product?        @relation(fields: [productId], references: [id], onDelete: Restrict)
+  customer       Customer?       @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  team           Team?           @relation(fields: [teamId], references: [id], onDelete: Restrict)
+  order          Order?          @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  supplier       Supplier?       @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  purchaseOrder  PurchaseOrder?  @relation(fields: [purchaseOrderId], references: [id], onDelete: Restrict)
+  importShipment ImportShipment? @relation(fields: [importShipmentId], references: [id], onDelete: Restrict)
+  sample         Sample?         @relation(fields: [sampleId], references: [id], onDelete: Restrict)
+  ambassador     Ambassador?     @relation(fields: [ambassadorId], references: [id], onDelete: Restrict)
+  contentItem    ContentItem?    @relation(fields: [contentItemId], references: [id], onDelete: Restrict)
+  createdBy      StaffUser       @relation("FileCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  deletedBy      StaffUser?      @relation("FileDeletedBy", fields: [deletedById], references: [id], onDelete: Restrict)
+
+  @@index([status, createdAt])
+  @@index([accessLevel, status])
+  @@index([retentionUntil])
+  @@index([createdById, createdAt])
+  @@index([productId])
+  @@index([customerId])
+  @@index([teamId])
+  @@index([orderId])
+  @@index([supplierId])
+  @@index([purchaseOrderId])
+  @@index([importShipmentId])
+  @@index([sampleId])
+  @@index([ambassadorId])
+  @@index([contentItemId])
 }

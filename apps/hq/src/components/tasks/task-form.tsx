@@ -1,5 +1,7 @@
 "use client";
 
+import { Select } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker";
 import Link from "next/link";
 import { useActionState } from "react";
 import { ArrowLeft, Check, Save } from "lucide-react";
@@ -80,17 +82,17 @@ export function TaskForm({
           </label>
           <label className="field">
             <span>Status</span>
-            <select name="status" defaultValue={defaults?.status ?? "TODO"}>
+            <Select name="status" defaultValue={defaults?.status ?? "TODO"}>
               {TASK_STATUSES.map((status) => (
                 <option value={status} key={status}>
                   {taskStatusLabels[status]}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <label className="field">
             <span>Priority</span>
-            <select
+            <Select
               name="priority"
               defaultValue={defaults?.priority ?? "MEDIUM"}
             >
@@ -99,22 +101,18 @@ export function TaskForm({
                   {taskPriorityLabels[priority]}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <label className="field">
             <span>Due date</span>
-            <input
-              name="dueAt"
-              type="date"
-              defaultValue={defaults?.dueAt ?? ""}
-            />
+            <DatePicker name="dueAt" defaultValue={defaults?.dueAt ?? ""} />
             {error("dueAt") ? (
               <small className="field-error">{error("dueAt")}</small>
             ) : null}
           </label>
           <label className="field">
             <span>Assignee</span>
-            <select
+            <Select
               name="assignedToId"
               defaultValue={defaults?.assignedToId ?? ""}
             >
@@ -124,14 +122,14 @@ export function TaskForm({
                   {person.name}
                 </option>
               ))}
-            </select>
+            </Select>
             {error("assignedToId") ? (
               <small className="field-error">{error("assignedToId")}</small>
             ) : null}
           </label>
           <label className="field field--wide">
             <span>Related record</span>
-            <select name="related" defaultValue={defaults?.related ?? ""}>
+            <Select name="related" defaultValue={defaults?.related ?? ""}>
               <option value="">No related record</option>
               {[...groups.entries()].map(([group, options]) => (
                 <optgroup label={group} key={group}>
@@ -142,7 +140,7 @@ export function TaskForm({
                   ))}
                 </optgroup>
               ))}
-            </select>
+            </Select>
             {error("related") ? (
               <small className="field-error">{error("related")}</small>
             ) : null}
@@ -201,13 +199,13 @@ export function TaskStatusControl({
       <form action={formAction} className="task-status-form">
         <label>
           <span className="sr-only">Change task status</span>
-          <select name="status" defaultValue={current} disabled={pending}>
+          <Select name="status" defaultValue={current} disabled={pending}>
             {TASK_STATUSES.map((status) => (
               <option value={status} key={status}>
                 {taskStatusLabels[status]}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         <button
           className="button button--secondary"

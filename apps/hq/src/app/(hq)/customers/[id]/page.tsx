@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/page-header";
 import { getCustomer } from "@/lib/commerce/data";
 import { requireStaff } from "@/lib/auth/session";
 import { paymentSummary } from "@/lib/commerce/money";
+import { FileAttachmentsPanel } from "@/components/files/file-attachments-panel";
 
 export const instant = false;
 
@@ -95,6 +96,11 @@ export default async function CustomerDetailPage({
         </section>
       ) : null}
       <OrderHistory orders={customer.orders} />
+      <FileAttachmentsPanel
+        staff={staff}
+        target={{ type: "CUSTOMER", id: id }}
+        targetLabel={customer.name}
+      />
     </main>
   );
 }

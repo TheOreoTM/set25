@@ -152,9 +152,27 @@ Financial naming in the interface remains plain English even where the model use
 - `Task` stores title, optional description, To Do/Doing/Waiting/Done status, Low/Medium/High priority, optional due date, creator, optional active staff assignee, completion timestamp, and timestamps.
 - Explicit nullable relations support one Order/Preorder, Purchase Order, Import, Supplier, Sample, Customer, or Team link. A database check enforces at most one linked record and another keeps Done status aligned with `completedAt`.
 - Owner and Manager may create, edit, assign, and change task status. Staff may view all Tasks and change only the status of Tasks assigned to themselves; they cannot create, edit, reassign, or reprioritise Tasks. The status action enforces this server-side.
-- `Ambassador` and agreement/activity records
-- `ContentItem` and publishing schedule
-- `FileAsset` / attachment metadata with secure object storage references
+
+### Ambassadors
+
+- `Ambassador` stores name, optional team/club, position, Instagram handle (without `@`), phone, email, Prospect/Active/Paused/Ended status, optional discount code, discount %, commission %, start/end dates, notes, and creator. Ambassadors are never hard-deleted; Ended is the terminal state.
+- `discountCode` is normalised to uppercase and unique, which makes it case-insensitively unique; a database check enforces uppercase. Percentages are `Decimal(5,2)` constrained to 0–100. These are reference terms only: Store redemption and commission payouts are deferred to Milestone 8.
+- `AmbassadorProductGrant` is an append-only giveaway record: ambassador, variant, quantity (> 0), given date, notes, creator, unique idempotency key, and a unique link to the `InventoryMovement` it created. It snapshots product name, product code, SKU, size, and colour so history stays readable after catalogue edits. All its relations are `Restrict`.
+
+Giving product runs in one transaction: verify the ambassador is not Ended and the variant is active, conditionally decrement `stockOnHand` only when enough stock exists, create a `GIVEAWAY` movement (`-quantity`, acting staff, ambassador reference, derived idempotency key), then create the grant. A repeated submission with the same key returns without deducting again; a concurrent duplicate loses on the unique key.
+
+### Content
+
+- `ContentItem` stores title, platform (Instagram/TikTok/Both), type (Reel/Post/Carousel/Story/Photo/Other), status, hook, caption, notes, `publishAt`, `postedAt`, `externalUrl`, optional product, optional ambassador, optional owner (responsible staff), and creator (who made the record). Owner and creator are separate on purpose.
+- Status is Idea, Creating, Ready, Scheduled, Posted, or Cancelled. Database checks require `publishAt` when Scheduled and keep `postedAt` set exactly when Posted. Server actions set `postedAt` on the first move to Posted and clear it when leaving Posted. Any other transition is allowed; there is no state machine.
+- Product and ambassador links use `SetNull`; content is planning data and never publishes anything.
+
+### Files
+
+- `FileAsset` holds metadata for a private object: display-only original name, optional note, generated unique `storageKey`, canonical MIME type, size, status (Pending/Available/Deleted), access level (All Staff / Managers & Owner / Owner Only), retention policy (Permanent / Until date) with `retentionUntil`, creator, `finalizedAt`, `deletedAt`, and `deletedBy`. No storage credentials or public URLs are stored.
+- Attachments use explicit nullable foreign keys on `FileAsset` (Product, Customer, Team, Order/Preorder, Supplier, Purchase Order, Import, Sample, Ambassador, Content), with a database check allowing at most one target. A file with no target is a general document. Attachment relations are `Restrict`, so a record with files cannot be silently hard-deleted.
+- Database checks: size > 0; Permanent ⇔ no `retentionUntil`; Until date ⇔ `retentionUntil` set; Available ⇒ `finalizedAt` set; Deleted ⇔ `deletedAt` set.
+- Expiry is derived from `retentionUntil` (the start of the chosen Maldives date) rather than stored as a separate status, so it can never drift from the date.
 
 ## Modelling rules for later milestones
 

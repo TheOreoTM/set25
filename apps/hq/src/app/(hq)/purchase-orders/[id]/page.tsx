@@ -15,6 +15,7 @@ import {
   importShipmentStatusLabels,
   purchaseOrderStatusLabels,
 } from "@set25/shared";
+import { FileAttachmentsPanel } from "@/components/files/file-attachments-panel";
 
 export const instant = false;
 
@@ -258,6 +259,11 @@ export default async function PurchaseOrderPage({
           </div>
         )}
       </section>
+      <FileAttachmentsPanel
+        staff={staff}
+        target={{ type: "PURCHASE_ORDER", id: id }}
+        targetLabel={formatPurchaseOrderNumber(po.purchaseOrderNumber)}
+      />
     </main>
   );
 }

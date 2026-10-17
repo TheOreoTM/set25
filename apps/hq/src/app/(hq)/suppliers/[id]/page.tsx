@@ -17,6 +17,7 @@ import {
   purchaseOrderStatusLabels,
   sampleStatusLabels,
 } from "@set25/shared";
+import { FileAttachmentsPanel } from "@/components/files/file-attachments-panel";
 
 export const instant = false;
 
@@ -317,6 +318,11 @@ export default async function SupplierPage({
           )}
         </section>
       </div>
+      <FileAttachmentsPanel
+        staff={staff}
+        target={{ type: "SUPPLIER", id: id }}
+        targetLabel={supplier.name}
+      />
     </main>
   );
 }

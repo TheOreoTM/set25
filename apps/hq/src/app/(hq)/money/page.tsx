@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Select } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -259,15 +261,23 @@ function DateRangeBar({
         <input type="hidden" name="preset" value="custom" />
         <label>
           <span>From</span>
-          <input
-            type="date"
+          <DatePicker
+            key={`from-${range.from}-${range.to}`}
             name="from"
             defaultValue={query.from ?? range.from}
+            required
+            compact
           />
         </label>
         <label>
           <span>To</span>
-          <input type="date" name="to" defaultValue={query.to ?? range.to} />
+          <DatePicker
+            key={`to-${range.from}-${range.to}`}
+            name="to"
+            defaultValue={query.to ?? range.to}
+            required
+            compact
+          />
         </label>
         <button className="button button--secondary" type="submit">
           Apply
@@ -298,15 +308,15 @@ function MoneyFilters({ query }: { query: SearchParams }) {
       </label>
       <label className="field">
         <span className="sr-only">Direction</span>
-        <select name="direction" defaultValue={query.direction ?? ""}>
+        <Select name="direction" defaultValue={query.direction ?? ""}>
           <option value="">All directions</option>
           <option value="IN">Money In</option>
           <option value="OUT">Money Out</option>
-        </select>
+        </Select>
       </label>
       <label className="field">
         <span className="sr-only">Category</span>
-        <select name="category" defaultValue={query.category ?? ""}>
+        <Select name="category" defaultValue={query.category ?? ""}>
           <option value="">All categories</option>
           <option value="ORDER_PAYMENT">Order Payments / Refunds</option>
           {MONEY_CATEGORIES.map((category) => (
@@ -314,7 +324,7 @@ function MoneyFilters({ query }: { query: SearchParams }) {
               {moneyCategoryLabels[category]}
             </option>
           ))}
-        </select>
+        </Select>
       </label>
       <button className="button button--secondary" type="submit">
         <SlidersHorizontal aria-hidden="true" /> Apply

@@ -1,5 +1,7 @@
 "use client";
 
+import { Select } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker";
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { ArrowLeft, Plus, Save, Trash2 } from "lucide-react";
@@ -86,7 +88,7 @@ export function PurchaseOrderForm({
         <div className="form-grid">
           <label className="field">
             <span>Supplier</span>
-            <select
+            <Select
               name="supplierId"
               required
               defaultValue={defaults?.supplierId ?? ""}
@@ -99,7 +101,7 @@ export function PurchaseOrderForm({
                   {supplier.name}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <label className="field">
             <span>Supplier reference</span>
@@ -133,9 +135,8 @@ export function PurchaseOrderForm({
           </label>
           <label className="field">
             <span>ETA</span>
-            <input
+            <DatePicker
               name="expectedAt"
-              type="date"
               defaultValue={defaults?.expectedAt ?? ""}
             />
           </label>
@@ -158,7 +159,7 @@ export function PurchaseOrderForm({
               </span>
               <label className="field">
                 <span>Variant</span>
-                <select
+                <Select
                   name="variantId"
                   required
                   value={line.variantId}
@@ -172,7 +173,7 @@ export function PurchaseOrderForm({
                       {variant.label} · {variant.sku}
                     </option>
                   ))}
-                </select>
+                </Select>
               </label>
               <label className="field">
                 <span>Ordered</span>
