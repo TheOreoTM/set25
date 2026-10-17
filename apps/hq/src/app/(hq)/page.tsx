@@ -43,7 +43,7 @@ export default async function DashboardPage({
     getDashboardTasks(),
     getProfitSummary(monthRange.start, monthRange.end),
   ]);
-  const { start: today } = getTodayRange();
+  const { start: today, end: tomorrow } = getTodayRange();
   const taskAttention = tasks.filter(
     (task) =>
       task.priority === "HIGH" ||
@@ -259,7 +259,7 @@ export default async function DashboardPage({
             ))}
             {!attentionCount ? (
               <div className="inline-empty inline-empty--panel">
-                <p>No urgent commerce or stock issues right now.</p>
+                <p>Nothing needs attention right now.</p>
               </div>
             ) : null}
           </div>
@@ -415,6 +415,7 @@ export default async function DashboardPage({
                   <span>
                     <strong>{task.title}</strong>
                     <small>
+                      {taskDueState(task.dueAt, today, tomorrow)} ·{" "}
                       {taskPriorityLabels[task.priority]} ·{" "}
                       {taskStatusLabels[task.status]}
                       {task.assignedTo
@@ -481,6 +482,14 @@ function formatDate(value: Date) {
     minute: "2-digit",
     timeZone: "Indian/Maldives",
   }).format(value);
+}
+
+function taskDueState(value: string | null, today: Date, tomorrow: Date) {
+  if (!value) return "No due date";
+  const due = new Date(value);
+  if (due < today) return "Overdue";
+  if (due < tomorrow) return "Due today";
+  return "Upcoming";
 }
 
 function dashboardTaskDate(value: string | null) {

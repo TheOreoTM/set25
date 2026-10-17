@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Pencil, Plus, SlidersHorizontal } from "lucide-react";
+import { Pencil, Plus, Search, SlidersHorizontal } from "lucide-react";
 import {
   TASK_PRIORITIES,
   TASK_STATUSES,
@@ -58,13 +58,14 @@ export default async function TasksPage({
       ) : null}
       {query.forbidden === "write" ? (
         <div className="form-message form-message--error" role="alert">
-          Staff access to Tasks is read-only.
+          Staff can update the status of tasks assigned to them. Creating and
+          editing tasks needs an Owner or Manager.
         </div>
       ) : null}
 
       <section className="task-summary-strip" aria-label="Task summary">
         <TaskSummary
-          href="/tasks?view=attention"
+          href="/tasks?view=overdue"
           label="Overdue"
           value={result.summary.overdue}
           urgent={result.summary.overdue > 0}
@@ -96,11 +97,23 @@ export default async function TasksPage({
             Clear filters
           </Link>
         </div>
+        <nav className="task-view-tabs" aria-label="Task views">
+          {taskViews.map(([value, label]) => (
+            <Link
+              className={(query.view ?? "") === value ? "is-active" : ""}
+              href={value ? `/tasks?view=${value}` : "/tasks"}
+              key={value}
+            >
+              {label}
+            </Link>
+          ))}
+        </nav>
         <form action="/tasks" className="task-filter-bar">
           {query.view ? (
             <input type="hidden" name="view" value={query.view} />
           ) : null}
           <label className="search-field">
+            <Search aria-hidden="true" />
             <span className="sr-only">Search tasks</span>
             <input
               name="search"
@@ -147,7 +160,7 @@ export default async function TasksPage({
         </form>
 
         {result.tasks.length ? (
-          <div className="task-list">
+          <div className="task-queue">
             <div className="task-row task-row--head">
               <span>Priority</span>
               <span>Task</span>
@@ -198,7 +211,7 @@ export default async function TasksPage({
                     {due ? formatDate(due) : "No due date"}
                   </span>
                   <span data-label="Status">
-                    {canWrite ? (
+                    {canWrite || task.assignedTo?.id === staff.id ? (
                       <TaskStatusControl
                         action={updateTaskStatusAction.bind(null, task.id)}
                         current={task.status}
@@ -265,16 +278,31 @@ function TaskSummary({
   );
 }
 
+const taskViews = [
+  ["", "Open"],
+  ["attention", "Needs Attention"],
+  ["overdue", "Overdue"],
+  ["today", "Today"],
+  ["upcoming", "Upcoming"],
+  ["waiting", "Waiting"],
+  ["completed", "Completed"],
+  ["all", "All"],
+] as const;
+
 function viewTitle(view?: string) {
   return view === "attention"
     ? "Needs attention"
-    : view === "today"
-      ? "Due today"
-      : view === "upcoming"
-        ? "Upcoming"
-        : view === "waiting"
-          ? "Waiting"
-          : view === "completed"
-            ? "Completed"
-            : "All tasks";
+    : view === "overdue"
+      ? "Overdue"
+      : view === "today"
+        ? "Due today"
+        : view === "upcoming"
+          ? "Upcoming"
+          : view === "waiting"
+            ? "Waiting"
+            : view === "completed"
+              ? "Completed"
+              : view === "all"
+                ? "All tasks"
+                : "Open tasks";
 }

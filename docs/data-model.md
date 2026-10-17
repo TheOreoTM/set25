@@ -151,7 +151,7 @@ Financial naming in the interface remains plain English even where the model use
 
 - `Task` stores title, optional description, To Do/Doing/Waiting/Done status, Low/Medium/High priority, optional due date, creator, optional active staff assignee, completion timestamp, and timestamps.
 - Explicit nullable relations support one Order/Preorder, Purchase Order, Import, Supplier, Sample, Customer, or Team link. A database check enforces at most one linked record and another keeps Done status aligned with `completedAt`.
-- Owner and Manager may create, edit, assign, and change task status. Staff are read-only for Tasks during rapid development.
+- Owner and Manager may create, edit, assign, and change task status. Staff may view all Tasks and change only the status of Tasks assigned to themselves; they cannot create, edit, reassign, or reprioritise Tasks. The status action enforces this server-side.
 - `Ambassador` and agreement/activity records
 - `ContentItem` and publishing schedule
 - `FileAsset` / attachment metadata with secure object storage references

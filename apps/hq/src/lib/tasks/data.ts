@@ -43,21 +43,26 @@ export async function getTasks(filters: TaskFilters = {}) {
   )
     ? (filters.priority as TaskPriorityValue)
     : undefined;
+  // The default view is open work; an explicit status filter still wins below.
   const viewWhere: Prisma.TaskWhereInput =
-    filters.view === "today"
-      ? { status: { not: "DONE" }, dueAt: { gte: today, lt: tomorrow } }
-      : filters.view === "upcoming"
-        ? { status: { not: "DONE" }, dueAt: { gte: tomorrow } }
-        : filters.view === "waiting"
-          ? { status: "WAITING" }
-          : filters.view === "completed"
-            ? { status: "DONE" }
-            : filters.view === "attention"
-              ? {
-                  status: { not: "DONE" },
-                  OR: [{ dueAt: { lt: tomorrow } }, { priority: "HIGH" }],
-                }
-              : {};
+    filters.view === "all"
+      ? {}
+      : filters.view === "overdue"
+        ? { status: { not: "DONE" }, dueAt: { lt: today } }
+        : filters.view === "today"
+          ? { status: { not: "DONE" }, dueAt: { gte: today, lt: tomorrow } }
+          : filters.view === "upcoming"
+            ? { status: { not: "DONE" }, dueAt: { gte: tomorrow } }
+            : filters.view === "waiting"
+              ? { status: "WAITING" }
+              : filters.view === "completed"
+                ? { status: "DONE" }
+                : filters.view === "attention"
+                  ? {
+                      status: { not: "DONE" },
+                      OR: [{ dueAt: { lt: tomorrow } }, { priority: "HIGH" }],
+                    }
+                  : { status: { not: "DONE" } };
   const search = filters.search?.trim();
   const [tasks, summaryRecords, staff] = await Promise.all([
     db.task.findMany({

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Check, Save } from "lucide-react";
 import {
   TASK_PRIORITIES,
   TASK_STATUSES,
@@ -197,29 +197,45 @@ export function TaskStatusControl({
     initialTaskFormState,
   );
   return (
-    <form action={formAction} className="task-status-control">
-      <label>
-        <span className="sr-only">Change task status</span>
-        <select name="status" defaultValue={current} disabled={pending}>
-          {TASK_STATUSES.map((status) => (
-            <option value={status} key={status}>
-              {taskStatusLabels[status]}
-            </option>
-          ))}
-        </select>
-      </label>
-      <button
-        className="button button--secondary"
-        type="submit"
-        disabled={pending}
-      >
-        {pending ? "Saving…" : "Update"}
-      </button>
+    <div className="task-status-control">
+      <form action={formAction} className="task-status-form">
+        <label>
+          <span className="sr-only">Change task status</span>
+          <select name="status" defaultValue={current} disabled={pending}>
+            {TASK_STATUSES.map((status) => (
+              <option value={status} key={status}>
+                {taskStatusLabels[status]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button
+          className="button button--secondary"
+          type="submit"
+          disabled={pending}
+        >
+          {pending ? "Saving…" : "Update"}
+        </button>
+      </form>
+      {current !== "DONE" ? (
+        <form action={formAction}>
+          <input type="hidden" name="status" value="DONE" />
+          <button
+            className="button button--dark task-done-button"
+            type="submit"
+            disabled={pending}
+            aria-label="Mark done"
+            title="Mark done"
+          >
+            <Check aria-hidden="true" />
+          </button>
+        </form>
+      ) : null}
       {state.message ? (
         <small className="field-error" role="alert">
           {state.message}
         </small>
       ) : null}
-    </form>
+    </div>
   );
 }

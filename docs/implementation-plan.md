@@ -76,7 +76,7 @@ Implemented:
 - optional Money links to Supplier, Purchase Order, Import, or Order plus payment context on PO and Import detail pages;
 - operational Tasks with status, priority, due date, assignee, and one validated business-record relation;
 - live dashboard Sales Profit, incomplete stock valuation context, task attention, and upcoming tasks;
-- Owner/Manager Money and Task mutations with Staff read-only access;
+- Owner/Manager Money and Task mutations; Staff read-only Money and status-only updates on their own assigned Tasks;
 - Decimal-safe server/client DTOs and responsive Money/Task rows and forms.
 
 Deferred deliberately: bank reconciliation, formal bookkeeping, double entry, tax filing, payroll, invoice generation, reversal tooling, original-currency ledgers, equipment accounting treatment, task comments, notifications, recurring tasks, Kanban, and Milestone 7 entities.

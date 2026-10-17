@@ -3,7 +3,7 @@
 import { db } from "@set25/database";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireOperationalAccess } from "@/lib/auth/session";
+import { requireOperationalAccess, requireStaff } from "@/lib/auth/session";
 import {
   validateTask,
   validateTaskStatus,
@@ -126,15 +126,18 @@ export async function updateTaskStatusAction(
   _state: TaskFormState,
   formData: FormData,
 ): Promise<TaskFormState> {
-  await requireOperationalAccess();
+  // Staff may move only tasks assigned to themselves; Owner/Manager may move any.
+  const staff = await requireStaff();
   const status = validateTaskStatus(formData);
   if (!status) return failure("Choose a valid task status.");
   try {
     const task = await db.task.findUnique({
       where: { id },
-      select: { completedAt: true },
+      select: { completedAt: true, assignedToId: true },
     });
     if (!task) return failure("This task no longer exists.");
+    if (staff.role === "STAFF" && task.assignedToId !== staff.id)
+      return failure("Staff can only update tasks assigned to them.");
     await db.task.update({
       where: { id },
       data: {

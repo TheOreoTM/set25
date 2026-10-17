@@ -114,7 +114,7 @@ Money definitions are explicit:
 
 Manual entries are MVR-only in this milestone; foreign payments are recorded at their MVR equivalent. Entries are historical and append-only with no casual edit/delete workflow. Money may link to one Supplier, Purchase Order, Import, or Order without changing the linked record's operational cost facts.
 
-Tasks are a small planning layer rather than a project-management system. A Task has a status, priority, optional due date, optional active staff assignee, and at most one explicit link to an Order/Preorder, Purchase Order, Import, Supplier, Sample, Customer, or Team. Owner and Manager can create, edit, assign, and update Tasks. Staff can read Money and Tasks but cannot mutate them in this milestone.
+Tasks are a small planning layer rather than a project-management system. A Task has a status, priority, optional due date, optional active staff assignee, and at most one explicit link to an Order/Preorder, Purchase Order, Import, Supplier, Sample, Customer, or Team. Owner and Manager can create, edit, assign, and update Tasks. Staff can read Money and Tasks, cannot record Money, and can only change the status of Tasks assigned to themselves (including Mark Done). Task views cover Open, Needs Attention (overdue, due today, or High priority), Overdue, Today, Upcoming, Waiting, Completed, and All.
 
 The dashboard uses live monthly Sales Profit and real open Tasks. Formal bookkeeping, bank reconciliation, double entry, tax reporting, payroll, balance sheets, professional profit-and-loss statements, reversals, and equipment accounting remain deferred.
 

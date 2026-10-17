@@ -1,5 +1,10 @@
 import Link from "next/link";
-import { ArrowDownLeft, ArrowUpRight, SlidersHorizontal } from "lucide-react";
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  Search,
+  SlidersHorizontal,
+} from "lucide-react";
 import {
   MONEY_CATEGORIES,
   formatMVR,
@@ -73,8 +78,16 @@ export default async function MoneyPage({
       <DateRangeBar query={query} range={report.range} />
 
       <section className="money-summary-strip" aria-label="Money summary">
-        <MoneyMetric label="Money In" value={formatMVR(summary.moneyIn)} />
-        <MoneyMetric label="Money Out" value={formatMVR(summary.moneyOut)} />
+        <MoneyMetric
+          label="Money In"
+          value={formatMVR(summary.moneyIn)}
+          note="Order payments less refunds, plus manual income"
+        />
+        <MoneyMetric
+          label="Money Out"
+          value={formatMVR(summary.moneyOut)}
+          note="Recorded payments and expenses"
+        />
         <MoneyMetric
           label="Sales Profit"
           value={
@@ -273,6 +286,7 @@ function MoneyFilters({ query }: { query: SearchParams }) {
         </>
       ) : null}
       <label className="search-field">
+        <Search aria-hidden="true" />
         <span className="sr-only">Search money history</span>
         <input
           name="search"

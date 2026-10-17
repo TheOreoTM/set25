@@ -26,6 +26,9 @@ body {
   background: var(--white);
   color: var(--onyx);
   font-family: var(--font-interface);
+  /* HQ interface base size. Any text a component forgets to size falls back
+     here instead of the browser's 16px default. */
+  font-size: 12px;
 }
 a {
   color: inherit;
@@ -341,6 +344,11 @@ svg {
   font-weight: 600;
   letter-spacing: -0.01em;
   line-height: 1;
+}
+.section-heading > p {
+  margin: 0;
+  color: var(--steel);
+  font-size: 10px;
 }
 .section-heading > svg {
   width: 19px;
@@ -1534,6 +1542,8 @@ td strong {
 .field .field-error,
 .field-error {
   color: var(--danger);
+  font-size: 9px;
+  line-height: 1.5;
 }
 .input-with-prefix {
   display: grid;
@@ -1838,6 +1848,12 @@ td strong {
   display: grid;
   gap: 18px;
   padding: 22px;
+}
+.dialog-body > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.65;
 }
 .dialog-body[hidden] {
   display: none;
@@ -2513,6 +2529,9 @@ td strong {
   display: grid;
   gap: 4px;
 }
+.receive-line strong {
+  font-size: 10.5px;
+}
 .receive-line small {
   color: var(--steel);
   font-size: 9px;
@@ -2566,6 +2585,9 @@ td strong {
 .evaluation-list header > div {
   display: grid;
   gap: 4px;
+}
+.evaluation-list header strong {
+  font-size: 11px;
 }
 .evaluation-list header small,
 .evaluation-list p {
@@ -3189,6 +3211,9 @@ td strong {
 .payment-entry > div {
   display: grid;
   gap: 3px;
+}
+.payment-entry > div strong {
+  font-size: 11px;
 }
 .payment-entry small,
 .payment-entry p {
@@ -3963,7 +3988,9 @@ td strong {
   border: 1px solid var(--line);
   background: var(--paper);
 }
-.supply-detail-page .detail-section-head {
+.supply-detail-page .detail-section-head,
+.money-page .detail-section-head,
+.tasks-page .detail-section-head {
   display: flex;
   min-height: 38px;
   align-items: flex-start;
@@ -3971,14 +3998,17 @@ td strong {
   gap: 16px;
   margin-bottom: 16px;
 }
-.supply-detail-page .detail-section-head h2 {
+.supply-detail-page .detail-section-head h2,
+.money-page .detail-section-head h2,
+.tasks-page .detail-section-head h2 {
   margin: 3px 0 0;
   font-family: var(--font-display);
   font-size: 21px;
   font-weight: 600;
   line-height: 1;
 }
-.supply-detail-page .detail-section-head > span {
+.supply-detail-page .detail-section-head > span,
+.money-page .detail-section-head > span {
   color: var(--steel);
   font-size: 9px;
 }
@@ -4070,6 +4100,10 @@ td strong {
   display: grid;
   gap: 4px;
 }
+.compact-empty strong {
+  color: var(--onyx);
+  font-size: 11px;
+}
 .compact-empty p {
   margin: 0;
   color: var(--steel);
@@ -4105,6 +4139,9 @@ td strong {
 .terms-row > div:not(.terms-actions) {
   display: grid;
   gap: 4px;
+}
+.terms-product strong {
+  font-size: 11px;
 }
 .terms-row small {
   color: var(--steel);
@@ -4355,6 +4392,9 @@ td strong {
   display: grid;
   gap: 3px;
 }
+.shipment-event-list strong {
+  font-size: 10.5px;
+}
 .shipment-event-list p,
 .shipment-event-list small {
   margin: 0;
@@ -4598,11 +4638,41 @@ td strong {
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-.money-custom-range input {
+.money-custom-range input,
+.money-filter-bar .search-field input,
+.task-filter-bar .search-field input {
+  width: 100%;
   height: 36px;
   border: 1px solid var(--line);
+  border-radius: 0;
   background: var(--paper);
+  color: var(--onyx);
   padding: 0 9px;
+  font-family: "Inter Variable", Inter, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  outline: none;
+}
+.money-filter-bar .search-field input,
+.task-filter-bar .search-field input {
+  height: 42px;
+  padding-left: 39px;
+}
+.money-filter-bar .search-field input::placeholder,
+.task-filter-bar .search-field input::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+.money-filter-bar .search-field svg,
+.task-filter-bar .search-field svg {
+  top: 13px;
+}
+.money-custom-range input:focus,
+.money-filter-bar .search-field input:focus,
+.task-filter-bar .search-field input:focus {
+  border-color: var(--onyx);
+  box-shadow: 0 0 0 2px var(--volt);
 }
 .money-custom-range .button {
   min-height: 36px;
@@ -4619,7 +4689,7 @@ td strong {
 .task-summary-strip > a {
   display: grid;
   min-height: 104px;
-  align-content: center;
+  align-content: start;
   gap: 6px;
   padding: 15px 17px;
   border-right: 1px solid var(--line);
@@ -4671,7 +4741,7 @@ td strong {
 .profitability-grid > div {
   display: grid;
   min-height: 112px;
-  align-content: center;
+  align-content: start;
   gap: 7px;
   padding: 14px;
   border-right: 1px solid var(--line);
@@ -4702,19 +4772,21 @@ td strong {
 .money-filter-bar,
 .task-filter-bar {
   display: grid;
-  grid-template-columns: minmax(210px, 1.5fr) repeat(
-      2,
-      minmax(140px, 0.7fr)
-    ) auto;
+  grid-template-columns:
+    minmax(210px, 1.5fr) repeat(2, minmax(140px, 0.7fr))
+    auto;
   align-items: end;
   gap: 8px;
   margin-bottom: 12px;
 }
 .task-filter-bar {
-  grid-template-columns: minmax(210px, 1.5fr) repeat(
-      3,
-      minmax(125px, 0.65fr)
-    ) auto;
+  grid-template-columns:
+    minmax(210px, 1.5fr) repeat(3, minmax(125px, 0.65fr))
+    auto;
+}
+.money-filter-bar .search-field,
+.task-filter-bar .search-field {
+  width: 100%;
 }
 .money-filter-bar .field,
 .task-filter-bar .field {
@@ -4727,15 +4799,14 @@ td strong {
   height: 42px;
 }
 .money-activity-list,
-.task-list {
+.task-queue {
   border-top: 1px solid var(--line);
 }
 .money-activity-row {
   display: grid;
-  grid-template-columns: 95px minmax(220px, 1.6fr) minmax(
-      110px,
-      0.75fr
-    ) 105px 105px 110px;
+  grid-template-columns:
+    95px minmax(220px, 1.6fr) minmax(110px, 0.75fr)
+    105px 105px 110px;
   align-items: center;
   gap: 13px;
   min-height: 64px;
@@ -4803,10 +4874,9 @@ td strong {
 }
 .task-row {
   display: grid;
-  grid-template-columns: 76px minmax(220px, 1.5fr) minmax(100px, 0.65fr) minmax(
-      100px,
-      0.65fr
-    ) 105px 195px 38px;
+  grid-template-columns:
+    76px minmax(220px, 1.5fr) minmax(100px, 0.65fr) minmax(100px, 0.65fr)
+    105px 230px 38px;
   align-items: center;
   gap: 12px;
   min-height: 68px;
@@ -4844,8 +4914,43 @@ td strong {
 }
 .task-status-control {
   display: grid;
-  grid-template-columns: minmax(100px, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
   gap: 5px;
+}
+.task-status-form {
+  display: grid;
+  grid-template-columns: minmax(90px, 1fr) auto;
+  gap: 5px;
+}
+.task-status-control .field-error {
+  grid-column: 1 / -1;
+}
+.task-status-control .task-done-button {
+  width: 34px;
+  padding: 0;
+}
+.task-done-button svg {
+  width: 14px;
+}
+.task-view-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.task-view-tabs a {
+  min-height: 34px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 650;
+}
+.task-view-tabs a.is-active {
+  border-color: var(--onyx);
+  background: var(--onyx);
+  color: var(--white);
 }
 .task-status-control select {
   width: 100%;
@@ -4986,7 +5091,13 @@ td strong {
   .profitability-grid > div:first-child {
     border-top: 0;
   }
-  .task-status-control {
-    grid-template-columns: 1fr auto;
+  .task-view-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin-inline: -2px;
+    padding-bottom: 2px;
+  }
+  .task-view-tabs a {
+    flex: 0 0 auto;
   }
 }
