@@ -9,12 +9,17 @@ import {
     paymentStatusLabels,
     paymentTypeLabels,
     preorderStatusLabels,
+    formatPurchaseOrderNumber,
+    formatImportNumber,
+    importShipmentStatusLabels,
 } from "@set25/shared";
 import { PageHeader } from "@/components/page-header";
 import { getOrder } from "@/lib/commerce/data";
 import { paymentSummary } from "@/lib/commerce/money";
 import type { StaffIdentity } from "@/lib/auth/types";
 import { FulfilmentControl, PaymentControl, PreorderStatusControl, TerminalOrderControls } from "./order-controls";
+import { PreorderSupplyForm } from "@/components/supply/sample-forms";
+import { linkPreorderPurchaseOrderAction } from "@/lib/supply/actions";
 
 export type OrderDetailRecord = NonNullable<Awaited<ReturnType<typeof getOrder>>>;
 
@@ -24,12 +29,14 @@ export function OrderDetail({
     paymentKey,
     preorder = false,
     saved,
+    purchaseOrders = [],
 }: {
     order: OrderDetailRecord;
     staff: StaffIdentity;
     paymentKey: string;
     preorder?: boolean;
     saved?: string;
+    purchaseOrders?: { id: string; label: string }[];
 }) {
     const number = formatOrderNumber(order.orderNumber);
     const payment = paymentSummary(order.total, order.payments);
@@ -267,11 +274,57 @@ export function OrderDetail({
                                     <dt>Supplier Ordered</dt>
                                     <dd>{order.preorder.supplierOrdered ? "Yes" : "Not yet"}</dd>
                                 </div>
+                                <div>
+                                    <dt>Purchase Order</dt>
+                                    <dd>
+                                        {order.preorder.purchaseOrder ? (
+                                            <Link href={`/purchase-orders/${order.preorder.purchaseOrder.id}`}>
+                                                {formatPurchaseOrderNumber(
+                                                    order.preorder.purchaseOrder.purchaseOrderNumber,
+                                                )}
+                                            </Link>
+                                        ) : (
+                                            "Not linked"
+                                        )}
+                                    </dd>
+                                </div>
+                                {(() => {
+                                    const imports =
+                                        order.preorder.purchaseOrder?.lines.flatMap((line) =>
+                                            line.shipmentLines.map((shipmentLine) => shipmentLine.importShipment),
+                                        ) ?? [];
+                                    const shipment = imports.find((item) => item.status !== "CANCELLED") ?? imports[0];
+                                    return shipment ? (
+                                        <>
+                                            <div>
+                                                <dt>Import</dt>
+                                                <dd>
+                                                    <Link href={`/imports/${shipment.id}`}>
+                                                        {formatImportNumber(shipment.importNumber)}
+                                                    </Link>
+                                                </dd>
+                                            </div>
+                                            <div>
+                                                <dt>Shipment Status</dt>
+                                                <dd>{importShipmentStatusLabels[shipment.status]}</dd>
+                                            </div>
+                                        </>
+                                    ) : null;
+                                })()}
                             </dl>
                             {order.preorder.notes ? (
                                 <div className="order-notes">
                                     <span>Preorder notes</span>
                                     <p>{order.preorder.notes}</p>
+                                </div>
+                            ) : null}
+                            {canWrite ? (
+                                <div className="embedded-editor">
+                                    <PreorderSupplyForm
+                                        action={linkPreorderPurchaseOrderAction.bind(null, order.preorder.id)}
+                                        purchaseOrders={purchaseOrders}
+                                        current={order.preorder.purchaseOrderId}
+                                    />
                                 </div>
                             ) : null}
                         </section>

@@ -11,6 +11,7 @@ import {
   CircleDollarSign,
   ClipboardList,
   FileArchive,
+  FileText,
   Handshake,
   House,
   Import,
@@ -50,6 +51,7 @@ const groups = [
     label: "Supply",
     items: [
       { label: "Suppliers", href: "/suppliers", icon: Truck },
+      { label: "Purchase Orders", href: "/purchase-orders", icon: FileText },
       { label: "Imports", href: "/imports", icon: Import },
       { label: "Samples", href: "/samples", icon: PackageSearch },
     ],
@@ -86,6 +88,10 @@ const staffRoutes = new Set([
   "/preorders",
   "/customers",
   "/teams",
+  "/suppliers",
+  "/purchase-orders",
+  "/imports",
+  "/samples",
 ]);
 
 function NavigationLinks({

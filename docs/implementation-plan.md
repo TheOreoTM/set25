@@ -44,9 +44,24 @@ Implemented:
 
 Returns, reservations, supplier/import links, shipment tracking, Store checkout, CRM automation, team rosters, and profitability remain later milestones.
 
-## Milestone 5 — Supply operations
+## Milestone 5 — Supply operations (complete)
 
-Implement suppliers, purchase orders, imports, incoming stock, shipment events, receiving, samples, and Actual Cost to SET25 calculations.
+Implemented:
+
+- Suppliers and lightweight supplier product/terms references;
+- sequence-backed Purchase Orders with immutable placed-line snapshots and manual FX snapshots;
+- consolidated Import Shipments spanning multiple POs and suppliers;
+- forward-moving, append-only shipment status history;
+- live Incoming Stock on Stock, Product detail, and supply records;
+- Decimal-safe Actual Cost to SET25 previews by quantity or product value;
+- one atomic, idempotent receiving transaction with `PURCHASE_RECEIVED` movements;
+- weighted-average current ProductVariant Cost Each while retaining historical import costs;
+- live Dashboard Incoming and shipment attention;
+- Samples with multiple 1–5 tester evaluations and average scores;
+- optional Preorder-to-Purchase-Order supply context;
+- Owner/Manager mutations and Staff read-only supply access.
+
+Deferred deliberately: general Money In/Out and expense ledgers, freight invoice currencies beyond entered MVR equivalents, attachments, destructive receipt correction, reservations, per-preorder allocation, and multi-location inventory.
 
 ## Milestone 6 — Money and planning
 

@@ -212,3 +212,88 @@ export function getPaymentStatus(
 export function formatOrderNumber(value: number) {
   return `S25-${String(value).padStart(6, "0")}`;
 }
+
+export function formatPurchaseOrderNumber(value: number) {
+  return `PO-${String(value).padStart(6, "0")}`;
+}
+
+export function formatImportNumber(value: number) {
+  return `IMP-${String(value).padStart(6, "0")}`;
+}
+
+export function formatSampleNumber(value: number) {
+  return `SMP-${String(value).padStart(6, "0")}`;
+}
+
+export const PURCHASE_ORDER_STATUSES = [
+  "DRAFT",
+  "PLACED",
+  "CLOSED",
+  "CANCELLED",
+] as const;
+export type PurchaseOrderStatusValue = (typeof PURCHASE_ORDER_STATUSES)[number];
+export const purchaseOrderStatusLabels: Record<
+  PurchaseOrderStatusValue,
+  string
+> = {
+  DRAFT: "Draft",
+  PLACED: "Placed",
+  CLOSED: "Closed",
+  CANCELLED: "Cancelled",
+};
+
+export const IMPORT_SHIPMENT_STATUSES = [
+  "PLANNING",
+  "SUPPLIER_SHIPPING",
+  "CHINA_WAREHOUSE",
+  "READY_TO_SHIP",
+  "IN_TRANSIT",
+  "MALDIVES_CUSTOMS",
+  "READY_FOR_COLLECTION",
+  "RECEIVED",
+  "CANCELLED",
+] as const;
+export type ImportShipmentStatusValue =
+  (typeof IMPORT_SHIPMENT_STATUSES)[number];
+export const importShipmentStatusLabels: Record<
+  ImportShipmentStatusValue,
+  string
+> = {
+  PLANNING: "Planning",
+  SUPPLIER_SHIPPING: "Supplier Shipping",
+  CHINA_WAREHOUSE: "China Warehouse",
+  READY_TO_SHIP: "Ready to Ship",
+  IN_TRANSIT: "In Transit",
+  MALDIVES_CUSTOMS: "Maldives Customs",
+  READY_FOR_COLLECTION: "Ready for Collection",
+  RECEIVED: "Received",
+  CANCELLED: "Cancelled",
+};
+
+export const COST_ALLOCATION_METHODS = [
+  "BY_QUANTITY",
+  "BY_PRODUCT_VALUE",
+] as const;
+export type CostAllocationMethodValue =
+  (typeof COST_ALLOCATION_METHODS)[number];
+export const costAllocationMethodLabels: Record<
+  CostAllocationMethodValue,
+  string
+> = {
+  BY_QUANTITY: "By Quantity",
+  BY_PRODUCT_VALUE: "By Product Value",
+};
+
+export const SAMPLE_STATUSES = [
+  "PENDING",
+  "APPROVED",
+  "REJECTED",
+  "RETEST",
+] as const;
+export type SampleStatusValue = (typeof SAMPLE_STATUSES)[number];
+export const sampleStatusLabels: Record<SampleStatusValue, string> = {
+  PENDING: "Pending",
+  APPROVED: "Approved",
+  REJECTED: "Rejected",
+  RETEST: "Retest",
+};

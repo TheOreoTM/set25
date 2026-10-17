@@ -13,12 +13,16 @@ import { connection } from "next/server";
 import {
   fulfilmentStatusLabels,
   formatMVR,
+  formatImportNumber,
   formatOrderNumber,
+  importShipmentStatusLabels,
   paymentStatusLabels,
 } from "@set25/shared";
 import { PageHeader } from "@/components/page-header";
 import { getCommerceDashboard } from "@/lib/commerce/data";
 import { paymentSummary } from "@/lib/commerce/money";
+import { getSupplyDashboard } from "@/lib/supply/data";
+import { formatDate as formatSupplyDate } from "@/lib/supply/presentation";
 
 const tasks = [
   {
@@ -42,14 +46,19 @@ export default async function DashboardPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   await connection();
-  const [query, commerce] = await Promise.all([
+  const [query, commerce, supply] = await Promise.all([
     searchParams,
     getCommerceDashboard(),
+    getSupplyDashboard(),
   ]);
   const openOrders = commerce.monthOrders.filter(
     (order) => !["COMPLETED", "CANCELLED"].includes(order.fulfilmentStatus),
   ).length;
-  const attentionCount = commerce.attention.length + commerce.lowStock.length;
+  const attentionCount =
+    commerce.attention.length +
+    commerce.lowStock.length +
+    supply.attention.length +
+    supply.unassignedPurchaseOrders.length;
   const monthName = new Intl.DateTimeFormat("en", {
     month: "long",
     timeZone: "Indian/Maldives",
@@ -99,7 +108,8 @@ export default async function DashboardPage({
       ) : null}
       <div className="demo-notice" role="note">
         <span>Live commerce</span> Orders, payments, sales, and stock are live.
-        Profit, incoming supply, and tasks remain marked as deferred or demo.
+        Incoming supply is live. Profit and tasks remain marked as deferred or
+        demo.
       </div>
 
       <section aria-labelledby="month-summary-title">
@@ -185,6 +195,48 @@ export default async function DashboardPage({
                 <ArrowRight className="row-arrow" aria-hidden="true" />
               </Link>
             ))}
+            {supply.attention.map((shipment) => (
+              <Link
+                className="attention-item attention-item--attention"
+                href={`/imports/${shipment.id}`}
+                key={shipment.id}
+              >
+                <span className="attention-icon">
+                  <Truck aria-hidden="true" />
+                </span>
+                <span className="attention-copy">
+                  <span>Shipment needs action</span>
+                  <strong>
+                    {formatImportNumber(shipment.importNumber)} ·{" "}
+                    {importShipmentStatusLabels[shipment.status]}
+                  </strong>
+                  <small>
+                    {shipment.estimatedArrival &&
+                    shipment.estimatedArrival < new Date()
+                      ? "ETA overdue"
+                      : `ETA ${formatSupplyDate(shipment.estimatedArrival)}`}
+                  </small>
+                </span>
+                <ArrowRight className="row-arrow" aria-hidden="true" />
+              </Link>
+            ))}
+            {supply.unassignedPurchaseOrders.map((po) => (
+              <Link
+                className="attention-item"
+                href={`/purchase-orders/${po.id}`}
+                key={po.id}
+              >
+                <span className="attention-icon">
+                  <PackageCheck aria-hidden="true" />
+                </span>
+                <span className="attention-copy">
+                  <span>Not assigned to an import</span>
+                  <strong>{po.supplier.name}</strong>
+                  <small>Placed purchase order</small>
+                </span>
+                <ArrowRight className="row-arrow" aria-hidden="true" />
+              </Link>
+            ))}
             {!attentionCount ? (
               <div className="inline-empty inline-empty--panel">
                 <p>No urgent commerce or stock issues right now.</p>
@@ -196,38 +248,44 @@ export default async function DashboardPage({
         <section className="panel incoming" aria-labelledby="incoming-title">
           <div className="section-heading">
             <div>
-              <p className="kicker">Supply · Demo</p>
+              <p className="kicker">Supply · Live</p>
               <h2 id="incoming-title">Incoming</h2>
             </div>
             <Truck aria-hidden="true" />
           </div>
-          <div className="incoming-hero">
-            <div>
-              <p>Milestone 5</p>
-              <h3>Supply operations deferred</h3>
+          {supply.shipments.length ? (
+            <div className="dashboard-incoming-list">
+              {supply.shipments.map((shipment) => (
+                <Link
+                  className="incoming-hero"
+                  href={`/imports/${shipment.id}`}
+                  key={shipment.id}
+                >
+                  <div>
+                    <p>{formatImportNumber(shipment.importNumber)}</p>
+                    <h3>
+                      {shipment.lines.reduce(
+                        (sum, line) => sum + line.quantityShipped,
+                        0,
+                      )}{" "}
+                      units · ETA {formatSupplyDate(shipment.estimatedArrival)}
+                    </h3>
+                  </div>
+                  <span
+                    className={`status status--${shipment.status.toLowerCase()}`}
+                  >
+                    {importShipmentStatusLabels[shipment.status]}
+                  </span>
+                </Link>
+              ))}
             </div>
-            <span className="status">Planned</span>
-          </div>
-          <p className="detail-copy">
-            Imports, shipment tracking, and incoming quantities will become live
-            in the next supply milestone.
-          </p>
-          <div className="shipment-track" aria-label="Supply workflow planned">
-            <span>
-              <Check aria-hidden="true" /> Products
-            </span>
-            <span>
-              <PackageCheck aria-hidden="true" /> Purchase
-            </span>
-            <span>
-              <Truck aria-hidden="true" /> In transit
-            </span>
-            <span>
-              <Box aria-hidden="true" /> Received
-            </span>
-          </div>
+          ) : (
+            <div className="inline-empty inline-empty--panel">
+              <p>No active imports right now.</p>
+            </div>
+          )}
           <Link className="text-link" href="/imports">
-            View planned area <ArrowRight aria-hidden="true" />
+            View all imports <ArrowRight aria-hidden="true" />
           </Link>
         </section>
       </div>

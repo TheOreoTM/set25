@@ -146,7 +146,7 @@ async function StockList({
                     {variant.stockOnHand}
                   </span>
                   <span data-label="Incoming" className="muted-value">
-                    —
+                    {variant.incoming}
                   </span>
                   <span data-label="Cost Each">
                     {variant.cost ? formatMVR(variant.cost) : "—"}

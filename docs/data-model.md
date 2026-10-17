@@ -64,11 +64,42 @@ The eventual available-to-sell value should be derived from on-hand quantities a
 
 ### Supply
 
-- `Supplier`
-- `PurchaseOrder` and `PurchaseOrderLine`
-- `ImportShipment` and shipment events/status
-- `Sample` and sample status/history
-- supplier and freight costs required to calculate **Actual Cost to SET25**
+Milestone 5 implements the supply chain as:
+
+`Supplier → PurchaseOrder → PurchaseOrderLine → ImportShipmentLine → ImportShipment → InventoryMovement → ProductVariant stock`
+
+- `Supplier` is retained by Active/Inactive state. `SupplierProduct` stores lightweight Alibaba/product links, supplier SKU, MOQ, reference prices, currency, and notes against the shared SET25 Product.
+- `PurchaseOrder` uses a PostgreSQL sequence-backed number displayed as `PO-000001`. It snapshots one manually entered exchange rate where one unit of PO currency multiplied by the rate equals MVR. `PurchaseOrderLine` snapshots catalogue identity and agreed cost; its optional variant relation uses `SetNull` so history remains readable.
+- `ImportShipment` uses `IMP-000001` numbers and may consolidate lines from any number of POs and suppliers. `ImportShipmentLine` is the quantity bridge to a PO line. Active shipment allocation plus already received quantity may never exceed ordered quantity.
+- `ImportShipmentEvent` is an append-only, shipment-specific status history with staff identity. Current status remains cached on the shipment for efficient operational queries.
+- `Sample` uses `SMP-000001` numbers. Multiple `SampleEvaluation` records retain external tester names, optional recording staff, seven integer scores, and notes. Both runtime validation and a database constraint enforce scores from 1 through 5.
+- `PreorderDetail.purchaseOrderId` is an optional, deliberately coarse supply-context link. It does not reserve PO or shipment quantities for a customer.
+
+### Incoming Stock
+
+Incoming per variant is the sum of `quantityOrdered - quantityReceived` on `PLACED` Purchase Orders. Draft, cancelled, and fully received/closed POs do not count. Incoming never changes `stockOnHand` and is never added to Available.
+
+### Actual Cost to SET25
+
+All authoritative calculations use Prisma Decimal:
+
+1. line product cost in MVR = PO unit cost × snapshotted exchange rate × received quantity;
+2. shared shipment cost = China Shipping + International Shipping + Tax/Fees + Other Fees;
+3. shared cost is allocated either by unit quantity or by each line's share of total MVR product value;
+4. actual line cost = product cost + allocated shared cost;
+5. actual unit cost = actual line cost ÷ received quantity.
+
+Currency totals and allocated shares are rounded to two decimal places, with the rounding remainder assigned to the final line so allocations equal shared costs exactly. Actual unit cost is retained to four decimal places. If By Product Value is selected while every product value is zero, allocation falls back to quantity rather than losing shared cost.
+
+### Atomic receiving and weighted-average cost
+
+Receiving runs at Serializable isolation and locks the outcome behind shipment state plus deterministic movement keys (`import:{importId}:line:{lineId}:receive`). In one transaction it validates all received quantities, calculates and freezes line costs, increments every variant balance, creates every movement, increments PO received quantities, marks fully received POs closed, marks the shipment received, and appends its event. Any error rolls back everything.
+
+The operational `ProductVariant.cost` becomes a weighted average:
+
+`(existing stock × existing Cost Each + received stock × import Actual Unit Cost) ÷ new stock`
+
+The received import line keeps its own Actual Unit Cost permanently. If existing stock has no known Cost Each, the new received Actual Unit Cost becomes the useful cost for the combined balance rather than treating legacy stock as free.
 
 ### Commerce
 

@@ -7,6 +7,7 @@ import {
   type ProductCategoryValue,
   type ProductStatusValue,
 } from "@set25/shared";
+import { getIncomingByVariant } from "@/lib/supply/data";
 
 export type ProductFilters = {
   search?: string;
@@ -61,7 +62,7 @@ export async function getProduct(id: string) {
 }
 
 export async function getProductWithMovements(id: string) {
-  return db.product.findUnique({
+  const product = await db.product.findUnique({
     where: { id },
     include: {
       variants: {
@@ -78,6 +79,17 @@ export async function getProductWithMovements(id: string) {
       },
     },
   });
+  if (!product) return null;
+  const incoming = await getIncomingByVariant(
+    product.variants.map((variant) => variant.id),
+  );
+  return {
+    ...product,
+    variants: product.variants.map((variant) => ({
+      ...variant,
+      incoming: incoming.get(variant.id) ?? 0,
+    })),
+  };
 }
 
 export async function getVariant(productId: string, variantId: string) {
@@ -107,8 +119,16 @@ export async function getStock(filters: StockFilters = {}) {
     orderBy: [{ product: { name: "asc" } }, { sku: "asc" }],
   });
 
-  if (!filters.status || filters.status === "ALL") return variants;
-  return variants.filter((variant) => {
+  const incoming = await getIncomingByVariant(
+    variants.map((variant) => variant.id),
+  );
+  const withIncoming = variants.map((variant) => ({
+    ...variant,
+    incoming: incoming.get(variant.id) ?? 0,
+  }));
+
+  if (!filters.status || filters.status === "ALL") return withIncoming;
+  return withIncoming.filter((variant) => {
     if (filters.status === "OUT_OF_STOCK") return variant.stockOnHand <= 0;
     if (filters.status === "LOW")
       return (

@@ -171,6 +171,7 @@ async function ProductDetail({
             <div className="variant-row variant-row--head">
               <span>SKU / Variant</span>
               <span>Available</span>
+              <span>Incoming</span>
               <span>Cost Each</span>
               <span>Sell Price</span>
               <span>Reorder At</span>
@@ -195,6 +196,9 @@ async function ProductDetail({
                   </span>
                   <span data-label="Available" className="stock-number">
                     {variant.stockOnHand}
+                  </span>
+                  <span data-label="Incoming" className="muted-value">
+                    {variant.incoming}
                   </span>
                   <span data-label="Cost Each">
                     {variant.cost ? formatMVR(variant.cost) : "—"}

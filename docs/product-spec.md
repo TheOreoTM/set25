@@ -80,7 +80,22 @@ HQ now records real operational sales through one shared commerce foundation:
 
 Completed orders cannot return to an earlier fulfilment state or be cancelled. Returns, refund workflows, incoming supply, and profitability reporting remain intentionally deferred so historical commerce facts are not weakened by partial workflows.
 
-The dashboard now uses live data for completed sales this month, order count, recent orders, payment attention, and stock value. Profit remains explicitly deferred until its accounting definition is implemented; supply and task examples remain visibly labelled as planned/demo content.
+## Milestone 5: supply operations
+
+HQ now follows SET25 stock from supplier agreement through physical receipt:
+
+- Suppliers retain contacts and lightweight product/MOQ/price references without becoming a separate catalogue.
+- Purchase Orders snapshot the supplier, currency, exchange rate, product identity, variant identity, ordered quantity, and agreed unit cost. Drafts may be edited; placed lines are historical facts.
+- Imports consolidate quantities from multiple Purchase Orders and suppliers into one freight movement. Their append-only status events show what changed, when, and which staff member changed it.
+- Incoming is the remaining quantity on **placed** Purchase Orders only. It is visible operational context, never available stock.
+- Shared China shipping, international shipping, tax/fees, and other costs produce a transparent **Actual Cost to SET25** preview before receiving.
+- Receiving atomically finalises import costs, increases stock, records `PURCHASE_RECEIVED` movements, updates PO receipts, closes fully received POs, and updates the current weighted-average variant cost.
+- Samples support multiple named testers and focused 1–5 evaluation criteria. Approval remains independent from catalogue publication and inventory.
+- A preorder can reference a Purchase Order and display its current import context without reserving units or promising stock.
+
+Supply costs exist only to value incoming inventory. Milestone 5 does not introduce a general expense ledger, Money In/Out, accounting reports, file storage, or Store exposure. All supplier, cost, shipment, and staff information remains private to HQ.
+
+The dashboard now uses live data for completed sales this month, order count, recent orders, payment attention, stock value, active import shipments, and supply attention. Profit remains explicitly deferred until its accounting definition is implemented; tasks remain visibly labelled as demo content.
 
 ## Success criteria for Milestone 1
 

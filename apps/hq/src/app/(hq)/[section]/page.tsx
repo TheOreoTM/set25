@@ -5,18 +5,6 @@ import { PageHeader } from "@/components/page-header";
 import { requireStaff } from "@/lib/auth/session";
 
 const sections = {
-  suppliers: [
-    "Suppliers",
-    "Supplier records and terms will arrive with supply operations.",
-  ],
-  imports: [
-    "Imports",
-    "Shipment tracking, import costs, and receiving will arrive with supply operations.",
-  ],
-  samples: [
-    "Samples",
-    "Sample requests and decisions will be added with the supply workflow.",
-  ],
   money: [
     "Money",
     "Money In, Money Out, and profitability will be implemented after commerce foundations.",

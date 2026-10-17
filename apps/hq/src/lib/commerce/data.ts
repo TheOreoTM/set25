@@ -180,7 +180,20 @@ export async function getOrder(id: string) {
         include: { recordedBy: { select: { name: true } } },
         orderBy: { createdAt: "desc" },
       },
-      preorder: true,
+      preorder: {
+        include: {
+          purchaseOrder: {
+            include: {
+              supplier: true,
+              lines: {
+                include: {
+                  shipmentLines: { include: { importShipment: true } },
+                },
+              },
+            },
+          },
+        },
+      },
     },
   });
 }
