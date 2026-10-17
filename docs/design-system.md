@@ -47,6 +47,20 @@ Suggested scale:
 - body: 0.875–1rem, Inter 400–500;
 - label/meta: 0.6875–0.75rem, Rajdhani or Inter 600, tracked uppercase.
 
+## Shared tokens
+
+Canonical colours, font families, and the type scale live in `packages/brand/styles/tokens.css`. Apps import it right after Tailwind (`@import "tailwindcss"; @import "@set25/brand/styles/tokens.css";`). Every token is both a CSS variable and a Tailwind v4 utility:
+
+| Kind        | CSS variable                                                                                                   | Utility example                        |
+| ----------- | -------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| Colour      | `--color-onyx`, `-white`, `-volt`, `-steel`, `-paper`, `-line`, `-muted`, `-danger`                            | `text-onyx`, `bg-volt`, `border-line`  |
+| Font family | `--font-interface`, `--font-display`                                                                           | `font-interface`, `font-display`       |
+| Type scale  | `--text-meta` 9px, `-label` 10px, `-small` 11px, `-body` 12px, `-body-lg` 13px, `-section` 21px, `-title` 32px | `text-meta`, `text-body`, `text-title` |
+
+The HQ type scale is deliberately small. New code uses these steps only: 9px is the minimum for readable interface text, and new 8px or fractional sizes should not be introduced. SET25 White (`#F4F4F4`) replaces Tailwind's default `white`.
+
+The shared file holds universal primitives only. HQ-specific layout, density, tables, forms, and cards stay in the HQ app, because the Store needs a different density. HQ's short variable names (`--onyx`, `--paper`, and so on) are compatibility aliases of the shared tokens. HQ `body` uses `--text-body` as its base size so unsized text never falls back to the browser's 16px.
+
 ## Spacing and layout
 
 Use a 4px base unit with a practical sequence of 4, 8, 12, 16, 20, 24, 32, 40, 48, and 64px. Dense operational groups use 12–20px; page sections use 32–48px. The desktop content area has a readable maximum width while operational tables may use available width.

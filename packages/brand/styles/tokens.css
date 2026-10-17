@@ -1,0 +1,47 @@
+/*
+ * SET25 shared design tokens.
+ *
+ * Canonical brand primitives shared by every SET25 surface (HQ, Store).
+ * Import after `@import "tailwindcss";` in an app stylesheet processed by
+ * Tailwind v4:
+ *
+ *   @import "tailwindcss";
+ *   @import "@set25/brand/styles/tokens.css";
+ *
+ * Each token is both a CSS variable (`var(--color-onyx)`, `var(--text-body)`)
+ * and a Tailwind utility (`text-onyx`, `bg-volt`, `font-display`,
+ * `text-meta`). `static` emits every variable on :root even when no utility
+ * references it, so plain CSS can always rely on them.
+ *
+ * Keep this file universal. App-specific layout, density, and component
+ * styles belong in the app, not here.
+ */
+
+@theme static {
+  /* Brand colours. Note: SET25 White is an off-white and intentionally
+     replaces Tailwind's default `white`. */
+  --color-onyx: #0a0a0a;
+  --color-white: #f4f4f4;
+  --color-volt: #d7ff3f;
+  --color-steel: #8a8f94;
+
+  /* Interface neutrals and states */
+  --color-paper: #fbfbf8;
+  --color-line: #deded9;
+  --color-muted: #676b6f;
+  --color-danger: #c94435;
+
+  /* Font families */
+  --font-interface: "Inter Variable", Inter, sans-serif;
+  --font-display: Rajdhani, sans-serif;
+
+  /* Type scale. 9px is the minimum for readable interface text; do not add
+     smaller steps or fractional in-between sizes. */
+  --text-meta: 9px;
+  --text-label: 10px;
+  --text-small: 11px;
+  --text-body: 12px;
+  --text-body-lg: 13px;
+  --text-section: 21px;
+  --text-title: 32px;
+}
