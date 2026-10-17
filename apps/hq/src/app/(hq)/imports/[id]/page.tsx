@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
-import { ShipmentCostForm } from "@/components/supply/import-form";
+import { ShipmentCostEditor } from "@/components/supply/import-form";
 import {
   ReceiveShipment,
   ShipmentStatusForm,
@@ -14,17 +14,19 @@ import {
   updateShipmentCostsAction,
 } from "@/lib/supply/actions";
 import { getImport } from "@/lib/supply/data";
+import { toReceiveShipmentDto } from "@/lib/supply/dto";
 import { formatDate, formatDateTime } from "@/lib/supply/presentation";
 import {
   COST_ALLOCATION_METHODS,
+  costAllocationMethodLabels,
   formatImportNumber,
   formatMVR,
   formatPurchaseOrderNumber,
   importShipmentStatusLabels,
-  costAllocationMethodLabels,
 } from "@set25/shared";
 
 const journey = [
+  "PLANNING",
   "SUPPLIER_SHIPPING",
   "CHINA_WAREHOUSE",
   "READY_TO_SHIP",
@@ -42,98 +44,74 @@ export default async function ImportPage({
   const { id } = await params;
   const [staff, shipment] = await Promise.all([requireStaff(), getImport(id)]);
   if (!shipment) notFound();
+
   const canWrite = staff.role !== "STAFF";
   const locked = ["RECEIVED", "CANCELLED"].includes(shipment.status);
+  const readyToReceive = shipment.status === "READY_FOR_COLLECTION";
+  const units = shipment.lines.reduce(
+    (sum, line) => sum + line.quantityShipped,
+    0,
+  );
   const currentIndex = journey.indexOf(
     shipment.status as (typeof journey)[number],
   );
   const costs = new Map(shipment.preview.lines.map((line) => [line.id, line]));
   const supplyGroups = new Map<number, { id: string; supplier: string }>();
-  for (const line of shipment.lines)
+  for (const line of shipment.lines) {
     supplyGroups.set(line.purchaseOrderLine.purchaseOrder.purchaseOrderNumber, {
       id: line.purchaseOrderLine.purchaseOrder.id,
       supplier: line.purchaseOrderLine.purchaseOrder.supplier.name,
     });
+  }
+  const receiveDto = toReceiveShipmentDto(shipment);
+
   return (
-    <main className="page-wrap">
+    <main className="page-wrap supply-detail-page import-detail-page">
       <PageHeader
         eyebrow="Supply / Imports"
         title={formatImportNumber(shipment.importNumber)}
-        description={`${shipment.freightForwarder} · created by ${shipment.createdBy.name}`}
+        titleMeta={
+          <span className={`status status--${shipment.status.toLowerCase()}`}>
+            {importShipmentStatusLabels[shipment.status]}
+          </span>
+        }
+        description={`${shipment.freightForwarder}${shipment.trackingReference ? ` · ${shipment.trackingReference}` : ""}`}
       />
       <div className="detail-actions">
         <Link className="text-link back-link" href="/imports">
           <ArrowLeft aria-hidden="true" /> All imports
         </Link>
-        <div>
-          {canWrite && !locked ? (
-            <ReceiveShipment
-              action={receiveShipmentAction.bind(null, id)}
-              shipment={shipment}
-              lines={shipment.lines.map((line) => ({
-                id: line.id,
-                label: `${line.purchaseOrderLine.productCode} · ${[line.purchaseOrderLine.color, line.purchaseOrderLine.size].filter(Boolean).join(" / ") || "Default"}`,
-                sku: line.purchaseOrderLine.sku,
-                quantity: line.quantityShipped,
-                actualUnitCost: costs
-                  .get(line.id)!
-                  .actualUnitCostMvr.toString(),
-              }))}
-            />
-          ) : null}
-        </div>
       </div>
-      <div className="import-hero">
-        <section className="detail-section">
+
+      <section className="supply-summary-strip" aria-label="Import summary">
+        <SummaryFact label="Forwarder" value={shipment.freightForwarder} />
+        <SummaryFact label="Units" value={String(units)} />
+        <SummaryFact
+          label="ETA"
+          value={formatDate(shipment.estimatedArrival)}
+        />
+        <SummaryFact
+          label="Tracking / Departure"
+          value={
+            shipment.trackingReference ??
+            formatDate(shipment.estimatedDeparture)
+          }
+        />
+        <SummaryFact
+          label="Total Import Cost"
+          value={formatMVR(shipment.preview.totalCostMvr)}
+        />
+      </section>
+
+      <div className="supply-detail-grid import-workflow-grid">
+        <section className="detail-section supply-main-panel journey-panel">
           <div className="detail-section-head">
             <div>
-              <p className="kicker">Status</p>
+              <p className="kicker">Shipment Journey</p>
               <h2>{importShipmentStatusLabels[shipment.status]}</h2>
             </div>
-            <span className={`status status--${shipment.status.toLowerCase()}`}>
-              {importShipmentStatusLabels[shipment.status]}
-            </span>
           </div>
-          <dl className="detail-definition-grid">
-            <div>
-              <dt>Freight Forwarder</dt>
-              <dd>{shipment.freightForwarder}</dd>
-            </div>
-            <div>
-              <dt>Tracking Reference</dt>
-              <dd>{shipment.trackingReference ?? "Not recorded"}</dd>
-            </div>
-            <div>
-              <dt>Estimated Departure</dt>
-              <dd>{formatDate(shipment.estimatedDeparture)}</dd>
-            </div>
-            <div>
-              <dt>ETA</dt>
-              <dd>{formatDate(shipment.estimatedArrival)}</dd>
-            </div>
-            <div>
-              <dt>Received</dt>
-              <dd>{formatDate(shipment.receivedAt)}</dd>
-            </div>
-            <div>
-              <dt>Allocation</dt>
-              <dd>
-                {costAllocationMethodLabels[shipment.costAllocationMethod]}
-              </dd>
-            </div>
-          </dl>
-          {shipment.notes ? (
-            <p className="detail-copy">{shipment.notes}</p>
-          ) : null}
-        </section>
-        <section className="detail-section">
-          <div className="detail-section-head">
-            <div>
-              <p className="kicker">Logistics</p>
-              <h2>Shipment journey</h2>
-            </div>
-          </div>
-          <ol className="shipment-timeline">
+          <ol className="shipment-timeline shipment-timeline--horizontal">
             {journey.map((status, index) => {
               const complete =
                 shipment.status === "RECEIVED" ||
@@ -146,26 +124,107 @@ export default async function ImportPage({
                   }
                   key={status}
                 >
-                  <span>{complete ? "✓" : active ? "●" : ""}</span>
+                  <span>{complete ? "✓" : active ? "●" : "○"}</span>
                   <strong>{importShipmentStatusLabels[status]}</strong>
                 </li>
               );
             })}
           </ol>
+          {canWrite && !locked ? (
+            <div className="workflow-control">
+              <div>
+                <p className="kicker">Next Movement</p>
+                <h3>Update shipment status</h3>
+              </div>
+              <ShipmentStatusForm
+                action={changeShipmentStatusAction.bind(null, id)}
+                current={shipment.status}
+              />
+            </div>
+          ) : null}
         </section>
+
+        <aside className="supply-side-rail">
+          <section className="detail-section cost-rail-card">
+            <div className="detail-section-head">
+              <div>
+                <p className="kicker">Actual Cost to SET25</p>
+                <h2>Cost breakdown</h2>
+              </div>
+            </div>
+            <dl className="cost-breakdown cost-breakdown--compact">
+              <CostRow
+                label="Product Cost"
+                value={formatMVR(shipment.preview.productCostMvr)}
+              />
+              <CostRow
+                label="China Shipping"
+                value={formatMVR(shipment.chinaShippingMvr)}
+              />
+              <CostRow
+                label="International / ICL"
+                value={formatMVR(shipment.internationalShippingMvr)}
+              />
+              <CostRow
+                label="Tax / Fees"
+                value={formatMVR(shipment.taxFeesMvr)}
+              />
+              <CostRow label="Other" value={formatMVR(shipment.otherFeesMvr)} />
+              <div className="cost-total">
+                <dt>Total</dt>
+                <dd>{formatMVR(shipment.preview.totalCostMvr)}</dd>
+              </div>
+            </dl>
+            <div className="cost-allocation-note">
+              <span>Allocation</span>
+              <strong>
+                {costAllocationMethodLabels[shipment.costAllocationMethod]}
+              </strong>
+            </div>
+            {canWrite && !locked ? (
+              <ShipmentCostEditor
+                action={updateShipmentCostsAction.bind(null, id)}
+                defaults={{
+                  chinaShippingMvr: shipment.chinaShippingMvr.toString(),
+                  internationalShippingMvr:
+                    shipment.internationalShippingMvr.toString(),
+                  taxFeesMvr: shipment.taxFeesMvr.toString(),
+                  otherFeesMvr: shipment.otherFeesMvr.toString(),
+                  costAllocationMethod: COST_ALLOCATION_METHODS.includes(
+                    shipment.costAllocationMethod,
+                  )
+                    ? shipment.costAllocationMethod
+                    : "BY_QUANTITY",
+                }}
+              />
+            ) : null}
+          </section>
+          {canWrite && readyToReceive ? (
+            <section className="receive-callout">
+              <p className="kicker">Ready to Receive</p>
+              <strong>
+                {units} {units === 1 ? "unit" : "units"}
+              </strong>
+              <span>
+                {formatMVR(shipment.preview.totalCostMvr)} actual import cost
+              </span>
+              <ReceiveShipment
+                action={receiveShipmentAction.bind(null, id)}
+                receive={receiveDto}
+              />
+            </section>
+          ) : null}
+        </aside>
       </div>
-      <section className="detail-section">
+
+      <section className="detail-section compact-detail-section">
         <div className="detail-section-head">
           <div>
-            <p className="kicker">Supply</p>
-            <h2>Purchase orders and items</h2>
+            <p className="kicker">Shipment Contents</p>
+            <h2>Products and purchase orders</h2>
           </div>
           <span>
-            {shipment.lines.reduce(
-              (sum, line) => sum + line.quantityShipped,
-              0,
-            )}{" "}
-            units
+            {units} {units === 1 ? "unit" : "units"}
           </span>
         </div>
         <div className="supply-context">
@@ -176,32 +235,44 @@ export default async function ImportPage({
             </Link>
           ))}
         </div>
-        <div className="supply-table supply-table--import">
+        <div className="supply-table supply-table--import-detail">
           <div className="supply-table-row supply-table-head">
             <span>Product / Variant</span>
-            <span>SKU</span>
+            <span>Source</span>
             <span>Shipped</span>
             <span>Received</span>
             <span>Product Cost</span>
             <span>Allocated Fees</span>
-            <span>Actual Cost Each</span>
+            <span>Actual Cost / Unit</span>
           </div>
           {shipment.lines.map((line) => {
             const cost = costs.get(line.id)!;
             return (
               <div className="supply-table-row" key={line.id}>
                 <span>
-                  <strong>
-                    {line.purchaseOrderLine.productCode} ·{" "}
+                  <strong>{line.purchaseOrderLine.productName}</strong>
+                  <small>
                     {[line.purchaseOrderLine.color, line.purchaseOrderLine.size]
                       .filter(Boolean)
                       .join(" / ") || "Default"}
+                  </small>
+                  <small>{line.purchaseOrderLine.sku}</small>
+                </span>
+                <span data-label="Source">
+                  <strong>
+                    <Link
+                      href={`/purchase-orders/${line.purchaseOrderLine.purchaseOrder.id}`}
+                    >
+                      {formatPurchaseOrderNumber(
+                        line.purchaseOrderLine.purchaseOrder
+                          .purchaseOrderNumber,
+                      )}
+                    </Link>
                   </strong>
                   <small>
                     {line.purchaseOrderLine.purchaseOrder.supplier.name}
                   </small>
                 </span>
-                <span data-label="SKU">{line.purchaseOrderLine.sku}</span>
                 <span data-label="Shipped">{line.quantityShipped}</span>
                 <span data-label="Received">{line.quantityReceived}</span>
                 <span data-label="Product Cost">
@@ -212,7 +283,7 @@ export default async function ImportPage({
                     line.allocatedSharedCostMvr ?? cost.allocatedSharedCostMvr,
                   )}
                 </span>
-                <span data-label="Actual Cost Each">
+                <span data-label="Actual Cost / Unit">
                   <strong>
                     {formatMVR(
                       line.actualUnitCostMvr ?? cost.actualUnitCostMvr,
@@ -224,101 +295,48 @@ export default async function ImportPage({
           })}
         </div>
       </section>
-      <section className="detail-section">
+
+      <section className="detail-section compact-detail-section">
         <div className="detail-section-head">
           <div>
-            <p className="kicker">Actual Cost to SET25</p>
-            <h2>Cost breakdown</h2>
+            <p className="kicker">Shipment Events</p>
+            <h2>Status history</h2>
           </div>
-          <span>
-            {costAllocationMethodLabels[shipment.costAllocationMethod]}
-          </span>
         </div>
-        <dl className="cost-breakdown">
-          <div>
-            <dt>Product Cost</dt>
-            <dd>{formatMVR(shipment.preview.productCostMvr)}</dd>
-          </div>
-          <div>
-            <dt>China Shipping</dt>
-            <dd>{formatMVR(shipment.chinaShippingMvr)}</dd>
-          </div>
-          <div>
-            <dt>International Shipping / ICL</dt>
-            <dd>{formatMVR(shipment.internationalShippingMvr)}</dd>
-          </div>
-          <div>
-            <dt>Tax / Fees</dt>
-            <dd>{formatMVR(shipment.taxFeesMvr)}</dd>
-          </div>
-          <div>
-            <dt>Other</dt>
-            <dd>{formatMVR(shipment.otherFeesMvr)}</dd>
-          </div>
-          <div className="cost-total">
-            <dt>Total Import Cost</dt>
-            <dd>{formatMVR(shipment.preview.totalCostMvr)}</dd>
-          </div>
-        </dl>
-        {canWrite && !locked ? (
-          <div className="embedded-editor">
-            <h3>Update shared costs</h3>
-            <ShipmentCostForm
-              action={updateShipmentCostsAction.bind(null, id)}
-              defaults={{
-                chinaShippingMvr: shipment.chinaShippingMvr.toString(),
-                internationalShippingMvr:
-                  shipment.internationalShippingMvr.toString(),
-                taxFeesMvr: shipment.taxFeesMvr.toString(),
-                otherFeesMvr: shipment.otherFeesMvr.toString(),
-                costAllocationMethod: COST_ALLOCATION_METHODS.includes(
-                  shipment.costAllocationMethod,
-                )
-                  ? shipment.costAllocationMethod
-                  : "BY_QUANTITY",
-              }}
-            />
-          </div>
-        ) : null}
-      </section>
-      <div className="detail-columns">
-        <section className="detail-section">
-          <div className="detail-section-head">
-            <div>
-              <p className="kicker">Status History</p>
-              <h2>Shipment events</h2>
-            </div>
-          </div>
-          <div className="activity-list">
-            {shipment.events.map((event) => (
-              <div key={event.id}>
-                <span>
-                  <strong>{importShipmentStatusLabels[event.status]}</strong>
-                  <small>{event.notes ?? "Status updated"}</small>
-                </span>
-                <span>
-                  {formatDateTime(event.createdAt)}
-                  <small>{event.createdBy.name}</small>
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-        {canWrite && !locked ? (
-          <section className="detail-section">
-            <div className="detail-section-head">
+        <div className="shipment-event-list">
+          {[...shipment.events].reverse().map((event) => (
+            <article key={event.id}>
+              <time dateTime={event.createdAt.toISOString()}>
+                {formatDateTime(event.createdAt)}
+              </time>
+              <span className="event-marker" />
               <div>
-                <p className="kicker">Update</p>
-                <h2>Move shipment</h2>
+                <strong>{importShipmentStatusLabels[event.status]}</strong>
+                <p>{event.notes ?? "Status updated"}</p>
+                <small>{event.createdBy.name}</small>
               </div>
-            </div>
-            <ShipmentStatusForm
-              action={changeShipmentStatusAction.bind(null, id)}
-              current={shipment.status}
-            />
-          </section>
-        ) : null}
-      </div>
+            </article>
+          ))}
+        </div>
+      </section>
     </main>
+  );
+}
+
+function SummaryFact({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function CostRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </div>
   );
 }

@@ -1,8 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
-import { ArrowLeft, Save } from "lucide-react";
+import { useActionState, useState } from "react";
+import {
+  ArrowLeft,
+  Check,
+  Plus,
+  RotateCcw,
+  Save,
+  X,
+  XCircle,
+} from "lucide-react";
 import { SAMPLE_STATUSES, sampleStatusLabels } from "@set25/shared";
 import {
   initialSupplyFormState,
@@ -142,7 +150,50 @@ export function SampleForm({
   );
 }
 
-export function EvaluationForm({ action }: { action: Action }) {
+export function EvaluationEditor({ action }: { action: Action }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        className="button button--dark"
+        type="button"
+        onClick={() => setOpen(true)}
+      >
+        <Plus aria-hidden="true" /> Add evaluation
+      </button>
+      {open ? (
+        <div className="dialog-backdrop" role="presentation">
+          <section
+            className="dialog-panel supply-editor-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="evaluation-title"
+          >
+            <div className="dialog-head">
+              <div>
+                <p className="kicker">Sample test</p>
+                <h2 id="evaluation-title">Add evaluation</h2>
+              </div>
+              <button
+                className="icon-button"
+                type="button"
+                aria-label="Close"
+                onClick={() => setOpen(false)}
+              >
+                <X aria-hidden="true" />
+              </button>
+            </div>
+            <div className="dialog-body">
+              <EvaluationForm action={action} />
+            </div>
+          </section>
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+function EvaluationForm({ action }: { action: Action }) {
   const [state, formAction, pending] = useActionState(
     action,
     initialSupplyFormState,
@@ -188,33 +239,84 @@ export function EvaluationForm({ action }: { action: Action }) {
   );
 }
 
-export function SampleStatusForm({
+export function SampleDecisionActions({
   action,
   current,
 }: {
   action: Action;
   current: string;
 }) {
+  return (
+    <div
+      className="sample-decision-actions"
+      aria-label={`Current sample status: ${sampleStatusLabels[current as keyof typeof sampleStatusLabels] ?? current}`}
+    >
+      {current !== "APPROVED" ? (
+        <DecisionButton
+          action={action}
+          status="APPROVED"
+          label="Approve"
+          icon="approve"
+        />
+      ) : null}
+      {current !== "RETEST" ? (
+        <DecisionButton
+          action={action}
+          status="RETEST"
+          label="Retest"
+          icon="retest"
+        />
+      ) : null}
+      {current !== "REJECTED" ? (
+        <DecisionButton
+          action={action}
+          status="REJECTED"
+          label="Reject"
+          icon="reject"
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function DecisionButton({
+  action,
+  status,
+  label,
+  icon,
+}: {
+  action: Action;
+  status: (typeof SAMPLE_STATUSES)[number];
+  label: string;
+  icon: "approve" | "retest" | "reject";
+}) {
   const [state, formAction, pending] = useActionState(
     action,
     initialSupplyFormState,
   );
+  const Icon =
+    icon === "approve" ? Check : icon === "retest" ? RotateCcw : XCircle;
   return (
-    <form action={formAction} className="compact-action-form">
-      <label className="field">
-        <span>Decision</span>
-        <select name="status" defaultValue={current}>
-          {SAMPLE_STATUSES.map((status) => (
-            <option value={status} key={status}>
-              {sampleStatusLabels[status]}
-            </option>
-          ))}
-        </select>
-      </label>
-      <button className="button button--dark" type="submit" disabled={pending}>
-        {pending ? "Saving…" : "Update status"}
+    <form action={formAction}>
+      <input type="hidden" name="status" value={status} />
+      <button
+        className={
+          icon === "reject"
+            ? "button button--danger"
+            : icon === "approve"
+              ? "button button--dark"
+              : "button button--secondary"
+        }
+        type="submit"
+        disabled={pending}
+      >
+        <Icon aria-hidden="true" /> {pending ? "Saving…" : label}
       </button>
-      {state.message ? <p className="field-error">{state.message}</p> : null}
+      {state.message ? (
+        <span className="field-error" role="alert">
+          {state.message}
+        </span>
+      ) : null}
     </form>
   );
 }

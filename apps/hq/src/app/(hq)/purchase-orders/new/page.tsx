@@ -4,6 +4,7 @@ import { PurchaseOrderForm } from "@/components/supply/purchase-order-form";
 import { requireOperationalPageAccess } from "@/lib/auth/session";
 import { createPurchaseOrderAction } from "@/lib/supply/actions";
 import { getActiveSuppliers, getSupplyProducts } from "@/lib/supply/data";
+import { toSupplierOptionDto } from "@/lib/supply/dto";
 
 export const metadata = { title: "New Purchase Order" };
 export default async function NewPurchaseOrderPage({
@@ -33,7 +34,7 @@ export default async function NewPurchaseOrderPage({
       />
       <PurchaseOrderForm
         action={createPurchaseOrderAction}
-        suppliers={suppliers}
+        suppliers={suppliers.map(toSupplierOptionDto)}
         variants={variants}
         idempotencyKey={randomUUID()}
         defaults={

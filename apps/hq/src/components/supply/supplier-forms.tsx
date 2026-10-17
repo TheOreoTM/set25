@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
-import { ArrowLeft, Plus, Save } from "lucide-react";
+import { useActionState, useState } from "react";
+import { ArrowLeft, Pencil, Plus, Save, X } from "lucide-react";
 import {
   initialSupplyFormState,
   type SupplyFormState,
@@ -136,15 +136,95 @@ export function SupplierForm({
   );
 }
 
-export function SupplierProductForm({
+type SupplierTermsDefaults = {
+  productId: string;
+  productUrl: string | null;
+  supplierSku: string | null;
+  moq: number | null;
+  sampleCost: string | null;
+  bulkUnitPrice: string | null;
+  currency: string;
+  notes: string | null;
+};
+
+export function SupplierProductEditor({
   action,
   products,
+  defaults,
+  label = "Add product terms",
+  compact = false,
 }: {
   action: (
     state: SupplyFormState,
     formData: FormData,
   ) => Promise<SupplyFormState>;
   products: { id: string; name: string; code: string }[];
+  defaults?: SupplierTermsDefaults;
+  label?: string;
+  compact?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        className={
+          compact ? "text-link supply-edit-link" : "button button--dark"
+        }
+        type="button"
+        onClick={() => setOpen(true)}
+      >
+        {compact ? <Pencil aria-hidden="true" /> : <Plus aria-hidden="true" />}
+        {label}
+      </button>
+      {open ? (
+        <div className="dialog-backdrop" role="presentation">
+          <section
+            className="dialog-panel supply-editor-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="supplier-terms-title"
+          >
+            <div className="dialog-head">
+              <div>
+                <p className="kicker">Supplier product</p>
+                <h2 id="supplier-terms-title">
+                  {defaults ? "Edit product terms" : "Add product terms"}
+                </h2>
+              </div>
+              <button
+                className="icon-button"
+                type="button"
+                aria-label="Close"
+                onClick={() => setOpen(false)}
+              >
+                <X aria-hidden="true" />
+              </button>
+            </div>
+            <div className="dialog-body">
+              <SupplierProductForm
+                action={action}
+                products={products}
+                defaults={defaults}
+              />
+            </div>
+          </section>
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+function SupplierProductForm({
+  action,
+  products,
+  defaults,
+}: {
+  action: (
+    state: SupplyFormState,
+    formData: FormData,
+  ) => Promise<SupplyFormState>;
+  products: { id: string; name: string; code: string }[];
+  defaults?: SupplierTermsDefaults;
 }) {
   const [state, formAction, pending] = useActionState(
     action,
@@ -155,7 +235,11 @@ export function SupplierProductForm({
       <div className="form-grid">
         <label className="field">
           <span>SET25 product</span>
-          <select name="productId" required defaultValue="">
+          <select
+            name="productId"
+            required
+            defaultValue={defaults?.productId ?? ""}
+          >
             <option value="" disabled>
               Choose a product
             </option>
@@ -166,23 +250,49 @@ export function SupplierProductForm({
             ))}
           </select>
         </label>
-        <Field name="productUrl" label="Alibaba / product link" type="url" />
-        <Field name="supplierSku" label="Supplier SKU" />
-        <Field name="moq" label="MOQ" type="number" min={1} step={1} />
-        <Field name="sampleCost" label="Sample cost" inputMode="decimal" />
+        <Field
+          name="productUrl"
+          label="Alibaba / product link"
+          type="url"
+          defaultValue={defaults?.productUrl ?? ""}
+        />
+        <Field
+          name="supplierSku"
+          label="Supplier SKU"
+          defaultValue={defaults?.supplierSku ?? ""}
+        />
+        <Field
+          name="moq"
+          label="MOQ"
+          type="number"
+          min={1}
+          step={1}
+          defaultValue={defaults?.moq ?? ""}
+        />
+        <Field
+          name="sampleCost"
+          label="Sample cost"
+          inputMode="decimal"
+          defaultValue={defaults?.sampleCost ?? ""}
+        />
         <Field
           name="bulkUnitPrice"
           label="Bulk unit price"
           inputMode="decimal"
+          defaultValue={defaults?.bulkUnitPrice ?? ""}
         />
         <Field
           name="currency"
           label="Currency"
-          defaultValue="USD"
+          defaultValue={defaults?.currency ?? "USD"}
           maxLength={3}
           required
         />
-        <Field name="notes" label="Terms notes" />
+        <Field
+          name="notes"
+          label="Terms notes"
+          defaultValue={defaults?.notes ?? ""}
+        />
       </div>
       <FormResult state={state} />
       <button className="button button--dark" type="submit" disabled={pending}>

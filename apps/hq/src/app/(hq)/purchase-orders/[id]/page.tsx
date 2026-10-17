@@ -23,6 +23,7 @@ export default async function PurchaseOrderPage({
   const { id } = await params;
   const [staff, po] = await Promise.all([requireStaff(), getPurchaseOrder(id)]);
   if (!po) notFound();
+
   const canWrite = staff.role !== "STAFF";
   const supplierTotal = decimalTotal(po.lines);
   const productCostMvr = supplierTotal.mul(po.exchangeRateToMvr);
@@ -31,6 +32,7 @@ export default async function PurchaseOrderPage({
     (sum, line) => sum + line.quantityReceived,
     0,
   );
+  const incoming = ordered - received;
   const shipments = new Map(
     po.lines.flatMap((line) =>
       line.shipmentLines.map((shipmentLine) => [
@@ -39,18 +41,24 @@ export default async function PurchaseOrderPage({
       ]),
     ),
   );
+
   return (
-    <main className="page-wrap">
+    <main className="page-wrap supply-detail-page">
       <PageHeader
         eyebrow="Supply / Purchase Orders"
         title={formatPurchaseOrderNumber(po.purchaseOrderNumber)}
+        titleMeta={
+          <span className={`status status--${po.status.toLowerCase()}`}>
+            {purchaseOrderStatusLabels[po.status]}
+          </span>
+        }
         description={`${po.supplier.name} · created by ${po.createdBy.name}`}
       />
-      {canWrite ? (
-        <div className="detail-actions">
-          <Link className="text-link back-link" href="/purchase-orders">
-            <ArrowLeft aria-hidden="true" /> All purchase orders
-          </Link>
+      <div className="detail-actions">
+        <Link className="text-link back-link" href="/purchase-orders">
+          <ArrowLeft aria-hidden="true" /> All purchase orders
+        </Link>
+        {canWrite ? (
           <div>
             {po.status === "DRAFT" ? (
               <Link
@@ -60,8 +68,8 @@ export default async function PurchaseOrderPage({
                 <Pencil aria-hidden="true" /> Edit draft
               </Link>
             ) : null}
-            {po.status === "PLACED" && received < ordered ? (
-              <Link className="button button--secondary" href="/imports/new">
+            {po.status === "PLACED" && incoming > 0 ? (
+              <Link className="button button--dark" href="/imports/new">
                 <Plus aria-hidden="true" /> Create import
               </Link>
             ) : null}
@@ -80,121 +88,130 @@ export default async function PurchaseOrderPage({
               />
             ) : null}
           </div>
+        ) : null}
+      </div>
+
+      <section
+        className="supply-summary-strip supply-summary-strip--six"
+        aria-label="Purchase order summary"
+      >
+        <div>
+          <span>Supplier</span>
+          <strong>
+            <Link href={`/suppliers/${po.supplierId}`}>{po.supplier.name}</Link>
+          </strong>
         </div>
-      ) : (
-        <div className="detail-actions">
-          <Link className="text-link back-link" href="/purchase-orders">
-            <ArrowLeft aria-hidden="true" /> All purchase orders
-          </Link>
-        </div>
-      )}
-      <section className="detail-section">
-        <div className="detail-section-head">
-          <div>
-            <p className="kicker">Purchase Order</p>
-            <h2>Agreement snapshot</h2>
-          </div>
-          <span className={`status status--${po.status.toLowerCase()}`}>
-            {purchaseOrderStatusLabels[po.status]}
-          </span>
-        </div>
-        <dl className="detail-definition-grid">
-          <div>
-            <dt>Supplier</dt>
-            <dd>
-              <Link href={`/suppliers/${po.supplierId}`}>
-                {po.supplier.name}
-              </Link>
-            </dd>
-          </div>
-          <div>
-            <dt>Currency</dt>
-            <dd>{po.currency}</dd>
-          </div>
-          <div>
-            <dt>Exchange Rate to MVR</dt>
-            <dd>{po.exchangeRateToMvr.toString()}</dd>
-          </div>
-          <div>
-            <dt>Placed</dt>
-            <dd>{formatDate(po.placedAt)}</dd>
-          </div>
-          <div>
-            <dt>ETA</dt>
-            <dd>{formatDate(po.expectedAt)}</dd>
-          </div>
-          <div>
-            <dt>Supplier reference</dt>
-            <dd>{po.supplierReference ?? "Not recorded"}</dd>
-          </div>
-        </dl>
-        {po.notes ? <p className="detail-copy">{po.notes}</p> : null}
+        <SummaryFact
+          label="Supplier Reference"
+          value={po.supplierReference ?? "Not recorded"}
+        />
+        <SummaryFact label="Currency" value={po.currency} />
+        <SummaryFact
+          label="Exchange Rate"
+          value={`${po.exchangeRateToMvr.toString()} → MVR`}
+        />
+        <SummaryFact label="Placed" value={formatDate(po.placedAt)} />
+        <SummaryFact label="ETA" value={formatDate(po.expectedAt)} />
       </section>
-      <section className="detail-section">
-        <div className="detail-section-head">
-          <div>
-            <p className="kicker">Items</p>
-            <h2>Ordered stock</h2>
-          </div>
-          <span>{ordered - received} incoming</span>
-        </div>
-        <div className="supply-table supply-table--po">
-          <div className="supply-table-row supply-table-head">
-            <span>Product / Variant</span>
-            <span>SKU</span>
-            <span>Ordered</span>
-            <span>Received</span>
-            <span>Remaining</span>
-            <span>Unit Cost</span>
-            <span>MVR Equivalent</span>
-          </div>
-          {po.lines.map((line) => (
-            <div className="supply-table-row" key={line.id}>
-              <span>
-                <strong>
-                  {line.productCode} ·{" "}
-                  {[line.color, line.size].filter(Boolean).join(" / ") ||
-                    "Default"}
-                </strong>
-                <small>{line.productName}</small>
-              </span>
-              <span data-label="SKU">{line.sku}</span>
-              <span data-label="Ordered">{line.quantityOrdered}</span>
-              <span data-label="Received">{line.quantityReceived}</span>
-              <span data-label="Remaining">
-                <strong>{line.quantityOrdered - line.quantityReceived}</strong>
-              </span>
-              <span data-label="Unit Cost">
-                {po.currency} {line.unitCost.toFixed(4)}
-              </span>
-              <span data-label="MVR Equivalent">
-                {formatMVR(line.unitCost.mul(po.exchangeRateToMvr))}
-              </span>
+
+      <div className="supply-detail-grid">
+        <section className="detail-section supply-main-panel">
+          <div className="detail-section-head">
+            <div>
+              <p className="kicker">Ordered Items</p>
+              <h2>Products and variants</h2>
             </div>
-          ))}
-        </div>
-        <div className="supply-total-strip">
-          <div>
-            <span>Supplier Total</span>
-            <strong>
-              {po.currency} {supplierTotal.toFixed(2)}
-            </strong>
+            <span>{incoming} incoming</span>
           </div>
-          <div>
-            <span>Product Cost in MVR</span>
-            <strong>{formatMVR(productCostMvr)}</strong>
+          <div className="supply-table supply-table--po">
+            <div className="supply-table-row supply-table-head">
+              <span>Product / Variant</span>
+              <span>SKU</span>
+              <span>Ordered</span>
+              <span>Received</span>
+              <span>Remaining</span>
+              <span>Unit Cost</span>
+              <span>MVR Cost</span>
+            </div>
+            {po.lines.map((line) => (
+              <div className="supply-table-row" key={line.id}>
+                <span>
+                  <strong>
+                    {line.productCode} ·{" "}
+                    {[line.color, line.size].filter(Boolean).join(" / ") ||
+                      "Default"}
+                  </strong>
+                  <small>{line.productName}</small>
+                </span>
+                <span data-label="SKU">{line.sku}</span>
+                <span data-label="Ordered">{line.quantityOrdered}</span>
+                <span data-label="Received">{line.quantityReceived}</span>
+                <span data-label="Remaining">
+                  <strong>
+                    {line.quantityOrdered - line.quantityReceived}
+                  </strong>
+                </span>
+                <span data-label="Unit Cost">
+                  {po.currency} {line.unitCost.toFixed(4)}
+                </span>
+                <span data-label="MVR Cost">
+                  {formatMVR(
+                    line.unitCost
+                      .mul(po.exchangeRateToMvr)
+                      .mul(line.quantityOrdered),
+                  )}
+                </span>
+              </div>
+            ))}
           </div>
-        </div>
-      </section>
-      <section className="detail-section">
+          {po.notes || po.supplierReference ? (
+            <div className="supply-notes">
+              <span>Supplier reference / notes</span>
+              <p>
+                {[po.supplierReference, po.notes].filter(Boolean).join(" · ")}
+              </p>
+            </div>
+          ) : null}
+        </section>
+
+        <aside className="supply-side-rail">
+          <section className="detail-section supply-summary-card">
+            <div className="detail-section-head">
+              <div>
+                <p className="kicker">Purchase Summary</p>
+                <h2>Committed supply</h2>
+              </div>
+            </div>
+            <dl className="rail-money-list">
+              <div>
+                <dt>Supplier Total</dt>
+                <dd>
+                  {po.currency} {supplierTotal.toFixed(2)}
+                </dd>
+              </div>
+              <div>
+                <dt>Product Cost</dt>
+                <dd>{formatMVR(productCostMvr)}</dd>
+              </div>
+            </dl>
+            <dl className="rail-stat-list rail-stat-list--compact">
+              <RailStat label="Units Ordered" value={ordered} />
+              <RailStat label="Units Received" value={received} />
+              <RailStat label="Incoming" value={incoming} />
+            </dl>
+          </section>
+        </aside>
+      </div>
+
+      <section className="detail-section compact-detail-section">
         <div className="detail-section-head">
           <div>
-            <p className="kicker">Imports</p>
+            <p className="kicker">Related Imports</p>
             <h2>Shipment context</h2>
           </div>
         </div>
         {shipments.size ? (
-          <div className="activity-list">
+          <div className="activity-list compact-activity-list">
             {[...shipments.values()].map((shipment) => (
               <Link href={`/imports/${shipment.id}`} key={shipment.id}>
                 <span>
@@ -213,11 +230,34 @@ export default async function PurchaseOrderPage({
             ))}
           </div>
         ) : (
-          <div className="inline-empty">
-            <p>No import shipment has been assigned yet.</p>
+          <div className="compact-empty">
+            <div>
+              <strong>Not assigned to an import yet.</strong>
+              <p>
+                Create an import when this stock enters the logistics workflow.
+              </p>
+            </div>
           </div>
         )}
       </section>
     </main>
+  );
+}
+
+function SummaryFact({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function RailStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div>
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </div>
   );
 }

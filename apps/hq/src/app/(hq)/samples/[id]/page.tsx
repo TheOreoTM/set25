@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import {
-  EvaluationForm,
-  SampleStatusForm,
+  EvaluationEditor,
+  SampleDecisionActions,
 } from "@/components/supply/sample-forms";
 import { requireStaff } from "@/lib/auth/session";
 import {
@@ -22,6 +24,7 @@ const criteria = [
   "branding",
   "value",
 ] as const;
+
 export default async function SamplePage({
   params,
 }: {
@@ -30,6 +33,7 @@ export default async function SamplePage({
   const { id } = await params;
   const [staff, sample] = await Promise.all([requireStaff(), getSample(id)]);
   if (!sample) notFound();
+
   const averages = Object.fromEntries(
     criteria.map((criterion) => [
       criterion,
@@ -46,76 +50,74 @@ export default async function SamplePage({
       criteria.length
     : 0;
   const canWrite = staff.role !== "STAFF";
+  const evaluationAction = addSampleEvaluationAction.bind(null, id);
+
   return (
-    <main className="page-wrap">
+    <main className="page-wrap supply-detail-page sample-detail-page">
       <PageHeader
         eyebrow="Supply / Samples"
         title={`${formatSampleNumber(sample.sampleNumber)} · ${sample.name}`}
-        description={`${sample.supplier.name} · recorded by ${sample.createdBy.name}`}
-      />
-      <section className="detail-section">
-        <div className="detail-section-head">
-          <div>
-            <p className="kicker">Sample</p>
-            <h2>Product test</h2>
-          </div>
+        titleMeta={
           <span className={`status status--${sample.status.toLowerCase()}`}>
             {sampleStatusLabels[sample.status]}
           </span>
-        </div>
-        <dl className="detail-definition-grid">
-          <div>
-            <dt>Supplier</dt>
-            <dd>{sample.supplier.name}</dd>
-          </div>
-          <div>
-            <dt>Product</dt>
-            <dd>{sample.product?.name ?? "Not linked"}</dd>
-          </div>
-          <div>
-            <dt>Variant</dt>
-            <dd>
-              {sample.variant
-                ? [sample.variant.color, sample.variant.size]
-                    .filter(Boolean)
-                    .join(" / ") || sample.variant.sku
-                : "Not linked"}
-            </dd>
-          </div>
-          <div>
-            <dt>Cost</dt>
-            <dd>
-              {sample.sampleCost
-                ? `${sample.currency} ${sample.sampleCost.toFixed(2)}`
-                : "Not recorded"}
-            </dd>
-          </div>
-          <div>
-            <dt>Ordered</dt>
-            <dd>{formatDate(sample.orderedAt)}</dd>
-          </div>
-          <div>
-            <dt>Received</dt>
-            <dd>{formatDate(sample.receivedAt)}</dd>
-          </div>
-        </dl>
-        {sample.notes ? <p className="detail-copy">{sample.notes}</p> : null}
+        }
+        description={sample.supplier.name}
+      />
+      <div className="detail-actions sample-page-actions">
+        <Link className="text-link back-link" href="/samples">
+          <ArrowLeft aria-hidden="true" /> All samples
+        </Link>
         {canWrite ? (
-          <div className="embedded-editor">
-            <SampleStatusForm
+          <div>
+            <EvaluationEditor action={evaluationAction} />
+            <SampleDecisionActions
               action={changeSampleStatusAction.bind(null, id)}
               current={sample.status}
             />
           </div>
         ) : null}
+      </div>
+
+      <section className="supply-summary-strip" aria-label="Sample summary">
+        <SummaryFact
+          label="Product"
+          value={sample.product?.name ?? "Not linked"}
+        />
+        <SummaryFact
+          label="Variant"
+          value={
+            sample.variant
+              ? [sample.variant.color, sample.variant.size]
+                  .filter(Boolean)
+                  .join(" / ") || sample.variant.sku
+              : "Not linked"
+          }
+        />
+        <SummaryFact label="Supplier" value={sample.supplier.name} />
+        <SummaryFact
+          label="Sample Cost"
+          value={
+            sample.sampleCost
+              ? `${sample.currency} ${sample.sampleCost.toFixed(2)}`
+              : "Not recorded"
+          }
+        />
+        <SummaryFact label="Received" value={formatDate(sample.receivedAt)} />
       </section>
-      <section className="detail-section">
+
+      <section className="detail-section sample-results-panel">
         <div className="detail-section-head">
           <div>
             <p className="kicker">Test Results</p>
             <h2>Evaluation averages</h2>
           </div>
-          <strong className="sample-overall">{overall.toFixed(2)} / 5</strong>
+          {sample.evaluations.length ? (
+            <div className="sample-overall-block">
+              <span>Overall Score</span>
+              <strong>{overall.toFixed(2)} / 5</strong>
+            </div>
+          ) : null}
         </div>
         {sample.evaluations.length ? (
           <div className="sample-average-grid">
@@ -123,64 +125,118 @@ export default async function SamplePage({
               <div key={criterion}>
                 <span>{criterion[0].toUpperCase() + criterion.slice(1)}</span>
                 <strong>{averages[criterion].toFixed(1)}</strong>
+                <small>/ 5</small>
               </div>
             ))}
           </div>
         ) : (
-          <div className="inline-empty">
-            <p>No evaluations recorded yet.</p>
+          <div className="compact-empty">
+            <div>
+              <strong>No evaluations yet.</strong>
+              <p>Add the first tester result to start the sample score.</p>
+            </div>
           </div>
         )}
       </section>
-      <section className="detail-section">
-        <div className="detail-section-head">
-          <div>
-            <p className="kicker">Testers</p>
-            <h2>Individual evaluations</h2>
+
+      <div className="supply-detail-grid sample-content-grid">
+        <section className="detail-section supply-main-panel compact-detail-section">
+          <div className="detail-section-head">
+            <div>
+              <p className="kicker">Tester Evaluations</p>
+              <h2>Individual results</h2>
+            </div>
           </div>
-          <span>{sample.evaluations.length} recorded</span>
-        </div>
-        {sample.evaluations.length ? (
-          <div className="evaluation-list">
-            {sample.evaluations.map((evaluation) => (
-              <article key={evaluation.id}>
-                <header>
-                  <div>
-                    <strong>{evaluation.testerName}</strong>
-                    <small>
-                      {formatDateTime(evaluation.createdAt)} · entered by{" "}
-                      {evaluation.recordedBy?.name ?? "Former staff"}
-                    </small>
-                  </div>
-                  <strong>
-                    {(
-                      criteria.reduce(
-                        (sum, criterion) => sum + evaluation[criterion],
-                        0,
-                      ) / criteria.length
-                    ).toFixed(2)}
-                  </strong>
-                </header>
-                <dl>
-                  {criteria.map((criterion) => (
-                    <div key={criterion}>
-                      <dt>{criterion}</dt>
-                      <dd>{evaluation[criterion]}</dd>
+          {sample.evaluations.length ? (
+            <div className="evaluation-list">
+              {sample.evaluations.map((evaluation) => (
+                <article key={evaluation.id}>
+                  <header>
+                    <div>
+                      <strong>{evaluation.testerName}</strong>
+                      <small>
+                        {formatDateTime(evaluation.createdAt)} · entered by{" "}
+                        {evaluation.recordedBy?.name ?? "Former staff"}
+                      </small>
                     </div>
-                  ))}
-                </dl>
-                {evaluation.notes ? <p>{evaluation.notes}</p> : null}
-              </article>
-            ))}
-          </div>
-        ) : null}
-        {canWrite ? (
-          <div className="embedded-editor">
-            <h3>Add evaluation</h3>
-            <EvaluationForm action={addSampleEvaluationAction.bind(null, id)} />
-          </div>
-        ) : null}
-      </section>
+                    <strong>
+                      {(
+                        criteria.reduce(
+                          (sum, criterion) => sum + evaluation[criterion],
+                          0,
+                        ) / criteria.length
+                      ).toFixed(2)}
+                    </strong>
+                  </header>
+                  <p className="evaluation-score-line">
+                    {criteria
+                      .map(
+                        (criterion) =>
+                          `${criterion[0].toUpperCase() + criterion.slice(1)} ${evaluation[criterion]}`,
+                      )
+                      .join(" · ")}
+                  </p>
+                  {evaluation.notes ? <p>{evaluation.notes}</p> : null}
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="compact-empty">
+              <p>Tester evaluations will appear here.</p>
+            </div>
+          )}
+        </section>
+
+        <aside className="supply-side-rail">
+          <section className="detail-section supply-summary-card">
+            <div className="detail-section-head">
+              <div>
+                <p className="kicker">Sample Context</p>
+                <h2>Testing record</h2>
+              </div>
+            </div>
+            <dl className="rail-stat-list rail-stat-list--text">
+              <TextRailStat
+                label="Ordered"
+                value={formatDate(sample.orderedAt)}
+              />
+              <TextRailStat
+                label="Received"
+                value={formatDate(sample.receivedAt)}
+              />
+              <TextRailStat
+                label="Evaluations"
+                value={String(sample.evaluations.length)}
+              />
+              <TextRailStat label="Recorded By" value={sample.createdBy.name} />
+            </dl>
+            {sample.notes ? (
+              <div className="supply-notes">
+                <span>Sample notes</span>
+                <p>{sample.notes}</p>
+              </div>
+            ) : null}
+          </section>
+        </aside>
+      </div>
     </main>
+  );
+}
+
+function SummaryFact({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function TextRailStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </div>
   );
 }

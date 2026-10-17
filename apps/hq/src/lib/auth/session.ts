@@ -13,6 +13,9 @@ export class AuthorizationError extends Error {
   }
 }
 
+// React cache only deduplicates this lookup within one server render. This is
+// intentionally not a `use cache` boundary: staff/session authorization must
+// be resolved from the current request and live database state.
 export const getCurrentStaff = cache(
   async (): Promise<StaffIdentity | null> => {
     const session = await auth();

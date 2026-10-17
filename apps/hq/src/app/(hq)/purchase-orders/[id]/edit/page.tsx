@@ -9,6 +9,7 @@ import {
   getSupplyProducts,
 } from "@/lib/supply/data";
 import { dateInput } from "@/lib/supply/presentation";
+import { toSupplierOptionDto } from "@/lib/supply/dto";
 
 export const metadata = { title: "Edit Purchase Order" };
 export default async function EditPurchaseOrderPage({
@@ -40,7 +41,7 @@ export default async function EditPurchaseOrderPage({
       />
       <PurchaseOrderForm
         action={updatePurchaseOrderAction.bind(null, id)}
-        suppliers={suppliers}
+        suppliers={suppliers.map(toSupplierOptionDto)}
         variants={variants}
         idempotencyKey={po.idempotencyKey}
         defaults={{

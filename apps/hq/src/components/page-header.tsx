@@ -1,18 +1,28 @@
+import type { ReactNode } from "react";
 import { Search } from "lucide-react";
 import { AccountMenu } from "./account-menu";
 
 type PageHeaderProps = {
   eyebrow: string;
   title: string;
+  titleMeta?: ReactNode;
   description?: string;
 };
 
-export function PageHeader({ eyebrow, title, description }: PageHeaderProps) {
+export function PageHeader({
+  eyebrow,
+  title,
+  titleMeta,
+  description,
+}: PageHeaderProps) {
   return (
     <header className="page-header">
       <div>
         <p className="breadcrumb">{eyebrow}</p>
-        <h1>{title}</h1>
+        <div className="page-title-row">
+          <h1>{title}</h1>
+          {titleMeta}
+        </div>
         {description ? <p className="page-description">{description}</p> : null}
       </div>
       <div className="header-actions">

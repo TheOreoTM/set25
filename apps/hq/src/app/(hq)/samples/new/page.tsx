@@ -3,6 +3,7 @@ import { SampleForm } from "@/components/supply/sample-forms";
 import { requireOperationalPageAccess } from "@/lib/auth/session";
 import { createSampleAction } from "@/lib/supply/actions";
 import { getActiveSuppliers, getSupplyProducts } from "@/lib/supply/data";
+import { toSampleProductDto, toSupplierOptionDto } from "@/lib/supply/dto";
 
 export const metadata = { title: "New Sample" };
 export default async function NewSamplePage() {
@@ -20,8 +21,8 @@ export default async function NewSamplePage() {
       />
       <SampleForm
         action={createSampleAction}
-        suppliers={suppliers}
-        products={products}
+        suppliers={suppliers.map(toSupplierOptionDto)}
+        products={products.map(toSampleProductDto)}
       />
     </main>
   );

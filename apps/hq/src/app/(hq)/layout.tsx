@@ -2,7 +2,9 @@ import type { ReactNode } from "react";
 import { AppShell } from "@/components/app-shell";
 import { requireStaff } from "@/lib/auth/session";
 
-// Authenticated HQ routes intentionally resolve staff access before rendering.
+// Every route in this group is private and reads live operational data.
+// Resolve staff access before rendering instead of caching session data or
+// forcing low-value streaming boundaries into each page.
 export const instant = false;
 
 export default async function HqLayout({ children }: { children: ReactNode }) {

@@ -53,7 +53,12 @@ export function getSupplier(id: string) {
         orderBy: { product: { name: "asc" } },
       },
       purchaseOrders: {
-        include: { _count: { select: { lines: true } } },
+        include: {
+          _count: { select: { lines: true } },
+          lines: {
+            select: { quantityOrdered: true, quantityReceived: true },
+          },
+        },
         orderBy: { createdAt: "desc" },
         take: 10,
       },

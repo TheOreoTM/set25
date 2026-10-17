@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, useState } from "react";
-import { ArrowLeft, Plus, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Pencil, Plus, Save, Trash2, X } from "lucide-react";
 import {
   COST_ALLOCATION_METHODS,
   costAllocationMethodLabels,
@@ -136,7 +136,8 @@ export function ImportForm({
                   </select>
                   {selected ? (
                     <small>
-                      {selected.sku} · maximum {selected.remaining} units
+                      {selected.sku} · maximum {selected.remaining}{" "}
+                      {selected.remaining === 1 ? "unit" : "units"}
                     </small>
                   ) : null}
                 </label>
@@ -218,7 +219,15 @@ export function ImportForm({
   );
 }
 
-export function ShipmentCostForm({
+type ShipmentCostDefaults = Record<
+  | "chinaShippingMvr"
+  | "internationalShippingMvr"
+  | "taxFeesMvr"
+  | "otherFeesMvr",
+  string
+> & { costAllocationMethod: CostAllocationMethodValue };
+
+export function ShipmentCostEditor({
   action,
   defaults,
 }: {
@@ -226,13 +235,59 @@ export function ShipmentCostForm({
     state: SupplyFormState,
     formData: FormData,
   ) => Promise<SupplyFormState>;
-  defaults: Record<
-    | "chinaShippingMvr"
-    | "internationalShippingMvr"
-    | "taxFeesMvr"
-    | "otherFeesMvr",
-    string
-  > & { costAllocationMethod: CostAllocationMethodValue };
+  defaults: ShipmentCostDefaults;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        className="button button--secondary"
+        type="button"
+        onClick={() => setOpen(true)}
+      >
+        <Pencil aria-hidden="true" /> Edit costs
+      </button>
+      {open ? (
+        <div className="dialog-backdrop" role="presentation">
+          <section
+            className="dialog-panel supply-editor-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="shipment-cost-title"
+          >
+            <div className="dialog-head">
+              <div>
+                <p className="kicker">Actual Cost to SET25</p>
+                <h2 id="shipment-cost-title">Edit shipment costs</h2>
+              </div>
+              <button
+                className="icon-button"
+                type="button"
+                aria-label="Close"
+                onClick={() => setOpen(false)}
+              >
+                <X aria-hidden="true" />
+              </button>
+            </div>
+            <div className="dialog-body">
+              <ShipmentCostForm action={action} defaults={defaults} />
+            </div>
+          </section>
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+function ShipmentCostForm({
+  action,
+  defaults,
+}: {
+  action: (
+    state: SupplyFormState,
+    formData: FormData,
+  ) => Promise<SupplyFormState>;
+  defaults: ShipmentCostDefaults;
 }) {
   const [state, formAction, pending] = useActionState(
     action,

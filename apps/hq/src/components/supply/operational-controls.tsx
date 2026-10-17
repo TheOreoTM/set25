@@ -39,7 +39,7 @@ export function PurchaseOrderStatusButtons({
       <SimpleAction
         action={cancelAction}
         label="Cancel PO"
-        className="button button--secondary"
+        className="button button--danger"
       />
     </div>
   );
@@ -116,18 +116,23 @@ export function ShipmentStatusForm({
 
 export function ReceiveShipment({
   action,
-  shipment,
-  lines,
+  receive,
 }: {
   action: Action;
-  shipment: { importNumber: number };
-  lines: {
-    id: string;
-    label: string;
-    sku: string;
-    quantity: number;
-    actualUnitCost: string;
-  }[];
+  receive: {
+    importNumber: number;
+    lines: {
+      id: string;
+      productName: string;
+      variantLabel: string;
+      sku: string;
+      quantityShipped: number;
+      quantityReceived: number;
+      productCostMvr: string;
+      allocatedSharedCostMvr: string;
+      actualUnitCostMvr: string;
+    }[];
+  };
 }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(
@@ -155,7 +160,7 @@ export function ReceiveShipment({
               <div>
                 <p className="kicker">Critical inventory action</p>
                 <h2 id="receive-title">
-                  Receive {formatImportNumber(shipment.importNumber)}?
+                  Receive {formatImportNumber(receive.importNumber)}?
                 </h2>
               </div>
               <button
@@ -175,13 +180,19 @@ export function ReceiveShipment({
                   final-cost changes will commit together.
                 </p>
                 <div className="receive-line-list">
-                  {lines.map((line) => (
+                  {receive.lines.map((line) => (
                     <label className="receive-line" key={line.id}>
                       <span>
-                        <strong>{line.label}</strong>
+                        <strong>
+                          {line.productName} · {line.variantLabel}
+                        </strong>
                         <small>
-                          {line.sku} · expected {line.quantity} ·{" "}
-                          {formatMVR(line.actualUnitCost)} each
+                          {line.sku} · expected {line.quantityShipped} ·{" "}
+                          {formatMVR(line.actualUnitCostMvr)} each
+                        </small>
+                        <small>
+                          Product {formatMVR(line.productCostMvr)} · allocated
+                          fees {formatMVR(line.allocatedSharedCostMvr)}
                         </small>
                       </span>
                       <input
@@ -189,9 +200,9 @@ export function ReceiveShipment({
                         name={`received:${line.id}`}
                         type="number"
                         min={1}
-                        max={line.quantity}
+                        max={line.quantityShipped}
                         step={1}
-                        defaultValue={line.quantity}
+                        defaultValue={line.quantityShipped}
                         required
                       />
                     </label>

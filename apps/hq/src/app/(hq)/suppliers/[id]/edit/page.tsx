@@ -4,6 +4,7 @@ import { SupplierForm } from "@/components/supply/supplier-forms";
 import { requireOperationalPageAccess } from "@/lib/auth/session";
 import { updateSupplierAction } from "@/lib/supply/actions";
 import { getSupplier } from "@/lib/supply/data";
+import { toSupplierFormDto } from "@/lib/supply/dto";
 
 export const metadata = { title: "Edit Supplier" };
 export default async function EditSupplierPage({
@@ -26,7 +27,7 @@ export default async function EditSupplierPage({
       />
       <SupplierForm
         action={updateSupplierAction.bind(null, id)}
-        defaults={supplier}
+        defaults={toSupplierFormDto(supplier)}
         cancelHref={`/suppliers/${id}`}
         submitLabel="Save supplier"
       />

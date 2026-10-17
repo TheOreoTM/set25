@@ -2,17 +2,21 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink, Pencil, Plus } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
-import { SupplierProductForm } from "@/components/supply/supplier-forms";
+import { SupplierProductEditor } from "@/components/supply/supplier-forms";
 import { requireStaff } from "@/lib/auth/session";
 import { addSupplierProductAction } from "@/lib/supply/actions";
 import { getSupplier, getSupplyProducts } from "@/lib/supply/data";
+import {
+  toSupplierProductOptionDto,
+  toSupplierTermsDto,
+} from "@/lib/supply/dto";
+import { formatDate } from "@/lib/supply/presentation";
 import {
   formatPurchaseOrderNumber,
   formatSampleNumber,
   purchaseOrderStatusLabels,
   sampleStatusLabels,
 } from "@set25/shared";
-import { formatDate } from "@/lib/supply/presentation";
 
 export default async function SupplierPage({
   params,
@@ -20,23 +24,40 @@ export default async function SupplierPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [staff, supplier, products] = await Promise.all([
+  const [staff, supplier, productRecords] = await Promise.all([
     requireStaff(),
     getSupplier(id),
     getSupplyProducts(),
   ]);
   if (!supplier) notFound();
+
   const canWrite = staff.role !== "STAFF";
+  const products = productRecords.map(toSupplierProductOptionDto);
+  const openPurchaseOrders = supplier.purchaseOrders.filter((po) =>
+    ["DRAFT", "PLACED"].includes(po.status),
+  );
+  const incomingUnits = supplier.purchaseOrders
+    .filter((po) => po.status === "PLACED")
+    .flatMap((po) => po.lines)
+    .reduce(
+      (total, line) => total + line.quantityOrdered - line.quantityReceived,
+      0,
+    );
+  const recentPo = supplier.purchaseOrders[0];
+
   return (
-    <main className="page-wrap">
+    <main className="page-wrap supply-detail-page">
       <PageHeader
         eyebrow="Supply / Suppliers"
         title={supplier.name}
-        description={
-          [supplier.country, supplier.contactName]
-            .filter(Boolean)
-            .join(" · ") || "Supplier record"
+        titleMeta={
+          <span
+            className={`status status--${supplier.active ? "active" : "archived"}`}
+          >
+            {supplier.active ? "Active" : "Inactive"}
+          </span>
         }
+        description={supplier.country ?? "Supplier record"}
       />
       <div className="detail-actions">
         <Link className="text-link back-link" href="/suppliers">
@@ -45,12 +66,12 @@ export default async function SupplierPage({
         <div>
           {supplier.alibabaUrl ? (
             <a
-              className="button button--secondary"
+              className="button button--quiet"
               href={supplier.alibabaUrl}
               target="_blank"
               rel="noreferrer"
             >
-              <ExternalLink aria-hidden="true" /> Alibaba
+              Alibaba <ExternalLink aria-hidden="true" />
             </a>
           ) : null}
           {canWrite ? (
@@ -71,95 +92,161 @@ export default async function SupplierPage({
           ) : null}
         </div>
       </div>
-      <section className="detail-section">
-        <div className="detail-section-head">
-          <div>
-            <p className="kicker">Supplier</p>
-            <h2>Contact information</h2>
-          </div>
-          <span
-            className={`status status--${supplier.active ? "active" : "archived"}`}
-          >
-            {supplier.active ? "Active" : "Inactive"}
-          </span>
+
+      <section
+        className="supply-summary-strip supply-summary-strip--four"
+        aria-label="Supplier summary"
+      >
+        <SummaryFact
+          label="Contact"
+          value={supplier.contactName ?? "Not recorded"}
+        />
+        <SummaryFact
+          label="Phone / WhatsApp"
+          value={supplier.phone ?? "Not recorded"}
+        />
+        <SummaryFact label="Email" value={supplier.email ?? "Not recorded"} />
+        <div>
+          <span>Website</span>
+          <strong>
+            {supplier.website ? (
+              <a href={supplier.website} target="_blank" rel="noreferrer">
+                Open website <ExternalLink aria-hidden="true" />
+              </a>
+            ) : (
+              "Not recorded"
+            )}
+          </strong>
         </div>
-        <dl className="detail-definition-grid">
-          <div>
-            <dt>Contact</dt>
-            <dd>{supplier.contactName ?? "Not recorded"}</dd>
-          </div>
-          <div>
-            <dt>Phone / WhatsApp</dt>
-            <dd>{supplier.phone ?? "Not recorded"}</dd>
-          </div>
-          <div>
-            <dt>Email</dt>
-            <dd>{supplier.email ?? "Not recorded"}</dd>
-          </div>
-          <div>
-            <dt>Website</dt>
-            <dd>{supplier.website ?? "Not recorded"}</dd>
-          </div>
-        </dl>
-        {supplier.notes ? (
-          <p className="detail-copy">{supplier.notes}</p>
-        ) : null}
       </section>
-      <section className="detail-section">
-        <div className="detail-section-head">
-          <div>
-            <p className="kicker">Products / Terms</p>
-            <h2>Supplier product references</h2>
-          </div>
-          <span>{supplier.products.length} linked</span>
-        </div>
-        {supplier.products.length ? (
-          <div className="supply-table">
-            <div className="supply-table-row supply-table-head">
-              <span>Product</span>
-              <span>Supplier SKU</span>
-              <span>MOQ</span>
-              <span>Sample Cost</span>
-              <span>Bulk Unit Price</span>
+
+      <div className="supply-detail-grid">
+        <section className="detail-section supply-main-panel">
+          <div className="detail-section-head">
+            <div>
+              <p className="kicker">Products / Terms</p>
+              <h2>Supplier product references</h2>
             </div>
-            {supplier.products.map((item) => (
-              <div className="supply-table-row" key={item.id}>
-                <span>
-                  <strong>{item.product.code}</strong>
-                  <small>{item.product.name}</small>
-                </span>
-                <span data-label="Supplier SKU">{item.supplierSku ?? "—"}</span>
-                <span data-label="MOQ">{item.moq ?? "—"}</span>
-                <span data-label="Sample Cost">
-                  {item.sampleCost
-                    ? `${item.currency} ${item.sampleCost.toFixed(2)}`
-                    : "—"}
-                </span>
-                <span data-label="Bulk Unit Price">
-                  {item.bulkUnitPrice
-                    ? `${item.currency} ${item.bulkUnitPrice.toFixed(2)}`
-                    : "—"}
-                </span>
+            {canWrite && supplier.products.length ? (
+              <SupplierProductEditor
+                action={addSupplierProductAction.bind(null, id)}
+                products={products}
+              />
+            ) : supplier.products.length ? (
+              <span>{supplier.products.length} linked</span>
+            ) : null}
+          </div>
+          {supplier.products.length ? (
+            <div className="terms-list">
+              {supplier.products.map((item) => (
+                <article className="terms-row" key={item.id}>
+                  <div className="terms-product">
+                    <strong>{item.product.name}</strong>
+                    <small>
+                      {item.product.code}
+                      {item.supplierSku ? ` · ${item.supplierSku}` : ""}
+                    </small>
+                  </div>
+                  <TermFact label="MOQ" value={String(item.moq ?? "—")} />
+                  <TermFact
+                    label="Bulk Price"
+                    value={
+                      item.bulkUnitPrice
+                        ? `${item.currency} ${item.bulkUnitPrice.toFixed(2)}`
+                        : "—"
+                    }
+                  />
+                  <TermFact
+                    label="Sample"
+                    value={
+                      item.sampleCost
+                        ? `${item.currency} ${item.sampleCost.toFixed(2)}`
+                        : "—"
+                    }
+                  />
+                  <div className="terms-actions">
+                    {item.productUrl ? (
+                      <a
+                        className="text-link"
+                        href={item.productUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Alibaba <ExternalLink aria-hidden="true" />
+                      </a>
+                    ) : null}
+                    {canWrite ? (
+                      <SupplierProductEditor
+                        action={addSupplierProductAction.bind(null, id)}
+                        products={products}
+                        defaults={toSupplierTermsDto(item)}
+                        label="Edit"
+                        compact
+                      />
+                    ) : null}
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="compact-empty">
+              <div>
+                <strong>No product terms yet.</strong>
+                <p>
+                  Add MOQ, bulk price, and sample pricing for this supplier.
+                </p>
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="inline-empty">
-            <p>No product terms recorded yet.</p>
-          </div>
-        )}
-        {canWrite ? (
-          <div className="embedded-editor">
-            <h3>Add or update product terms</h3>
-            <SupplierProductForm
-              action={addSupplierProductAction.bind(null, id)}
-              products={products}
-            />
-          </div>
-        ) : null}
-      </section>
-      <div className="detail-columns">
-        <section className="detail-section">
+              {canWrite ? (
+                <SupplierProductEditor
+                  action={addSupplierProductAction.bind(null, id)}
+                  products={products}
+                />
+              ) : null}
+            </div>
+          )}
+          {supplier.notes ? (
+            <div className="supply-notes">
+              <span>Supplier notes</span>
+              <p>{supplier.notes}</p>
+            </div>
+          ) : null}
+        </section>
+
+        <aside className="supply-side-rail">
+          <section className="detail-section supply-summary-card">
+            <div className="detail-section-head">
+              <div>
+                <p className="kicker">Supply Summary</p>
+                <h2>At a glance</h2>
+              </div>
+            </div>
+            <dl className="rail-stat-list">
+              <RailStat
+                label="Purchase Orders"
+                value={supplier.purchaseOrders.length}
+              />
+              <RailStat label="Open POs" value={openPurchaseOrders.length} />
+              <RailStat label="Incoming Units" value={incomingUnits} />
+              <RailStat label="Samples" value={supplier.samples.length} />
+              <div>
+                <dt>Recent PO</dt>
+                <dd>
+                  {recentPo ? (
+                    <Link href={`/purchase-orders/${recentPo.id}`}>
+                      {formatPurchaseOrderNumber(recentPo.purchaseOrderNumber)}
+                    </Link>
+                  ) : (
+                    "—"
+                  )}
+                </dd>
+              </div>
+            </dl>
+          </section>
+        </aside>
+      </div>
+
+      <div className="detail-columns supply-secondary-grid">
+        <section className="detail-section compact-detail-section">
           <div className="detail-section-head">
             <div>
               <p className="kicker">Purchase Orders</p>
@@ -167,7 +254,7 @@ export default async function SupplierPage({
             </div>
           </div>
           {supplier.purchaseOrders.length ? (
-            <div className="activity-list">
+            <div className="activity-list compact-activity-list">
               {supplier.purchaseOrders.map((po) => (
                 <Link href={`/purchase-orders/${po.id}`} key={po.id}>
                   <span>
@@ -175,7 +262,9 @@ export default async function SupplierPage({
                       {formatPurchaseOrderNumber(po.purchaseOrderNumber)}
                     </strong>
                     <small>
-                      {po._count.lines} items · {formatDate(po.createdAt)}
+                      {po._count.lines}{" "}
+                      {po._count.lines === 1 ? "item" : "items"} ·{" "}
+                      {formatDate(po.createdAt)}
                     </small>
                   </span>
                   <span className={`status status--${po.status.toLowerCase()}`}>
@@ -185,12 +274,12 @@ export default async function SupplierPage({
               ))}
             </div>
           ) : (
-            <div className="inline-empty">
+            <div className="compact-empty">
               <p>No purchase orders yet.</p>
             </div>
           )}
         </section>
-        <section className="detail-section">
+        <section className="detail-section compact-detail-section">
           <div className="detail-section-head">
             <div>
               <p className="kicker">Samples</p>
@@ -198,7 +287,7 @@ export default async function SupplierPage({
             </div>
           </div>
           {supplier.samples.length ? (
-            <div className="activity-list">
+            <div className="activity-list compact-activity-list">
               {supplier.samples.map((sample) => (
                 <Link href={`/samples/${sample.id}`} key={sample.id}>
                   <span>
@@ -220,12 +309,39 @@ export default async function SupplierPage({
               ))}
             </div>
           ) : (
-            <div className="inline-empty">
+            <div className="compact-empty">
               <p>No samples yet.</p>
             </div>
           )}
         </section>
       </div>
     </main>
+  );
+}
+
+function SummaryFact({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function TermFact({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function RailStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div>
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </div>
   );
 }
