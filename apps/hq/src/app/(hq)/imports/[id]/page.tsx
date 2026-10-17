@@ -15,6 +15,7 @@ import {
 } from "@/lib/supply/actions";
 import { getImport } from "@/lib/supply/data";
 import { toReceiveShipmentDto } from "@/lib/supply/dto";
+import { getRecordedMoneyOut } from "@/lib/money/data";
 import { formatDate, formatDateTime } from "@/lib/supply/presentation";
 import {
   COST_ALLOCATION_METHODS,
@@ -24,6 +25,8 @@ import {
   formatPurchaseOrderNumber,
   importShipmentStatusLabels,
 } from "@set25/shared";
+
+export const instant = false;
 
 const journey = [
   "PLANNING",
@@ -42,7 +45,11 @@ export default async function ImportPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [staff, shipment] = await Promise.all([requireStaff(), getImport(id)]);
+  const [staff, shipment, recordedMoneyOut] = await Promise.all([
+    requireStaff(),
+    getImport(id),
+    getRecordedMoneyOut({ importShipmentId: id }),
+  ]);
   if (!shipment) notFound();
 
   const canWrite = staff.role !== "STAFF";
@@ -174,6 +181,10 @@ export default async function ImportPage({
                 <dt>Total</dt>
                 <dd>{formatMVR(shipment.preview.totalCostMvr)}</dd>
               </div>
+              <CostRow
+                label="Recorded related Money Out"
+                value={formatMVR(recordedMoneyOut)}
+              />
             </dl>
             <div className="cost-allocation-note">
               <span>Allocation</span>

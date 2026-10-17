@@ -6,6 +6,8 @@ import { requireStaff } from "@/lib/auth/session";
 import { getOpenPurchaseOrdersForPreorder } from "@/lib/supply/data";
 import { formatPurchaseOrderNumber } from "@set25/shared";
 
+export const instant = false;
+
 export default async function PreorderPage({
   params,
   searchParams,

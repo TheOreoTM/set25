@@ -4,6 +4,8 @@ import { OrderDetail } from "@/components/commerce/order-detail";
 import { getOrder } from "@/lib/commerce/data";
 import { requireStaff } from "@/lib/auth/session";
 
+export const instant = false;
+
 export default async function OrderPage({
   params,
   searchParams,

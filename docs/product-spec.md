@@ -97,6 +97,27 @@ Supply costs exist only to value incoming inventory. Milestone 5 does not introd
 
 The dashboard now uses live data for completed sales this month, order count, recent orders, payment attention, stock value, active import shipments, and supply attention. Profit remains explicitly deferred until its accounting definition is implemented; tasks remain visibly labelled as demo content.
 
+## Milestone 6: money and planning
+
+HQ now provides an operational cash-movement ledger, deliberately scoped profitability reporting, and lightweight task planning. These are management views for running SET25, not formal accounting statements.
+
+Money definitions are explicit:
+
+- **Money In** is the net of recorded Order/Preorder payments and refunds plus manual Money In entries. Customer payments remain in the existing Payment ledger and are never duplicated into `MoneyEntry`.
+- **Money Out** is the total of append-only manual `MoneyEntry` outflows in the selected period. A Purchase Order or Import cost fact does not automatically mean cash was paid.
+- **Net Cash Recorded** is Money In minus Money Out. It is not a bank balance, available cash figure, or reconciliation.
+- **Sales Revenue** is the total of Orders completed in the selected period.
+- **Cost of Items Sold** uses the immutable `OrderLine.unitCost × quantity` snapshots for those completed Orders.
+- **Sales Profit** is Sales Revenue minus Cost of Items Sold. If any sold line lacks historical Cost Each, Sales Profit is shown as unavailable rather than assuming zero cost.
+- **Operating Expenses** include Packaging, Marketing, Delivery, Software, and Other Money Out. Supplier Payment, China Shipping, International Shipping, and Tax/Fees are excluded because they are capitalised through Actual Cost to SET25 and later Cost of Items Sold. Equipment is also excluded because its treatment is intentionally unresolved.
+- **Operating Profit** is Sales Profit minus those Operating Expenses. It is an operational definition, not formal accounting net profit.
+
+Manual entries are MVR-only in this milestone; foreign payments are recorded at their MVR equivalent. Entries are historical and append-only with no casual edit/delete workflow. Money may link to one Supplier, Purchase Order, Import, or Order without changing the linked record's operational cost facts.
+
+Tasks are a small planning layer rather than a project-management system. A Task has a status, priority, optional due date, optional active staff assignee, and at most one explicit link to an Order/Preorder, Purchase Order, Import, Supplier, Sample, Customer, or Team. Owner and Manager can create, edit, assign, and update Tasks. Staff can read Money and Tasks, cannot record Money, and can only change the status of Tasks assigned to themselves (including Mark Done). Task views cover Open, Needs Attention (overdue, due today, or High priority), Overdue, Today, Upcoming, Waiting, Completed, and All.
+
+The dashboard uses live monthly Sales Profit and real open Tasks. Formal bookkeeping, bank reconciliation, double entry, tax reporting, payroll, balance sheets, professional profit-and-loss statements, reversals, and equipment accounting remain deferred.
+
 ## Success criteria for Milestone 1
 
 - The dashboard feels recognizably SET25 rather than like a generic admin template.

@@ -92,6 +92,8 @@ const staffRoutes = new Set([
   "/purchase-orders",
   "/imports",
   "/samples",
+  "/money",
+  "/tasks",
 ]);
 
 function NavigationLinks({

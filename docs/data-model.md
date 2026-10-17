@@ -137,15 +137,21 @@ Indexes support the current operational queries: order date, fulfilment/date, ty
 
 ### Money
 
-- `MoneyEntry` or purpose-specific income/expense records
-- payment allocation and reconciliation records
-- currency and exchange-rate facts where international supply requires them
+- `Payment` remains the only source for actual customer Order/Preorder payments and refunds. These transactions are aggregated directly into Money In and are never copied into `MoneyEntry`.
+- `MoneyEntry` is an append-only ledger for manual Money In and actual Money Out. It records direction, a deliberately small category, positive Decimal amount, MVR currency, occurrence date, description, optional reference/notes, actor, and a unique submission key.
+- A MoneyEntry may link to at most one Supplier, Purchase Order, Import Shipment, or Order. Explicit nullable foreign keys provide referential integrity; a database check prevents multiple simultaneous links.
+- Runtime and database checks restrict Money In to Owner Funding, Other Income, and Refund Received, and Money Out to the supported payment/operating categories.
+- Manual entries are MVR-only for Milestone 6. A foreign payment is entered at its MVR equivalent; original-currency accounting and exchange-rate ledgers remain deferred.
+
+Profitability is derived rather than stored. Completed Orders in the period provide Sales Revenue. Their immutable `OrderLine.unitCost × quantity` snapshots provide Cost of Items Sold. Missing historical costs make Sales Profit and Operating Profit unavailable. Operating Expenses include Packaging, Marketing, Delivery, Software, and Other only. Inventory acquisition categories are excluded to prevent double-counting costs already included through Actual Cost to SET25 and Cost of Items Sold. Equipment is excluded pending an explicit future treatment.
 
 Financial naming in the interface remains plain English even where the model uses precise accounting concepts.
 
 ### Operations and relationships
 
-- `Task`, assignee, due date, status, and links to operational records
+- `Task` stores title, optional description, To Do/Doing/Waiting/Done status, Low/Medium/High priority, optional due date, creator, optional active staff assignee, completion timestamp, and timestamps.
+- Explicit nullable relations support one Order/Preorder, Purchase Order, Import, Supplier, Sample, Customer, or Team link. A database check enforces at most one linked record and another keeps Done status aligned with `completedAt`.
+- Owner and Manager may create, edit, assign, and change task status. Staff may view all Tasks and change only the status of Tasks assigned to themselves; they cannot create, edit, reassign, or reprioritise Tasks. The status action enforces this server-side.
 - `Ambassador` and agreement/activity records
 - `ContentItem` and publishing schedule
 - `FileAsset` / attachment metadata with secure object storage references

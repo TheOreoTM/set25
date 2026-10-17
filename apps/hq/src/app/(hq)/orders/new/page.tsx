@@ -5,6 +5,8 @@ import { OrderForm } from "@/components/commerce/order-form";
 import { getOrderFormOptions } from "@/lib/commerce/data";
 import { requireOperationalPageAccess } from "@/lib/auth/session";
 
+export const instant = false;
+
 export const metadata = { title: "New Order" };
 
 export default async function NewOrderPage() {

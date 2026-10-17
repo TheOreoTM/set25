@@ -12,6 +12,8 @@ import { getTeam } from "@/lib/commerce/data";
 import { requireStaff } from "@/lib/auth/session";
 import { paymentSummary } from "@/lib/commerce/money";
 
+export const instant = false;
+
 export default async function TeamDetailPage({
   params,
 }: {

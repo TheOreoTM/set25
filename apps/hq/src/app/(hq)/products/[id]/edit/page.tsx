@@ -6,6 +6,8 @@ import { updateProductAction } from "@/lib/catalog/actions";
 import { getProduct } from "@/lib/catalog/data";
 import { requireOperationalPageAccess } from "@/lib/auth/session";
 
+export const instant = false;
+
 export default function EditProductPage({
   params,
 }: {

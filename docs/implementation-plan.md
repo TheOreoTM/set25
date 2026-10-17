@@ -63,9 +63,23 @@ Implemented:
 
 Deferred deliberately: general Money In/Out and expense ledgers, freight invoice currencies beyond entered MVR equivalents, attachments, destructive receipt correction, reservations, per-preorder allocation, and multi-location inventory.
 
-## Milestone 6 — Money and planning
+## Milestone 6 — Money and planning (complete)
 
-Implement Money In, Money Out, operational profitability, tasks, and links between money/tasks and business records. Confirm reporting definitions with SET25 before encoding them.
+Implemented:
+
+- append-only, idempotent manual Money In / Money Out entries in MVR;
+- one-source Money history combining existing Payment/Refund transactions with manual entries without duplication;
+- date presets, custom ranges, direction/category/search filters, and explicit Net Cash Recorded wording;
+- completed-order Sales Revenue and historical OrderLine-based Cost of Items Sold;
+- Sales Profit that becomes unavailable when historical cost data is incomplete;
+- Operating Expenses and Operating Profit with inventory acquisition and equipment excluded to prevent double-counting or ambiguous treatment;
+- optional Money links to Supplier, Purchase Order, Import, or Order plus payment context on PO and Import detail pages;
+- operational Tasks with status, priority, due date, assignee, and one validated business-record relation;
+- live dashboard Sales Profit, incomplete stock valuation context, task attention, and upcoming tasks;
+- Owner/Manager Money and Task mutations; Staff read-only Money and status-only updates on their own assigned Tasks;
+- Decimal-safe server/client DTOs and responsive Money/Task rows and forms.
+
+Deferred deliberately: bank reconciliation, formal bookkeeping, double entry, tax filing, payroll, invoice generation, reversal tooling, original-currency ledgers, equipment accounting treatment, task comments, notifications, recurring tasks, Kanban, and Milestone 7 entities.
 
 ## Milestone 7 — Relationships, content, and files
 

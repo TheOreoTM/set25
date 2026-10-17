@@ -13,6 +13,8 @@ import { getOrders } from "@/lib/commerce/data";
 import { paymentSummary } from "@/lib/commerce/money";
 import { requireStaff } from "@/lib/auth/session";
 
+export const instant = false;
+
 export const metadata = { title: "Preorders" };
 
 export default async function PreordersPage({

@@ -10,6 +10,8 @@ import {
 } from "@set25/shared";
 import { formatDate } from "@/lib/supply/presentation";
 
+export const instant = false;
+
 export const metadata = { title: "Purchase Orders" };
 export default async function PurchaseOrdersPage({
   searchParams,

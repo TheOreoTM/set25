@@ -18,6 +18,8 @@ import {
   sampleStatusLabels,
 } from "@set25/shared";
 
+export const instant = false;
+
 export default async function SupplierPage({
   params,
 }: {
