@@ -17,6 +17,11 @@ import { StockAdjustment } from "@/components/catalog/stock-adjustment";
 import { getProductWithMovements } from "@/lib/catalog/data";
 import { requireStaff } from "@/lib/auth/session";
 import { FileAttachmentsPanel } from "@/components/files/file-attachments-panel";
+import { ProductMediaPanel } from "@/components/catalog/product-media-panel";
+import {
+  isPublicMediaConfigured,
+  publicMediaBaseUrl,
+} from "@/lib/files/storage";
 
 export const instant = false;
 
@@ -249,6 +254,17 @@ async function ProductDetail({
           </div>
         )}
       </section>
+      <ProductMediaPanel
+        productId={product.id}
+        canWrite={staff.role !== "STAFF"}
+        configured={isPublicMediaConfigured()}
+        media={product.media.map((item) => ({
+          id: item.id,
+          url: `${publicMediaBaseUrl()}/${item.storageKey}`,
+          altText: item.altText,
+          isPrimary: item.isPrimary,
+        }))}
+      />
       <section
         className="resource-panel detail-section"
         aria-labelledby="movements-title"

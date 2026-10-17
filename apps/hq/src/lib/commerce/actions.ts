@@ -1,6 +1,7 @@
 "use server";
 
 import { db, Prisma } from "@set25/database";
+import { holdingReservationWhere } from "@set25/database/inventory";
 import { formatOrderNumber } from "@set25/shared";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -21,6 +22,16 @@ function failure(
   errors?: Record<string, string[]>,
 ): CommerceFormState {
   return { status: "error", message, errors };
+}
+
+async function keepReservationsUntilClosed(
+  transaction: Prisma.TransactionClient,
+  orderId: string,
+) {
+  await transaction.stockReservation.updateMany({
+    where: { orderId, ...holdingReservationWhere(new Date()) },
+    data: { expiresAt: null },
+  });
 }
 
 function databaseFailure(
@@ -182,6 +193,7 @@ export async function createOrderAction(
         notes: input.notes,
         subtotal,
         discountAmount: discount,
+        discountSource: discount.greaterThan(0) ? "MANUAL" : null,
         deliveryFee: delivery,
         total,
         createdById: staff.id,
@@ -260,6 +272,10 @@ export async function recordPaymentAction(
         await transaction.payment.create({
           data: { orderId, ...input, amount, recordedById: staff.id },
         });
+        // A paid Store order keeps its stock hold until completion or
+        // cancellation. An already-expired hold is not revived.
+        if (input.type === "PAYMENT")
+          await keepReservationsUntilClosed(transaction, orderId);
         const afterPayment =
           input.type === "PAYMENT" ? paid.plus(amount) : paid.minus(amount);
         if (
@@ -340,13 +356,19 @@ export async function updateFulfilmentAction(
       );
     if (rank[status] < rank[order.fulfilmentStatus])
       return failure("Fulfilment can only move forward.");
-    const updated = await db.order.updateMany({
-      where: {
-        id: orderId,
-        fulfilmentStatus: order.fulfilmentStatus,
-        inventoryAppliedAt: null,
-      },
-      data: { fulfilmentStatus: status },
+    const updated = await db.$transaction(async (transaction) => {
+      const result = await transaction.order.updateMany({
+        where: {
+          id: orderId,
+          fulfilmentStatus: order.fulfilmentStatus,
+          inventoryAppliedAt: null,
+        },
+        data: { fulfilmentStatus: status },
+      });
+      // Staff are working on this order, so its Store hold no longer expires.
+      if (result.count === 1 && status !== "NEW")
+        await keepReservationsUntilClosed(transaction, orderId);
+      return result;
     });
     if (updated.count !== 1)
       return failure(
@@ -357,6 +379,7 @@ export async function updateFulfilmentAction(
   }
   revalidatePath("/");
   revalidatePath("/orders");
+  revalidatePath("/stock");
   revalidatePath(`/orders/${orderId}`);
   redirect(
     `/${formData.get("returnTo") === "preorder" ? "preorders" : "orders"}/${orderId}?saved=fulfilment`,
@@ -418,6 +441,13 @@ export async function completeOrderAction(
         });
       }
       const completedAt = new Date();
+      // The SALE movements above deducted the physical units that any Store
+      // reservation was holding, so the hold is now consumed (never released
+      // and never deducted twice).
+      await transaction.stockReservation.updateMany({
+        where: { orderId, status: "ACTIVE" },
+        data: { status: "CONSUMED", consumedAt: completedAt },
+      });
       const completed = await transaction.order.updateMany({
         where: {
           id: orderId,
@@ -512,15 +542,21 @@ export async function cancelOrderAction(
       if (order.fulfilmentStatus === "COMPLETED")
         throw new Error("ORDER_COMPLETED");
       if (order.fulfilmentStatus === "CANCELLED") return;
+      const cancelledAt = new Date();
       const cancelled = await transaction.order.updateMany({
         where: {
           id: orderId,
           fulfilmentStatus: { notIn: ["COMPLETED", "CANCELLED"] },
           inventoryAppliedAt: null,
         },
-        data: { fulfilmentStatus: "CANCELLED", cancelledAt: new Date() },
+        data: { fulfilmentStatus: "CANCELLED", cancelledAt },
       });
       if (cancelled.count !== 1) throw new Error("ORDER_STATE_CHANGED");
+      // Reserved units become available to sell again immediately.
+      await transaction.stockReservation.updateMany({
+        where: { orderId, status: "ACTIVE" },
+        data: { status: "RELEASED", releasedAt: cancelledAt },
+      });
       if (order.type === "PREORDER") {
         await transaction.preorderDetail.updateMany({
           where: {
@@ -547,6 +583,7 @@ export async function cancelOrderAction(
   revalidatePath("/");
   revalidatePath("/orders");
   revalidatePath("/preorders");
+  revalidatePath("/stock");
   revalidatePath(`/orders/${orderId}`);
   revalidatePath(`/preorders/${orderId}`);
   redirect(

@@ -176,6 +176,9 @@ export async function getOrder(id: string) {
       customer: true,
       team: true,
       createdBy: { select: { name: true } },
+      ambassador: { select: { id: true, name: true } },
+      delivery: true,
+      reservations: { orderBy: { createdAt: "asc" } },
       lines: { orderBy: { createdAt: "asc" } },
       payments: {
         include: { recordedBy: { select: { name: true } } },

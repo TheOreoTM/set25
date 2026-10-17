@@ -98,9 +98,27 @@ Requires the `R2_*` variables (see `apps/hq/.env.example`) and a private bucket 
 
 Deferred deliberately: Store discount redemption, commission payouts, social posting integrations, campaign analytics, file versioning, virus scanning, abandoned-upload cleanup jobs, and a generic audit log.
 
-## Milestone 8 — Store and checkout
+## Milestone 8 — Public Store and checkout (implemented, awaiting manual verification)
 
-Build the public storefront, published catalogue, availability, cart, checkout, customer communications, and post-purchase experience against the same shared database and controlled server services.
+Implemented:
+
+- a branded, mobile-first public Store: home, `/shop` with category and availability filters, product detail with accessible colour/size selection, cart, guest checkout, order confirmation, About, and branded empty/error/not-found states;
+- explicit public catalogue, settings, and order projections that exclude every private HQ field;
+- public `ProductMedia` in a separate public bucket, managed from the HQ product page;
+- one canonical available-to-sell helper used by Store listing, product detail, checkout, and HQ `/stock`;
+- `StockReservation` holds created at checkout, expired lazily, extended once paid or in fulfilment, consumed by completion, and released by cancellation;
+- a server-authoritative, row-locked, idempotent checkout transaction that creates ONLINE orders with immutable line, delivery, payment-intention, and discount snapshots;
+- Customer reuse by normalised phone;
+- ambassador discount codes validated and snapshotted server-side, with ambassador attribution;
+- unguessable public order tokens;
+- HQ `/settings/store` for Store Open, contact, instructions, reservation hours, and delivery options;
+- an HQ order detail Store checkout panel;
+- pragmatic in-memory rate limits and a no-op customer messaging boundary;
+- product-specific metadata and Open Graph data, plus `robots.txt`.
+
+Requires the `store_checkout` migration. Public images also need `R2_PUBLIC_BUCKET_NAME` and `PUBLIC_MEDIA_BASE_URL` in HQ and `PUBLIC_MEDIA_BASE_URL` in the Store.
+
+Deferred deliberately: payment-proof upload (customers send slips by WhatsApp or Instagram), confirmation email/SMS/WhatsApp, online card payments, customer accounts, commission payouts, courier integration, a sitemap, shared rate limiting, on-demand Store revalidation, and reservation-aware blocking of HQ manual sales.
 
 ## Rapid-development quality gates
 

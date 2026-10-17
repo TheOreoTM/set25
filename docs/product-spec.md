@@ -167,6 +167,93 @@ The dashboard adds overdue content and (for the Owner) retention-expired files t
 
 Deferred deliberately: Store discount redemption, commission calculation and payouts, social posting APIs and automatic publishing, campaign analytics, content calendar drag-and-drop, file versioning, virus scanning, a scheduled cleanup job for abandoned pending uploads, and a generic audit log.
 
+## Milestone 8: public Store and checkout
+
+The public Store (`apps/shop`) sells published SET25 products from the same database HQ operates. HQ and the Store work on the same Product, Variant, Customer, and Order records; there is no separate Store catalogue, inventory, or order system.
+
+### Public/private boundary
+
+- The Store queries only through explicit projections in `apps/shop/src/lib` (`catalog.ts`, `orders.ts`, `settings.ts`). Each `select` lists customer-safe fields. Cost, supplier data, purchase orders, imports, internal notes, staff identity, Money records, FileAssets, SKUs, exact stock quantities, and inventory movements are never selected for public output.
+- The Store never imports HQ code. Shared logic lives in packages: `@set25/shared` (client-safe labels, `normalizePhone`, public availability labels) and `@set25/database/inventory` (the available-to-sell helper).
+- Money crosses the server/client boundary only as strings.
+
+### Catalogue
+
+A product is public when `isPublished = true`, `status = ACTIVE`, and it has at least one active variant. Only active variants are listed. Price is `sellPriceOverride` when set, otherwise `retailPrice`. `/shop` filters by category and "In stock only". Catalogue copy is cached for about a minute (`use cache`, `cacheLife` 60 s); availability is always read fresh. HQ and the Store are separate deployments, so catalogue edits in HQ reach the Store within about a minute rather than through on-demand revalidation.
+
+### Availability
+
+`availableToSell = stockOnHand − ACTIVE, unexpired StockReservation quantity`, computed only by `@set25/database/inventory`. The Store shows **In Stock**, **Low Stock** (3 or fewer), or **Sold Out**; it never shows exact quantities. HQ `/stock` shows On Hand, Reserved, Available, and Incoming.
+
+### Product media
+
+Store images are `ProductMedia` records stored in a **separate, deliberately public** bucket (`R2_PUBLIC_BUCKET_NAME`, served from `PUBLIC_MEDIA_BASE_URL`). Owners and Managers upload them from the product page (JPG/PNG/WEBP, 10 MB, required alt text), reorder them, choose the cover, and remove them. Private `FileAsset` documents are never made public or reused as Store media. Without the public media settings the Store shows a branded placeholder.
+
+### Cart
+
+The cart is stored in `localStorage` (survives refresh, syncs across tabs) and holds variant IDs, quantities, and display snapshots. The cart and checkout pages ask the server for an authoritative quote; the browser's prices, names, discounts, and totals are never trusted.
+
+### Checkout
+
+Guest checkout only. The customer gives full name, phone, optional email and Instagram, island/area, address, optional delivery notes, a delivery option, a payment method (Bank Transfer or Cash on Delivery), and an optional discount code.
+
+The server action re-derives everything in one transaction:
+
+1. validates the form and the cart (1–20 lines, quantity 1–10);
+2. confirms the Store is open and the delivery option is active (fresh reads);
+3. locks the variant rows (`SELECT … FOR UPDATE`, sorted IDs) and lazily releases expired reservations for them;
+4. reloads every variant, checks product ACTIVE, published, variant active, and enough available-to-sell stock;
+5. prices lines, subtotal, ambassador discount, delivery fee, and total server-side;
+6. reuses or creates the Customer;
+7. creates a STANDARD, ONLINE Order (fulfilment NEW, no staff actor) with immutable OrderLine snapshots, an `OrderDelivery` snapshot, the payment intention, and the discount snapshot;
+8. creates one ACTIVE reservation per line, expiring after the configured hours;
+9. returns an unguessable public token and redirects to `/order/[token]`.
+
+**Idempotency:** the browser generates one UUID per cart (kept in `sessionStorage`, renewed when the cart changes) and the order stores `store:<uuid>` in the unique `Order.idempotencyKey`. A double click, retry, or refresh returns the existing order; a concurrent duplicate loses on the unique key and also returns the winner.
+
+**Customer matching:** phone numbers are normalised to digits without `00` or the `960` country code (`Customer.phoneKey`). The oldest Customer with the same key is reused, otherwise a Customer is created. An advisory lock prevents two simultaneous first orders creating duplicates. Existing Customer details are never overwritten from the public form, and the Store never reveals whether a phone already exists.
+
+**Payment intention:** `Order.intendedPaymentMethod` records what the customer chose. No Payment row is created at checkout. Orders stay Unpaid until staff record a real Payment in HQ.
+
+**Payment proof upload is deferred.** The confirmation page shows the bank details from Store settings and asks the customer to send the transfer slip with the order number by WhatsApp or Instagram. A public upload path would need its own validation, abuse protection, and lifecycle, which is not justified for launch.
+
+### Reservations
+
+- Checkout reserves stock; `stockOnHand` does not change.
+- An unpaid reservation expires after `StoreSettings.reservationHours` (default 24). Expiry is lazy: expired holds stop counting immediately and are marked RELEASED the next time a checkout touches that variant. No background job is needed.
+- Recording a payment, or moving fulfilment past New, removes the expiry, so confirmed orders keep their hold until completion or cancellation. An already-expired hold is not revived.
+- HQ completion deducts `stockOnHand` and writes SALE movements exactly once (unchanged), then marks the order's reservations CONSUMED in the same transaction.
+- HQ cancellation releases ACTIVE reservations in the same transaction.
+- HQ manual orders, giveaways, and adjustments keep their existing behaviour and are not blocked by Store reservations. Staff can see Reserved and Available on `/stock`; if on-hand stock falls below what is reserved, completing the online order fails with the existing stock error.
+
+### Ambassador discounts
+
+A code is valid when it matches an ACTIVE ambassador's `discountCode` case-insensitively and the ambassador has a discount percentage above 0 and at most 100. The discount applies to the items subtotal, rounded half-up to two places. The order snapshots `discountSource = AMBASSADOR_CODE`, `discountCode`, `discountPercent`, `discountAmount`, and `ambassadorId`, so later ambassador changes never alter past orders. Commission calculation and payouts remain deferred.
+
+### Order confirmation
+
+`/order/[token]` uses a 256-bit random token (`Order.publicToken`), never the order ID or sequential number. It shows the order number, first name, items, totals, fulfilment status, paid/awaiting payment, payment instructions, the stock hold, and delivery details. It is `noindex`, sent with `Referrer-Policy: no-referrer`, rate-limited, and always rendered fresh.
+
+### Store settings and delivery
+
+HQ `/settings/store` (Owner and Manager) controls Store Open, an announcement, reservation hours, support phone/WhatsApp/Instagram, bank transfer instructions, delivery instructions, and delivery options (name, description, price, active, position). The migration creates the settings row **closed**, and the Malé, Hulhumalé, and Other Maldives options **inactive with price 0**, so staff set real prices before opening. When the Store is closed, customers can browse but checkout shows "Online ordering is temporarily unavailable."
+
+### HQ integration
+
+Online orders appear in `/orders` with Source **Online** and use the existing fulfilment, payment, completion, and cancellation workflow. Order detail adds a Store checkout panel with the recipient, phone, email, Instagram, delivery method and fee, area, address, customer notes, intended payment, discount code and ambassador, and the stock hold state.
+
+### Security
+
+Rate limits are in memory per server instance: checkout 10 per 10 minutes, quotes 120, discount checks 20, and order lookups 60 per IP. They slow abuse without new infrastructure. The Store also sends `nosniff` and `X-Frame-Options: DENY`.
+
+### Communications
+
+`apps/shop/src/lib/messaging.ts` is the confirmation boundary. No email, SMS, or WhatsApp provider is approved, so it does nothing and checkout never depends on it.
+
+### Deferred after Milestone 8
+
+Payment-proof upload, confirmation email/SMS/WhatsApp, online card payments, customer accounts, wishlists, reviews, loyalty, advanced promotions, gift cards, commission payouts, courier APIs, a sitemap, cross-instance rate limiting, on-demand Store revalidation from HQ, and reservation-aware blocking of HQ manual sales.
+
 ## Success criteria for Milestone 1
 
 - The dashboard feels recognizably SET25 rather than like a generic admin template.

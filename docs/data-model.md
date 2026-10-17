@@ -48,7 +48,7 @@ The following map records implemented foundations and the direction for later mi
 
 - `Product`
 - `ProductVariant`
-- `ProductMedia` (later)
+- `ProductMedia` (Milestone 8: public Store images)
 - `ProductCollection` / category if merchandising requires it
 - publication fields and public descriptions separated from internal notes
 
@@ -57,7 +57,7 @@ The following map records implemented foundations and the direction for later mi
 - `InventoryMovement` as the append-only explanation for quantity changes
 - cached `ProductVariant.stockOnHand` balance
 - `Location` and per-location balances (later)
-- `StockReservation` (later)
+- `StockReservation` (Milestone 8: Store checkout holds)
 - `StockCount` workflow (later)
 
 The eventual available-to-sell value should be derived from on-hand quantities and reservations. Incoming stock should not count as available stock until received.
@@ -173,6 +173,21 @@ Giving product runs in one transaction: verify the ambassador is not Ended and t
 - Attachments use explicit nullable foreign keys on `FileAsset` (Product, Customer, Team, Order/Preorder, Supplier, Purchase Order, Import, Sample, Ambassador, Content), with a database check allowing at most one target. A file with no target is a general document. Attachment relations are `Restrict`, so a record with files cannot be silently hard-deleted.
 - Database checks: size > 0; Permanent ⇔ no `retentionUntil`; Until date ⇔ `retentionUntil` set; Available ⇒ `finalizedAt` set; Deleted ⇔ `deletedAt` set.
 - Expiry is derived from `retentionUntil` (the start of the chosen Maldives date) rather than stored as a separate status, so it can never drift from the date.
+
+### Store and checkout (Milestone 8)
+
+Migration `20261019120000_store_checkout` is additive and backfills only `Customer.phoneKey`.
+
+- **`StockReservation`**: order, unique order line, variant, positive quantity, `ACTIVE`/`RELEASED`/`CONSUMED` status, optional `expiresAt`, and `releasedAt`/`consumedAt`. The database requires `releasedAt` exactly when RELEASED and `consumedAt` exactly when CONSUMED. One reservation per order line makes duplicate holds impossible.
+- **Available to sell** is `stockOnHand − Σ quantity of ACTIVE reservations with no expiry or an expiry in the future`. `packages/database/src/inventory.ts` is the only implementation (`getReservedQuantities`, `availableToSell`, `holdingReservationWhere`, `releaseExpiredReservations`).
+- **`Order`** additions: `createdById` is now nullable (Store orders have no staff actor; a check requires an actor or a `publicToken`), unique `publicToken`, `intendedPaymentMethod` (`BANK_TRANSFER`/`CASH_ON_DELIVERY`), and the discount snapshot `discountSource` (`MANUAL`/`AMBASSADOR_CODE`), `discountCode`, `discountPercent` (0–100), and `ambassadorId` (`SetNull`). An ambassador-code discount must carry its code and percentage. HQ orders with a manual discount record `MANUAL`.
+- **`OrderDelivery`**: one per order. Snapshots recipient name, phone, email, Instagram, address, island/area, delivery method name, an optional `SetNull` link to the option, and customer notes. The fee is `Order.deliveryFee`. Later Customer or delivery-option edits never change it.
+- **`DeliveryOption`**: name, description, non-negative price, active, sort order.
+- **`StoreSettings`**: a single row with id `store` (enforced by a check): `storeOpen`, announcement, `reservationHours` (1–168), support phone, WhatsApp, Instagram, bank transfer instructions, delivery instructions, and the last staff editor. Explicit columns rather than key/value pairs.
+- **`ProductMedia`**: product (`Restrict`), unique generated `storageKey` in the public media bucket, MIME type, positive size, required alt text, sort order, `isPrimary`, Pending/Available status, creator, `finalizedAt`. Removing an image deletes the public object first and then the row. It is separate from `FileAsset` on purpose.
+- **`Customer.phoneKey`**: digits-only matching key (`normalizePhone`), indexed but not unique, because existing data may already contain duplicates.
+
+Checkout locks the affected `ProductVariant` rows with `FOR UPDATE` before reading reservations, so concurrent checkouts and HQ completions for the same variants serialise. Completion still uses the conditional `stockOnHand` decrement and SALE idempotency keys, then marks the order's reservations CONSUMED in the same transaction. Cancellation marks them RELEASED.
 
 ## Modelling rules for later milestones
 

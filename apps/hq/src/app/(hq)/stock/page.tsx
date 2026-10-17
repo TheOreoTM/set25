@@ -108,13 +108,15 @@ async function StockList({
               {variants.length} {variants.length === 1 ? "variant" : "variants"}
             </h2>
           </div>
-          <p>Incoming stock is added when received</p>
+          <p>Available = On Hand − Store reservations</p>
         </div>
         {variants.length ? (
           <div className="stock-table">
             <div className="stock-row stock-row--head">
               <span>Product / Variant</span>
               <span>SKU</span>
+              <span>On Hand</span>
+              <span>Reserved</span>
               <span>Available</span>
               <span>Incoming</span>
               <span>Cost Each</span>
@@ -145,8 +147,14 @@ async function StockList({
                   <span data-label="SKU">
                     <strong>{variant.sku}</strong>
                   </span>
-                  <span data-label="Available" className="stock-number">
+                  <span data-label="On Hand" className="stock-number">
                     {variant.stockOnHand}
+                  </span>
+                  <span data-label="Reserved" className="muted-value">
+                    {variant.reserved}
+                  </span>
+                  <span data-label="Available" className="stock-number">
+                    {variant.available}
                   </span>
                   <span data-label="Incoming" className="muted-value">
                     {variant.incoming}

@@ -475,3 +475,65 @@ export function formatFileSize(bytes: number) {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 }
+
+/**
+ * Deterministic phone matching key: digits only, without a leading 00 or the
+ * Maldives 960 country code. Must match the backfill in the store_checkout
+ * migration.
+ */
+export function normalizePhone(value: string) {
+  const digits = value.replace(/\D/g, "").replace(/^00/, "");
+  return digits.length === 10 && digits.startsWith("960")
+    ? digits.slice(3)
+    : digits;
+}
+
+export const CHECKOUT_PAYMENT_METHODS = [
+  "BANK_TRANSFER",
+  "CASH_ON_DELIVERY",
+] as const;
+export type CheckoutPaymentMethodValue =
+  (typeof CHECKOUT_PAYMENT_METHODS)[number];
+export const checkoutPaymentMethodLabels: Record<
+  CheckoutPaymentMethodValue,
+  string
+> = {
+  BANK_TRANSFER: "Bank Transfer",
+  CASH_ON_DELIVERY: "Cash on Delivery",
+};
+
+export const STOCK_RESERVATION_STATUSES = [
+  "ACTIVE",
+  "RELEASED",
+  "CONSUMED",
+] as const;
+export type StockReservationStatusValue =
+  (typeof STOCK_RESERVATION_STATUSES)[number];
+export const stockReservationStatusLabels: Record<
+  StockReservationStatusValue,
+  string
+> = {
+  ACTIVE: "Reserved",
+  RELEASED: "Released",
+  CONSUMED: "Consumed",
+};
+
+export type DiscountSourceValue = "MANUAL" | "AMBASSADOR_CODE";
+export const discountSourceLabels: Record<DiscountSourceValue, string> = {
+  MANUAL: "Manual",
+  AMBASSADOR_CODE: "Ambassador code",
+};
+
+/** Customer-facing availability. Exact quantities are never published. */
+export type PublicAvailability = "IN_STOCK" | "LOW_STOCK" | "SOLD_OUT";
+export const LOW_STOCK_THRESHOLD = 3;
+export function getPublicAvailability(available: number): PublicAvailability {
+  if (available <= 0) return "SOLD_OUT";
+  if (available <= LOW_STOCK_THRESHOLD) return "LOW_STOCK";
+  return "IN_STOCK";
+}
+export const publicAvailabilityLabels: Record<PublicAvailability, string> = {
+  IN_STOCK: "In Stock",
+  LOW_STOCK: "Low Stock",
+  SOLD_OUT: "Sold Out",
+};

@@ -12,6 +12,7 @@ import {
   formatPurchaseOrderNumber,
   formatImportNumber,
   importShipmentStatusLabels,
+  checkoutPaymentMethodLabels,
 } from "@set25/shared";
 import { PageHeader } from "@/components/page-header";
 import { getOrder } from "@/lib/commerce/data";
@@ -55,7 +56,7 @@ export function OrderDetail({
       <PageHeader
         eyebrow={`Commerce / ${preorder ? "Preorders" : "Orders"}`}
         title={number}
-        description={`${preorder ? "Preorder" : "Order"} created ${formatDate(order.createdAt)} by ${order.createdBy.name}.`}
+        description={`${preorder ? "Preorder" : "Order"} created ${formatDate(order.createdAt)} ${order.createdBy ? `by ${order.createdBy.name}` : "through Store checkout"}.`}
       />
       {saved ? (
         <div className="form-message form-message--success" role="status">
@@ -146,7 +147,10 @@ export function OrderDetail({
                 <dd>{formatMVR(order.subtotal)}</dd>
               </div>
               <div>
-                <dt>Discount</dt>
+                <dt>
+                  Discount
+                  {order.discountCode ? ` · ${order.discountCode}` : ""}
+                </dt>
                 <dd>− {formatMVR(order.discountAmount)}</dd>
               </div>
               <div>
@@ -268,6 +272,10 @@ export function OrderDetail({
               </div>
             ) : null}
           </section>
+
+          {order.delivery || order.intendedPaymentMethod ? (
+            <StoreCheckoutPanel order={order} />
+          ) : null}
 
           {preorder && order.preorder ? (
             <section className="detail-section preorder-panel">
@@ -392,9 +400,127 @@ function successMessage(saved: string) {
   if (saved === "payment") return "Payment transaction recorded.";
   if (saved === "fulfilment") return "Fulfilment status updated.";
   if (saved === "completed") return "Order completed and stock deducted once.";
-  if (saved === "cancelled") return "Order cancelled. Stock was not changed.";
+  if (saved === "cancelled")
+    return "Order cancelled. Stock on hand was not changed; any Store reservation was released.";
   if (saved === "status") return "Preorder status updated.";
   return "Change saved.";
+}
+
+function StoreCheckoutPanel({ order }: { order: OrderDetailRecord }) {
+  const now = new Date();
+  const active = order.reservations.filter(
+    (reservation) => reservation.status === "ACTIVE",
+  );
+  const holding = active.filter(
+    (reservation) => !reservation.expiresAt || reservation.expiresAt > now,
+  );
+  const reservedUnits = order.reservations.reduce(
+    (sum, reservation) => sum + reservation.quantity,
+    0,
+  );
+  const expiry = holding
+    .map((reservation) => reservation.expiresAt)
+    .filter((value): value is Date => Boolean(value))
+    .sort((a, b) => a.getTime() - b.getTime())[0];
+  let reservation = "No reservation";
+  if (order.reservations.length) {
+    if (holding.length)
+      reservation = expiry
+        ? `${reservedUnits} reserved until ${formatDateTime(expiry)}`
+        : `${reservedUnits} reserved until completed or cancelled`;
+    else if (active.length) reservation = "Expired · units no longer held";
+    else if (order.reservations.every((item) => item.status === "CONSUMED"))
+      reservation = "Consumed at completion";
+    else reservation = "Released";
+  }
+  return (
+    <section className="detail-section order-contact-panel">
+      <div className="section-heading">
+        <div>
+          <p className="kicker">Store checkout</p>
+          <h2>Delivery & payment</h2>
+        </div>
+      </div>
+      <dl className="order-context">
+        {order.delivery ? (
+          <>
+            <div>
+              <dt>Recipient</dt>
+              <dd>{order.delivery.recipientName}</dd>
+            </div>
+            <div>
+              <dt>Phone</dt>
+              <dd>
+                <a href={`tel:${order.delivery.phone.replace(/\s/g, "")}`}>
+                  {order.delivery.phone}
+                </a>
+              </dd>
+            </div>
+            {order.delivery.email ? (
+              <div>
+                <dt>Email</dt>
+                <dd>{order.delivery.email}</dd>
+              </div>
+            ) : null}
+            {order.delivery.instagramHandle ? (
+              <div>
+                <dt>Instagram</dt>
+                <dd>@{order.delivery.instagramHandle}</dd>
+              </div>
+            ) : null}
+            <div>
+              <dt>Delivery</dt>
+              <dd>
+                {order.delivery.methodName} · {formatMVR(order.deliveryFee)}
+              </dd>
+            </div>
+            <div>
+              <dt>Island / Area</dt>
+              <dd>{order.delivery.area}</dd>
+            </div>
+            <div>
+              <dt>Address</dt>
+              <dd>{order.delivery.address}</dd>
+            </div>
+          </>
+        ) : null}
+        <div>
+          <dt>Intended payment</dt>
+          <dd>
+            {order.intendedPaymentMethod
+              ? checkoutPaymentMethodLabels[order.intendedPaymentMethod]
+              : "—"}
+          </dd>
+        </div>
+        {order.discountSource === "AMBASSADOR_CODE" ? (
+          <div>
+            <dt>Discount code</dt>
+            <dd>
+              {order.discountCode} · {order.discountPercent?.toString()}%
+              {order.ambassador ? (
+                <>
+                  {" · "}
+                  <Link href={`/ambassadors/${order.ambassador.id}`}>
+                    {order.ambassador.name}
+                  </Link>
+                </>
+              ) : null}
+            </dd>
+          </div>
+        ) : null}
+        <div>
+          <dt>Stock hold</dt>
+          <dd>{reservation}</dd>
+        </div>
+      </dl>
+      {order.delivery?.notes ? (
+        <div className="order-notes">
+          <span>Customer delivery notes</span>
+          <p>{order.delivery.notes}</p>
+        </div>
+      ) : null}
+    </section>
+  );
 }
 
 function formatDate(value: Date) {

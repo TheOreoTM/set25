@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./password": "./src/password.ts"
+    "./password": "./src/password.ts",
+    "./inventory": "./src/inventory.ts"
   },
   "scripts": {
     "generate": "prisma generate",
