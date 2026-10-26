@@ -130,6 +130,7 @@ export async function getMoneyReport(filters: MoneyFilters = {}) {
         ? payment.amount.toString()
         : payment.amount.negated().toString(),
     outAmount: null,
+    original: null,
     recordedBy: payment.recordedBy.name,
   }));
   const manualActivity = entries.map((entry) => {
@@ -146,6 +147,16 @@ export async function getMoneyReport(filters: MoneyFilters = {}) {
       relatedHref: related?.href ?? null,
       inAmount: entry.direction === "IN" ? entry.amount.toString() : null,
       outAmount: entry.direction === "OUT" ? entry.amount.toString() : null,
+      original:
+        entry.originalCurrency &&
+        entry.originalAmount &&
+        entry.exchangeRateToMvr
+          ? {
+              currency: entry.originalCurrency,
+              amount: entry.originalAmount.toString(),
+              rate: entry.exchangeRateToMvr.toString(),
+            }
+          : null,
       recordedBy: entry.createdBy.name,
     };
   });
