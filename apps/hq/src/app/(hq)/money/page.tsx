@@ -209,20 +209,20 @@ export default async function MoneyPage({
                 </span>
                 <span data-label="Money In" className="money-in-value">
                   {item.inAmount ? (
-                    <>
+                    <span className="money-amount">
                       {formatSignedMVR(item.inAmount)}
                       <OriginalAmount original={item.original} />
-                    </>
+                    </span>
                   ) : (
                     "—"
                   )}
                 </span>
                 <span data-label="Money Out" className="money-out-value">
                   {item.outAmount ? (
-                    <>
+                    <span className="money-amount">
                       {formatMVR(item.outAmount)}
                       <OriginalAmount original={item.original} />
-                    </>
+                    </span>
                   ) : (
                     "—"
                   )}
@@ -391,13 +391,17 @@ function OriginalAmount({
   original: { currency: string; amount: string; rate: string } | null;
 }) {
   if (!original) return null;
+  const detail = `Paid ${formatMoney(original.amount, original.currency)} at ${original.rate} MVR per ${original.currency}`;
+  // The tip is drawn from data-tip by CSS, so without styles only the
+  // currency code shows instead of the full sentence spilling into the row.
   return (
-    <span className="money-original" tabIndex={0}>
-      <span aria-hidden="true">{original.currency}</span>
-      <span className="money-original-tip" role="tooltip">
-        Paid {formatMoney(original.amount, original.currency)} at{" "}
-        {original.rate} MVR per {original.currency}
-      </span>
+    <span
+      className="money-original"
+      tabIndex={0}
+      aria-label={detail}
+      data-tip={detail}
+    >
+      {original.currency}
     </span>
   );
 }
