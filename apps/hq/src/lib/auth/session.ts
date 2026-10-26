@@ -2,6 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { db, type StaffRole } from "@set25/database";
 import { auth } from "@/auth";
 import type { StaffIdentity } from "./types";
@@ -15,9 +16,12 @@ export class AuthorizationError extends Error {
 
 // React cache only deduplicates this lookup within one server render. This is
 // intentionally not a `use cache` boundary: staff/session authorization must
-// be resolved from the current request and live database state.
+// be resolved from the current request and live database state. `connection()`
+// marks this as request-time work before Auth.js touches the crypto APIs, which
+// Cache Components otherwise reports as unstable during prerendering.
 export const getCurrentStaff = cache(
   async (): Promise<StaffIdentity | null> => {
+    await connection();
     const session = await auth();
     if (!session?.user?.id) return null;
 

@@ -2,16 +2,11 @@ import Link from "next/link";
 import { LogOut, UserRound, Users } from "lucide-react";
 import { signOutAction } from "@/lib/auth/actions";
 import { requireStaff } from "@/lib/auth/session";
-import { staffRoleLabels } from "@/lib/auth/types";
+import { staffInitials, staffRoleLabels } from "@/lib/auth/types";
 
 export async function AccountMenu() {
   const staff = await requireStaff();
-  const initials = staff.name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
+  const initials = staffInitials(staff.name);
 
   return (
     <details className="account-menu">

@@ -115,8 +115,7 @@ function NavigationLinks({
     .flatMap((group) => group.items.map((item) => item.href))
     .filter(
       (href) =>
-        pathname === href ||
-        (href !== "/" && pathname.startsWith(`${href}/`)),
+        pathname === href || (href !== "/" && pathname.startsWith(`${href}/`)),
     )
     .sort((a, b) => b.length - a.length)[0];
   return (

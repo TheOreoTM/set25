@@ -83,7 +83,7 @@ export function getStockStatus(
 export const stockStatusLabels: Record<StockStatus, string> = {
   HEALTHY: "Healthy",
   LOW: "Low",
-  OUT_OF_STOCK: "Out of Stock",
+  OUT_OF_STOCK: "Out of stock",
 };
 
 export function getEffectivePrice(

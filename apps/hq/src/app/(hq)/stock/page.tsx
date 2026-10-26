@@ -82,7 +82,7 @@ async function StockList({
               <option value="">All stock statuses</option>
               <option value="HEALTHY">Healthy</option>
               <option value="LOW">Low</option>
-              <option value="OUT_OF_STOCK">Out of Stock</option>
+              <option value="OUT_OF_STOCK">Out of stock</option>
             </Select>
           </label>
           <button
@@ -115,14 +115,14 @@ async function StockList({
             <div className="stock-row stock-row--head">
               <span>Product / Variant</span>
               <span>SKU</span>
-              <span>On Hand</span>
-              <span>Reserved</span>
-              <span>Available</span>
-              <span>Incoming</span>
-              <span>Cost Each</span>
-              <span>Sell Price</span>
-              <span>Stock Value</span>
-              <span>Reorder At</span>
+              <span className="num">On Hand</span>
+              <span className="num">Reserved</span>
+              <span className="num">Available</span>
+              <span className="num">Incoming</span>
+              <span className="num">Cost Each</span>
+              <span className="num">Sell Price</span>
+              <span className="num">Stock Value</span>
+              <span className="num">Reorder At</span>
               <span>Status</span>
               <span />
             </div>
@@ -147,22 +147,22 @@ async function StockList({
                   <span data-label="SKU">
                     <strong>{variant.sku}</strong>
                   </span>
-                  <span data-label="On Hand" className="stock-number">
+                  <span data-label="On Hand" className="stock-number num">
                     {variant.stockOnHand}
                   </span>
-                  <span data-label="Reserved" className="muted-value">
+                  <span data-label="Reserved" className="muted-value num">
                     {variant.reserved}
                   </span>
-                  <span data-label="Available" className="stock-number">
+                  <span data-label="Available" className="stock-number num">
                     {variant.available}
                   </span>
-                  <span data-label="Incoming" className="muted-value">
+                  <span data-label="Incoming" className="muted-value num">
                     {variant.incoming}
                   </span>
-                  <span data-label="Cost Each">
+                  <span data-label="Cost Each" className="num">
                     {variant.cost ? formatMVR(variant.cost) : "—"}
                   </span>
-                  <span data-label="Sell Price">
+                  <span data-label="Sell Price" className="num">
                     {formatMVR(
                       getEffectivePrice(
                         variant.product.retailPrice,
@@ -170,14 +170,14 @@ async function StockList({
                       ),
                     )}
                   </span>
-                  <span data-label="Stock Value">
+                  <span data-label="Stock Value" className="num">
                     {stockValue ? formatMVR(stockValue) : "—"}
                   </span>
-                  <span data-label="Reorder At">{variant.reorderAt}</span>
+                  <span data-label="Reorder At" className="num">
+                    {variant.reorderAt}
+                  </span>
                   <span data-label="Status">
-                    <span
-                      className={`stock-status stock-status--${status.toLowerCase()}`}
-                    >
+                    <span className={`status status--${status.toLowerCase()}`}>
                       {stockStatusLabels[status]}
                     </span>
                   </span>

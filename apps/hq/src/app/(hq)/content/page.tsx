@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Select } from "@/components/ui/select";
-import { Plus, Search, SlidersHorizontal } from "lucide-react";
+import { ArrowRight, Plus, Search, SlidersHorizontal } from "lucide-react";
 import {
   CONTENT_PLATFORMS,
   contentPlatformLabels,
@@ -203,14 +203,11 @@ export default async function ContentPage({
             </section>
           ))
         ) : (
-          <div className="compact-empty">
-            <div>
-              <strong>No content in this view.</strong>
-              <p>Change the filters or plan the next piece of content.</p>
-            </div>
+          <div className="inline-empty inline-empty--panel">
+            <p>No content in this view.</p>
             {canWrite ? (
-              <Link className="button button--dark" href="/content/new">
-                New content
+              <Link href="/content/new">
+                Plan the next piece of content <ArrowRight aria-hidden="true" />
               </Link>
             ) : null}
           </div>

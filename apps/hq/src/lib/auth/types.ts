@@ -12,3 +12,12 @@ export type StaffIdentity = {
   email: string;
   role: StaffRole;
 };
+
+export function staffInitials(name: string) {
+  return name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+}

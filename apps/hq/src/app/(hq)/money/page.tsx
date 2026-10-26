@@ -232,14 +232,11 @@ export default async function MoneyPage({
             ))}
           </div>
         ) : (
-          <div className="compact-empty">
-            <div>
-              <strong>No recorded activity in this view.</strong>
-              <p>
-                Change the period or filters to review another set of cash
-                movements.
-              </p>
-            </div>
+          <div className="inline-empty inline-empty--panel">
+            <p>No recorded activity in this view.</p>
+            <span>
+              Change the period or filters to review other cash movements.
+            </span>
           </div>
         )}
       </section>
