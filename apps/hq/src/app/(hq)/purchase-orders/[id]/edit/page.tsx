@@ -13,7 +13,7 @@ import { toSupplierOptionDto } from "@/lib/supply/dto";
 
 export const instant = false;
 
-export const metadata = { title: "Edit Purchase Order" };
+export const metadata = { title: "Edit purchase order" };
 export default async function EditPurchaseOrderPage({
   params,
 }: {

@@ -8,7 +8,7 @@ import { toSupplierFormDto } from "@/lib/supply/dto";
 
 export const instant = false;
 
-export const metadata = { title: "Edit Supplier" };
+export const metadata = { title: "Edit supplier" };
 export default async function EditSupplierPage({
   params,
 }: {

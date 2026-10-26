@@ -126,6 +126,11 @@ export default async function SamplesPage({
         ) : (
           <div className="inline-empty">
             <p>No samples match these filters.</p>
+            {staff.role !== "STAFF" ? (
+              <Link href="/samples/new">
+                Log the first sample <ArrowRight aria-hidden="true" />
+              </Link>
+            ) : null}
           </div>
         )}
       </section>

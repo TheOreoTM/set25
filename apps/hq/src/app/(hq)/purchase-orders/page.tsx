@@ -138,6 +138,11 @@ export default async function PurchaseOrdersPage({
         ) : (
           <div className="inline-empty">
             <p>No purchase orders match these filters.</p>
+            {staff.role !== "STAFF" ? (
+              <Link href="/purchase-orders/new">
+                Create the first purchase order <ArrowRight aria-hidden="true" />
+              </Link>
+            ) : null}
           </div>
         )}
       </section>

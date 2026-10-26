@@ -29,7 +29,7 @@ async function NewVariant({ params }: { params: Promise<{ id: string }> }) {
   return (
     <>
       <PageHeader
-        eyebrow={`Products / ${product.code} / Variants`}
+        eyebrow={`Commerce / Products / ${product.code} / Variants`}
         title="Add variant"
         description="Create a sellable size or colour. Opening stock is recorded separately."
       />

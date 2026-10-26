@@ -7,7 +7,7 @@ import { toSampleProductDto, toSupplierOptionDto } from "@/lib/supply/dto";
 
 export const instant = false;
 
-export const metadata = { title: "New Sample" };
+export const metadata = { title: "New sample" };
 export default async function NewSamplePage() {
   await requireOperationalPageAccess("/samples?forbidden=write");
   const [suppliers, products] = await Promise.all([
@@ -18,7 +18,7 @@ export default async function NewSamplePage() {
     <main className="page-wrap">
       <PageHeader
         eyebrow="Supply / Samples / New"
-        title="Create sample"
+        title="New sample"
         description="Record the sample source and context before gathering evaluations."
       />
       <SampleForm

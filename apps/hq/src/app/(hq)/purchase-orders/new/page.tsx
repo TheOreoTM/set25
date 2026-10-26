@@ -8,7 +8,7 @@ import { toSupplierOptionDto } from "@/lib/supply/dto";
 
 export const instant = false;
 
-export const metadata = { title: "New Purchase Order" };
+export const metadata = { title: "New purchase order" };
 export default async function NewPurchaseOrderPage({
   searchParams,
 }: {
@@ -31,7 +31,7 @@ export default async function NewPurchaseOrderPage({
     <main className="page-wrap">
       <PageHeader
         eyebrow="Supply / Purchase Orders / New"
-        title="Create purchase order"
+        title="New purchase order"
         description="Create a draft first. Placing it makes remaining quantities count as Incoming."
       />
       <PurchaseOrderForm

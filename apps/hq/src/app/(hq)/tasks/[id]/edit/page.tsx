@@ -8,7 +8,7 @@ import { getTask, getTaskFormOptions } from "@/lib/tasks/data";
 
 export const instant = false;
 
-export const metadata = { title: "Edit Task" };
+export const metadata = { title: "Edit task" };
 
 export default async function EditTaskPage({
   params,

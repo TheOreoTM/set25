@@ -133,14 +133,8 @@ export default async function FilesPage({
             ))}
           </div>
         ) : (
-          <div className="compact-empty file-library-empty">
-            <div>
-              <strong>No files in this view.</strong>
-              <p>
-                Change the filters, or upload documents from here or from any
-                record&apos;s Files section.
-              </p>
-            </div>
+          <div className="inline-empty">
+            <p>No files match these filters.</p>
           </div>
         )}
       </section>

@@ -4,8 +4,9 @@ export default function NotFound() {
   return (
     <main className="page-wrap page-wrap--placeholder">
       <EmptyState
-        title="This page"
-        description="The destination does not exist in the SET25 HQ foundation."
+        kicker="Not found"
+        title="This page does not exist."
+        description="Check the address, or return to the dashboard to keep working."
       />
     </main>
   );

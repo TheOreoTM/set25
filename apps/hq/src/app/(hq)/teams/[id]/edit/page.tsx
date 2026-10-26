@@ -7,7 +7,7 @@ import { requireOperationalPageAccess } from "@/lib/auth/session";
 
 export const instant = false;
 
-export const metadata = { title: "Edit Team" };
+export const metadata = { title: "Edit team" };
 
 export default async function EditTeamPage({
   params,

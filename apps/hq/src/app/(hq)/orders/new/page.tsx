@@ -7,7 +7,7 @@ import { requireOperationalPageAccess } from "@/lib/auth/session";
 
 export const instant = false;
 
-export const metadata = { title: "New Order" };
+export const metadata = { title: "New order" };
 
 export default async function NewOrderPage() {
   await requireOperationalPageAccess("/orders?forbidden=write");
