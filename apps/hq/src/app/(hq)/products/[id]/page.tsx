@@ -178,11 +178,11 @@ async function ProductDetail({
           <div className="variant-table">
             <div className="variant-row variant-row--head">
               <span>SKU / Variant</span>
-              <span>Available</span>
-              <span>Incoming</span>
-              <span>Cost Each</span>
-              <span>Sell Price</span>
-              <span>Reorder At</span>
+              <span className="num">On Hand</span>
+              <span className="num">Incoming</span>
+              <span className="num">Cost Each</span>
+              <span className="num">Sell Price</span>
+              <span className="num">Reorder At</span>
               <span>Stock Status</span>
               <span />
             </div>
@@ -202,16 +202,16 @@ async function ProductDetail({
                       {variant.active ? "" : " · Inactive"}
                     </small>
                   </span>
-                  <span data-label="Available" className="stock-number">
+                  <span data-label="On Hand" className="stock-number num">
                     {variant.stockOnHand}
                   </span>
-                  <span data-label="Incoming" className="muted-value">
+                  <span data-label="Incoming" className="muted-value num">
                     {variant.incoming}
                   </span>
-                  <span data-label="Cost Each">
+                  <span data-label="Cost Each" className="num">
                     {variant.cost ? formatMVR(variant.cost) : "—"}
                   </span>
-                  <span data-label="Sell Price">
+                  <span data-label="Sell Price" className="num">
                     {formatMVR(
                       getEffectivePrice(
                         product.retailPrice,
@@ -222,11 +222,11 @@ async function ProductDetail({
                       <small className="price-note">Override</small>
                     ) : null}
                   </span>
-                  <span data-label="Reorder At">{variant.reorderAt}</span>
+                  <span data-label="Reorder At" className="num">
+                    {variant.reorderAt}
+                  </span>
                   <span data-label="Stock Status">
-                    <span
-                      className={`stock-status stock-status--${status.toLowerCase()}`}
-                    >
+                    <span className={`status status--${status.toLowerCase()}`}>
                       {stockStatusLabels[status]}
                     </span>
                   </span>

@@ -126,9 +126,9 @@ async function ProductList({
               <span>Product</span>
               <span>Code</span>
               <span>Category</span>
-              <span>Price</span>
-              <span>Variants</span>
-              <span>Stock</span>
+              <span className="num">Price</span>
+              <span className="num">Variants</span>
+              <span className="num">Stock</span>
               <span>Status</span>
               <span />
             </div>
@@ -155,11 +155,13 @@ async function ProductList({
                   <span data-label="Category">
                     {productCategoryLabels[product.category]}
                   </span>
-                  <span data-label="Price" className="numeric">
+                  <span data-label="Price" className="numeric num">
                     {formatMVR(product.retailPrice)}
                   </span>
-                  <span data-label="Variants">{product._count.variants}</span>
-                  <span data-label="Stock">
+                  <span data-label="Variants" className="num">
+                    {product._count.variants}
+                  </span>
+                  <span data-label="Stock" className="num">
                     <strong>{stock}</strong>
                   </span>
                   <span data-label="Status">

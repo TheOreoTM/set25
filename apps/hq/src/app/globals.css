@@ -1733,27 +1733,6 @@ td strong {
   color: var(--steel);
   font-size: var(--text-meta);
 }
-.stock-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: var(--text-meta);
-  font-weight: 650;
-  white-space: nowrap;
-}
-.stock-status::before {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--onyx);
-  content: "";
-}
-.stock-status--low::before {
-  background: #b79100;
-}
-.stock-status--out_of_stock::before {
-  background: var(--danger);
-}
 .movement-row {
   display: grid;
   min-height: 62px;
@@ -2915,11 +2894,15 @@ td strong {
   color: var(--white);
 }
 .status--cancelled,
-.status--refunded,
-.status--out_of_stock {
+.status--refunded {
   border-color: #c8c8c4;
   background: #ececea;
   color: #5f6264;
+}
+.status--out_of_stock {
+  border-color: var(--danger);
+  background: #f8ece9;
+  color: #7f2419;
 }
 .status--preparing,
 .status--ordered {
@@ -4607,10 +4590,6 @@ td strong {
 }
 
 /* Milestone 6 — Money + Planning */
-.money-page-actions,
-.tasks-page > .detail-actions {
-  margin-bottom: 14px;
-}
 .money-range-bar {
   display: flex;
   align-items: center;
@@ -5110,10 +5089,6 @@ td strong {
 }
 
 @media (max-width: 620px) {
-  .money-page-actions > div,
-  .money-page-actions .button {
-    width: 100%;
-  }
   .money-range-bar nav {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -6280,4 +6255,42 @@ td strong {
 
 .page-wrap > .form-message {
   margin-bottom: 16px;
+}
+
+/* Numeric table columns align right on desktop; stacked mobile rows stay left. */
+.catalog-row > .num,
+.stock-row > .num,
+.variant-row > .num {
+  justify-self: end;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 820px) {
+  .variant-row > .num {
+    justify-self: start;
+    text-align: left;
+  }
+}
+@media (max-width: 700px) {
+  .catalog-row > .num,
+  .stock-row > .num {
+    justify-self: start;
+    text-align: left;
+  }
+}
+
+/* List-page action rows keep their buttons right-aligned at natural width on
+   mobile, like the resource toolbar's primary action. */
+@media (max-width: 820px) {
+  .detail-actions--end {
+    align-items: flex-end;
+  }
+  .detail-actions--end > div {
+    width: auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .detail-actions--end > div .button {
+    flex: none;
+  }
 }

@@ -1,6 +1,6 @@
 import { PageHeader } from "@/components/page-header";
 import { requireStaff } from "@/lib/auth/session";
-import { staffRoleLabels } from "@/lib/auth/types";
+import { staffInitials, staffRoleLabels } from "@/lib/auth/types";
 
 export const instant = false;
 
@@ -19,9 +19,7 @@ export default async function AccountPage() {
       <section className="product-identity account-page-panel">
         <div className="identity-lead">
           <p className="kicker">Signed in as</p>
-          <div className="product-code-mark">
-            {staff.name.slice(0, 2).toUpperCase()}
-          </div>
+          <div className="product-code-mark">{staffInitials(staff.name)}</div>
           <h2>{staff.name}</h2>
           <p>{staff.email}</p>
         </div>

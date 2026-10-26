@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { Select } from "@/components/ui/select";
-import { Pencil, Plus, Search, SlidersHorizontal } from "lucide-react";
+import {
+  ArrowRight,
+  Pencil,
+  Plus,
+  Search,
+  SlidersHorizontal,
+} from "lucide-react";
 import {
   TASK_PRIORITIES,
   TASK_STATUSES,
@@ -243,16 +249,11 @@ export default async function TasksPage({
             })}
           </div>
         ) : (
-          <div className="compact-empty">
-            <div>
-              <strong>No tasks in this view.</strong>
-              <p>
-                Adjust the filters or create the next piece of operational work.
-              </p>
-            </div>
+          <div className="inline-empty inline-empty--panel">
+            <p>No tasks in this view.</p>
             {canWrite ? (
-              <Link className="button button--dark" href="/tasks/new">
-                New task
+              <Link href="/tasks/new">
+                Create the next task <ArrowRight aria-hidden="true" />
               </Link>
             ) : null}
           </div>
