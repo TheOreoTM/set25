@@ -3,13 +3,17 @@
 import { Select } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { ArrowLeft, Save } from "lucide-react";
 import {
+  DEFAULT_USD_TO_MVR_RATE,
+  MONEY_ENTRY_CURRENCIES,
   MONEY_IN_CATEGORIES,
   MONEY_OUT_CATEGORIES,
+  formatMVR,
   moneyCategoryLabels,
   type MoneyDirectionValue,
+  type MoneyEntryCurrencyValue,
 } from "@set25/shared";
 import {
   initialMoneyFormState,
@@ -39,6 +43,12 @@ export function MoneyEntryForm({
     initialMoneyFormState,
   );
   const error = (field: string) => state.errors?.[field]?.[0];
+  const [currency, setCurrency] = useState<MoneyEntryCurrencyValue>("MVR");
+  const [amount, setAmount] = useState("");
+  const [rate, setRate] = useState(DEFAULT_USD_TO_MVR_RATE);
+  const foreign = currency !== "MVR";
+  // Preview only; the server recalculates the stored MVR amount with Decimals.
+  const mvrPreview = (Number(amount) || 0) * (Number(rate) || 0);
   const categories =
     direction === "IN" ? MONEY_IN_CATEGORIES : MONEY_OUT_CATEGORIES;
   const groups = relatedOptions.reduce(
@@ -65,21 +75,65 @@ export function MoneyEntryForm({
         </div>
         <div className="form-grid">
           <label className="field">
+            <span>Currency</span>
+            <Select
+              name="currency"
+              value={currency}
+              onChange={(event) =>
+                setCurrency(event.target.value as MoneyEntryCurrencyValue)
+              }
+              aria-invalid={Boolean(error("currency"))}
+            >
+              {MONEY_ENTRY_CURRENCIES.map((value) => (
+                <option value={value} key={value}>
+                  {value === "MVR" ? "MVR" : "USD (converted to MVR)"}
+                </option>
+              ))}
+            </Select>
+            {error("currency") ? (
+              <small className="field-error">{error("currency")}</small>
+            ) : null}
+          </label>
+          <label className="field">
             <span>Amount</span>
             <div className="money-input">
-              <span>MVR</span>
+              <span>{currency}</span>
               <input
                 name="amount"
                 inputMode="decimal"
                 placeholder="0.00"
                 required
+                value={amount}
+                onChange={(event) => setAmount(event.target.value)}
                 aria-invalid={Boolean(error("amount"))}
               />
             </div>
             {error("amount") ? (
               <small className="field-error">{error("amount")}</small>
+            ) : foreign ? (
+              <small>Recorded as {formatMVR(mvrPreview)}</small>
             ) : null}
           </label>
+          {foreign ? (
+            <label className="field">
+              <span>Exchange rate to MVR</span>
+              <input
+                name="exchangeRateToMvr"
+                inputMode="decimal"
+                required
+                value={rate}
+                onChange={(event) => setRate(event.target.value)}
+                aria-invalid={Boolean(error("exchangeRateToMvr"))}
+              />
+              {error("exchangeRateToMvr") ? (
+                <small className="field-error">
+                  {error("exchangeRateToMvr")}
+                </small>
+              ) : (
+                <small>1 {currency} × rate = MVR</small>
+              )}
+            </label>
+          ) : null}
           <label className="field">
             <span>Category</span>
             <Select

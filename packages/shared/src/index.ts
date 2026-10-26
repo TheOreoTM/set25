@@ -1,11 +1,20 @@
 export type MoneyValue = number | string | { toString(): string };
 
-export function formatMVR(value: MoneyValue) {
+export function formatMoney(value: MoneyValue, currency: string) {
   const raw = typeof value === "number" ? value.toFixed(2) : value.toString();
   const [whole = "0", fraction = ""] = raw.split(".");
   const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  return `MVR ${grouped}.${fraction.padEnd(2, "0").slice(0, 2)}`;
+  return `${currency} ${grouped}.${fraction.padEnd(2, "0").slice(0, 2)}`;
 }
+
+export function formatMVR(value: MoneyValue) {
+  return formatMoney(value, "MVR");
+}
+
+/** Currencies a manual Money entry can be entered in; totals stay MVR. */
+export const MONEY_ENTRY_CURRENCIES = ["MVR", "USD"] as const;
+export type MoneyEntryCurrencyValue = (typeof MONEY_ENTRY_CURRENCIES)[number];
+export const DEFAULT_USD_TO_MVR_RATE = "15.42";
 
 export const PRODUCT_STATUSES = ["DRAFT", "ACTIVE", "ARCHIVED"] as const;
 export type ProductStatusValue = (typeof PRODUCT_STATUSES)[number];

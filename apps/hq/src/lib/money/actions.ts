@@ -29,6 +29,26 @@ export async function createMoneyEntryAction(
   });
   if (duplicate) redirect("/money?recorded=1");
 
+  // Totals are MVR-only; a foreign entry keeps its original amount and rate
+  // and stores the rounded MVR equivalent as `amount`.
+  const original =
+    input.exchangeRateToMvr === null
+      ? null
+      : {
+          originalCurrency: input.currency,
+          originalAmount: new Prisma.Decimal(input.amount),
+          exchangeRateToMvr: new Prisma.Decimal(input.exchangeRateToMvr),
+        };
+  const amount = original
+    ? original.originalAmount
+        .mul(original.exchangeRateToMvr)
+        .toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP)
+    : new Prisma.Decimal(input.amount);
+  if (amount.lte(0))
+    return failure("Check the highlighted fields.", {
+      amount: ["The MVR equivalent must be greater than zero."],
+    });
+
   const relation = await validatedRelation(input.relatedType, input.relatedId);
   if (!relation.valid)
     return failure("The related record no longer exists. Choose it again.", {
@@ -40,8 +60,9 @@ export async function createMoneyEntryAction(
       data: {
         direction: input.direction,
         category: input.category,
-        amount: new Prisma.Decimal(input.amount),
+        amount,
         currency: "MVR",
+        ...original,
         occurredAt: input.occurredAt,
         description: input.description,
         reference: input.reference,

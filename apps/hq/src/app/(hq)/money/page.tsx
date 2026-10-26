@@ -10,6 +10,7 @@ import {
 import {
   MONEY_CATEGORIES,
   formatMVR,
+  formatMoney,
   moneyCategoryLabels,
 } from "@set25/shared";
 import { PageHeader } from "@/components/page-header";
@@ -207,10 +208,24 @@ export default async function MoneyPage({
                   )}
                 </span>
                 <span data-label="Money In" className="money-in-value">
-                  {item.inAmount ? formatSignedMVR(item.inAmount) : "—"}
+                  {item.inAmount ? (
+                    <>
+                      {formatSignedMVR(item.inAmount)}
+                      <OriginalAmount original={item.original} />
+                    </>
+                  ) : (
+                    "—"
+                  )}
                 </span>
                 <span data-label="Money Out" className="money-out-value">
-                  {item.outAmount ? formatMVR(item.outAmount) : "—"}
+                  {item.outAmount ? (
+                    <>
+                      {formatMVR(item.outAmount)}
+                      <OriginalAmount original={item.original} />
+                    </>
+                  ) : (
+                    "—"
+                  )}
                 </span>
                 <span data-label="Recorded By">{item.recordedBy}</span>
               </article>
@@ -368,6 +383,25 @@ function ProfitFact({
       <strong>{value}</strong>
       {note ? <small>{note}</small> : null}
     </div>
+  );
+}
+
+// Foreign-currency entries show MVR (what totals use) with a small currency
+// marker; hovering, focusing, or tapping it reveals the original amount.
+function OriginalAmount({
+  original,
+}: {
+  original: { currency: string; amount: string; rate: string } | null;
+}) {
+  if (!original) return null;
+  return (
+    <span className="money-original" tabIndex={0}>
+      <span aria-hidden="true">{original.currency}</span>
+      <span className="money-original-tip" role="tooltip">
+        Paid {formatMoney(original.amount, original.currency)} at{" "}
+        {original.rate} MVR per {original.currency}
+      </span>
+    </span>
   );
 }
 

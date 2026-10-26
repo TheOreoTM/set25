@@ -1,8 +1,10 @@
 import {
+  MONEY_ENTRY_CURRENCIES,
   MONEY_IN_CATEGORIES,
   MONEY_OUT_CATEGORIES,
   type MoneyCategoryValue,
   type MoneyDirectionValue,
+  type MoneyEntryCurrencyValue,
 } from "@set25/shared";
 import { parseMaldivesDate } from "@/lib/planning/date-range";
 
@@ -35,6 +37,9 @@ export function validateMoneyEntry(formData: FormData) {
   const direction = text(formData, "direction") as MoneyDirectionValue;
   const category = text(formData, "category") as MoneyCategoryValue;
   const amount = text(formData, "amount");
+  const currency = (text(formData, "currency") ||
+    "MVR") as MoneyEntryCurrencyValue;
+  const exchangeRate = text(formData, "exchangeRateToMvr");
   const occurredAtRaw = text(formData, "occurredAt");
   const occurredAt = parseMaldivesDate(occurredAtRaw);
   const description = text(formData, "description");
@@ -51,6 +56,17 @@ export function validateMoneyEntry(formData: FormData) {
     addError(errors, "category", "Choose a valid category for this entry.");
   if (!/^\d{1,10}(\.\d{1,2})?$/.test(amount) || Number(amount) <= 0)
     addError(errors, "amount", "Enter an amount greater than zero.");
+  if (!MONEY_ENTRY_CURRENCIES.includes(currency))
+    addError(errors, "currency", "Choose MVR or USD.");
+  if (
+    currency !== "MVR" &&
+    (!/^\d{1,12}(\.\d{1,6})?$/.test(exchangeRate) || Number(exchangeRate) <= 0)
+  )
+    addError(
+      errors,
+      "exchangeRateToMvr",
+      "Enter an exchange rate greater than zero.",
+    );
   if (!occurredAt)
     addError(errors, "occurredAt", "Enter a valid transaction date.");
   if (description.length < 2 || description.length > 160)
@@ -88,6 +104,8 @@ export function validateMoneyEntry(formData: FormData) {
       direction,
       category,
       amount,
+      currency,
+      exchangeRateToMvr: currency === "MVR" ? null : exchangeRate,
       occurredAt: occurredAt!,
       description,
       reference: reference || null,
