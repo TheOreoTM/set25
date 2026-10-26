@@ -4848,10 +4848,14 @@ td strong {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
+.money-amount {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+}
 .money-original {
   position: relative;
-  display: inline-block;
-  margin-left: 6px;
   padding: 1px 4px;
   border: 1px solid var(--line);
   color: var(--steel);
@@ -4859,14 +4863,14 @@ td strong {
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.04em;
-  vertical-align: middle;
+  line-height: 1.4;
   cursor: help;
 }
 .money-original:focus-visible {
   outline: 2px solid var(--onyx);
   outline-offset: 2px;
 }
-.money-original-tip {
+.money-original::after {
   position: absolute;
   right: 0;
   bottom: calc(100% + 6px);
@@ -4876,18 +4880,17 @@ td strong {
   padding: 6px 8px;
   background: var(--onyx);
   color: var(--white);
+  content: attr(data-tip);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0;
   line-height: 1.35;
   white-space: normal;
-  opacity: 0;
   pointer-events: none;
   visibility: hidden;
 }
-.money-original:hover .money-original-tip,
-.money-original:focus .money-original-tip {
-  opacity: 1;
+.money-original:hover::after,
+.money-original:focus::after {
   visibility: visible;
 }
 .money-entry-form .money-input {
