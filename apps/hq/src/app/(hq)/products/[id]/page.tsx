@@ -76,7 +76,7 @@ async function ProductDetail({
   return (
     <>
       <PageHeader
-        eyebrow={`Products / ${product.code}`}
+        eyebrow={`Commerce / Products / ${product.code}`}
         title={product.name}
         description={product.shortDescription || "Shared SET25 product record."}
       />

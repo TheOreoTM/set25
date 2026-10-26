@@ -7,7 +7,7 @@ import { requireOperationalPageAccess } from "@/lib/auth/session";
 
 export const instant = false;
 
-export const metadata = { title: "Edit Ambassador" };
+export const metadata = { title: "Edit ambassador" };
 
 export default async function EditAmbassadorPage({
   params,

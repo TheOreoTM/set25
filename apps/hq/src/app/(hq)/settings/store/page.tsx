@@ -135,7 +135,7 @@ async function StoreSettingsContent({
             <p>No delivery options yet.</p>
           </div>
         )}
-        <div className="detail-section">
+        <div className="delivery-option-create">
           <p className="kicker">Add delivery option</p>
           <DeliveryOptionForm
             action={createDeliveryOptionAction}

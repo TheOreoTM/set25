@@ -31,8 +31,8 @@ async function EditProduct({ params }: { params: Promise<{ id: string }> }) {
   return (
     <>
       <PageHeader
-        eyebrow={`Products / ${product.code} / Edit`}
-        title="Edit product"
+        eyebrow={`Commerce / Products / ${product.code} / Edit`}
+        title={`Edit ${product.name}`}
         description="Update shared catalogue details without changing stock."
       />
       <ProductForm

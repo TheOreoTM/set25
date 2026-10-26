@@ -128,11 +128,13 @@ export default async function AmbassadorsPage({
             ))}
           </div>
         ) : (
-          <div className="compact-empty file-library-empty">
-            <div>
-              <strong>No ambassadors match this view.</strong>
-              <p>Change the filters or add the first SET25 representative.</p>
-            </div>
+          <div className="inline-empty">
+            <p>No ambassadors match these filters.</p>
+            {staff.role !== "STAFF" ? (
+              <Link href="/ambassadors/new">
+                Add the first ambassador <ArrowRight aria-hidden="true" />
+              </Link>
+            ) : null}
           </div>
         )}
       </section>

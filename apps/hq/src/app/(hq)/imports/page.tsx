@@ -111,9 +111,13 @@ export default async function ImportsPage() {
           </div>
         ) : (
           <div className="inline-empty">
-            <p>
-              No imports yet. Place a purchase order before creating a shipment.
-            </p>
+            <p>No imports yet.</p>
+            <span>Place a purchase order before creating a shipment.</span>
+            {staff.role !== "STAFF" ? (
+              <Link href="/imports/new">
+                Create the first import <ArrowRight aria-hidden="true" />
+              </Link>
+            ) : null}
           </div>
         )}
       </section>

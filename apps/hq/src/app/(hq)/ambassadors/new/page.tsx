@@ -5,7 +5,7 @@ import { requireOperationalPageAccess } from "@/lib/auth/session";
 
 export const instant = false;
 
-export const metadata = { title: "New Ambassador" };
+export const metadata = { title: "New ambassador" };
 
 export default async function NewAmbassadorPage() {
   await requireOperationalPageAccess("/ambassadors?forbidden=write");
@@ -13,7 +13,7 @@ export default async function NewAmbassadorPage() {
     <main className="page-wrap">
       <PageHeader
         eyebrow="Company / Ambassadors / New"
-        title="Add ambassador"
+        title="New ambassador"
         description="Record the player, their terms, and how SET25 works with them."
       />
       <AmbassadorForm

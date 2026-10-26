@@ -49,7 +49,7 @@ export default async function TasksPage({
         {canWrite ? (
           <div>
             <Link className="button button--dark" href="/tasks/new">
-              <Plus aria-hidden="true" /> New Task
+              <Plus aria-hidden="true" /> New task
             </Link>
           </div>
         ) : null}
@@ -252,7 +252,7 @@ export default async function TasksPage({
             </div>
             {canWrite ? (
               <Link className="button button--dark" href="/tasks/new">
-                New Task
+                New task
               </Link>
             ) : null}
           </div>
@@ -283,7 +283,7 @@ function TaskSummary({
 
 const taskViews = [
   ["", "Open"],
-  ["attention", "Needs Attention"],
+  ["attention", "Needs attention"],
   ["overdue", "Overdue"],
   ["today", "Today"],
   ["upcoming", "Upcoming"],

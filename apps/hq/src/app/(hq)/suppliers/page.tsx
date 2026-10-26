@@ -118,6 +118,11 @@ export default async function SuppliersPage({
         ) : (
           <div className="inline-empty">
             <p>No suppliers match these filters.</p>
+            {staff.role !== "STAFF" ? (
+              <Link href="/suppliers/new">
+                Add the first supplier <ArrowRight aria-hidden="true" />
+              </Link>
+            ) : null}
           </div>
         )}
       </section>

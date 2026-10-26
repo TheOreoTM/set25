@@ -6,7 +6,7 @@ import { getTaskFormOptions } from "@/lib/tasks/data";
 
 export const instant = false;
 
-export const metadata = { title: "New Task" };
+export const metadata = { title: "New task" };
 
 export default async function NewTaskPage() {
   await requireOperationalPageAccess("/tasks?forbidden=write");
@@ -15,7 +15,7 @@ export default async function NewTaskPage() {
     <main className="page-wrap">
       <PageHeader
         eyebrow="Company / Tasks / New"
-        title="Create task"
+        title="New task"
         description="Plan one clear piece of operational work and connect it to the relevant SET25 record."
       />
       <TaskForm

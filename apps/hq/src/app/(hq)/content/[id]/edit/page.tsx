@@ -8,7 +8,7 @@ import { maldivesDateTimeKey } from "@/lib/content/presentation";
 
 export const instant = false;
 
-export const metadata = { title: "Edit Content" };
+export const metadata = { title: "Edit content" };
 
 export default async function EditContentPage({
   params,

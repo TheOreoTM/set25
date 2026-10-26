@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { ImportForm } from "@/components/supply/import-form";
 import { requireOperationalPageAccess } from "@/lib/auth/session";
@@ -7,7 +9,7 @@ import { getEligiblePurchaseOrderLines } from "@/lib/supply/data";
 
 export const instant = false;
 
-export const metadata = { title: "New Import" };
+export const metadata = { title: "New import" };
 export default async function NewImportPage() {
   await requireOperationalPageAccess("/imports?forbidden=write");
   const lines = await getEligiblePurchaseOrderLines();
@@ -23,7 +25,7 @@ export default async function NewImportPage() {
     <main className="page-wrap">
       <PageHeader
         eyebrow="Supply / Imports / New"
-        title="Create import"
+        title="New import"
         description="Consolidate available lines from one or more placed purchase orders."
       />
       {options.length ? (
@@ -35,11 +37,14 @@ export default async function NewImportPage() {
       ) : (
         <section className="empty-state">
           <p className="kicker">Nothing ready</p>
-          <h2>No placed PO quantities are available</h2>
+          <h2>No placed PO quantities are available.</h2>
           <p>
             Place a purchase order, or finish/cancel an existing import
             allocation first.
           </p>
+          <Link className="button button--dark" href="/purchase-orders">
+            View purchase orders <ArrowRight aria-hidden="true" />
+          </Link>
         </section>
       )}
     </main>

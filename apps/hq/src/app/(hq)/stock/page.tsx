@@ -79,7 +79,7 @@ async function StockList({
           <label>
             <span className="sr-only">Filter by stock status</span>
             <Select name="status" defaultValue={filters.status}>
-              <option value="ALL">All stock statuses</option>
+              <option value="">All stock statuses</option>
               <option value="HEALTHY">Healthy</option>
               <option value="LOW">Low</option>
               <option value="OUT_OF_STOCK">Out of Stock</option>

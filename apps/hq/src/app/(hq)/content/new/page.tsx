@@ -6,7 +6,7 @@ import { getContentFormOptions } from "@/lib/content/data";
 
 export const instant = false;
 
-export const metadata = { title: "New Content" };
+export const metadata = { title: "New content" };
 
 export default async function NewContentPage({
   searchParams,
@@ -22,7 +22,7 @@ export default async function NewContentPage({
     <main className="page-wrap">
       <PageHeader
         eyebrow="Company / Content / New"
-        title="Plan content"
+        title="New content"
         description="Capture the idea now; scheduling and posting details can follow."
       />
       <ContentForm

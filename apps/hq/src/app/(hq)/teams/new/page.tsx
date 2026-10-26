@@ -5,7 +5,7 @@ import { requireOperationalPageAccess } from "@/lib/auth/session";
 
 export const instant = false;
 
-export const metadata = { title: "New Team" };
+export const metadata = { title: "New team" };
 
 export default async function NewTeamPage() {
   await requireOperationalPageAccess("/teams?forbidden=write");

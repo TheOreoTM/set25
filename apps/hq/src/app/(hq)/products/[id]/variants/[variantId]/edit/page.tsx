@@ -33,7 +33,7 @@ async function EditVariant({
   return (
     <>
       <PageHeader
-        eyebrow={`Products / ${variant.product.code} / ${variant.sku}`}
+        eyebrow={`Commerce / Products / ${variant.product.code} / ${variant.sku}`}
         title="Edit variant"
         description="Update variant details. Stock remains protected by movement records."
       />

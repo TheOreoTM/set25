@@ -73,7 +73,7 @@ const groups = [
       { label: "Settings", href: "/settings", icon: Settings },
       { label: "Store", href: "/settings/store", icon: Store },
       {
-        label: "Staff Access",
+        label: "Staff access",
         href: "/settings/staff",
         icon: Users,
         ownerOnly: true,
@@ -109,6 +109,16 @@ function NavigationLinks({
   mobile?: boolean;
 }) {
   const pathname = usePathname();
+  // Highlight only the most specific match, so /settings/store does not
+  // light up both Settings and Store.
+  const activeHref = groups
+    .flatMap((group) => group.items.map((item) => item.href))
+    .filter(
+      (href) =>
+        pathname === href ||
+        (href !== "/" && pathname.startsWith(`${href}/`)),
+    )
+    .sort((a, b) => b.length - a.length)[0];
   return (
     <nav className="nav-groups" aria-label="HQ navigation">
       {groups.map((group) => {
@@ -125,9 +135,7 @@ function NavigationLinks({
             <p>{group.label}</p>
             {items.map((item) => {
               const Icon = item.icon;
-              const active =
-                pathname === item.href ||
-                (item.href !== "/" && pathname.startsWith(`${item.href}/`));
+              const active = item.href === activeHref;
               return (
                 <Link
                   className={active ? "nav-link is-active" : "nav-link"}

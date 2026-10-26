@@ -5,15 +5,15 @@ import { requireOperationalPageAccess } from "@/lib/auth/session";
 
 export const instant = false;
 
-export const metadata = { title: "New Product" };
+export const metadata = { title: "New product" };
 
 export default async function NewProductPage() {
   await requireOperationalPageAccess();
   return (
     <main className="page-wrap">
       <PageHeader
-        eyebrow="Products / New"
-        title="Create product"
+        eyebrow="Commerce / Products / New"
+        title="New product"
         description="Start with the shared product identity. Add variants and opening stock next."
       />
       <ProductForm

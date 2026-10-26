@@ -5,14 +5,14 @@ import { createSupplierAction } from "@/lib/supply/actions";
 
 export const instant = false;
 
-export const metadata = { title: "New Supplier" };
+export const metadata = { title: "New supplier" };
 export default async function NewSupplierPage() {
   await requireOperationalPageAccess("/suppliers?forbidden=write");
   return (
     <main className="page-wrap">
       <PageHeader
         eyebrow="Supply / Suppliers / New"
-        title="Create supplier"
+        title="New supplier"
         description="Add the source first; product terms and purchase orders follow."
       />
       <SupplierForm
