@@ -9,7 +9,7 @@ export async function signInAction(
   _previous: SignInState,
   formData: FormData,
 ): Promise<SignInState> {
-  const email = formData.get("email");
+  const username = formData.get("username");
   const password = formData.get("password");
   const returnTo = formData.get("returnTo");
   const redirectTo =
@@ -20,7 +20,7 @@ export async function signInAction(
       : "/";
 
   try {
-    await signIn("credentials", { email, password, redirectTo });
+    await signIn("credentials", { username, password, redirectTo });
   } catch (error) {
     if (error instanceof AuthError) {
       return {

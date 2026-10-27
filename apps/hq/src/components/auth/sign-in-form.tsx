@@ -13,13 +13,15 @@ export function SignInForm() {
     <form className="sign-in-form" action={action}>
       <input type="hidden" name="returnTo" value="/" />
       <label className="field">
-        <span>Email</span>
+        <span>Username</span>
         <input
-          type="email"
-          name="email"
+          type="text"
+          name="username"
           autoComplete="username"
-          inputMode="email"
-          maxLength={254}
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          maxLength={32}
           required
           autoFocus
         />

@@ -11,7 +11,7 @@ cp packages/database/.env.example packages/database/.env
 
 Set the same `DATABASE_URL` in both files. Generate a strong `AUTH_SECRET` of at least 32 random bytes for `apps/hq/.env.local`.
 
-Apply migrations, then create the first Owner explicitly. Temporarily add `SET25_OWNER_NAME`, `SET25_OWNER_EMAIL`, and `SET25_OWNER_PASSWORD` to `packages/database/.env`, using a password of 12–128 characters.
+Apply migrations, then create the first Owner explicitly. Temporarily add `SET25_OWNER_NAME`, `SET25_OWNER_USERNAME`, and `SET25_OWNER_PASSWORD` to `packages/database/.env`, using a password of 12–128 characters.
 
 ```bash
 pnpm --filter @set25/database exec prisma migrate deploy

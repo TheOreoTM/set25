@@ -4,15 +4,18 @@ import { PrismaClient } from "../generated/prisma/client";
 import { hashPassword } from "../src/password";
 
 const name = process.env.SET25_OWNER_NAME?.trim();
-const email = process.env.SET25_OWNER_EMAIL?.trim().toLowerCase();
+const username = process.env.SET25_OWNER_USERNAME?.trim().toLowerCase();
 const password = process.env.SET25_OWNER_PASSWORD;
 
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is not set.");
 if (!name || name.length < 2 || name.length > 80) {
   throw new Error("SET25_OWNER_NAME must contain 2–80 characters.");
 }
-if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-  throw new Error("SET25_OWNER_EMAIL must be a valid email address.");
+// Same rule as STAFF_USERNAME_PATTERN in @set25/shared and the database check.
+if (!username || !/^[a-z0-9][a-z0-9._-]{2,31}$/.test(username)) {
+  throw new Error(
+    "SET25_OWNER_USERNAME must be 3–32 letters, digits, dots, underscores, or hyphens, starting with a letter or digit.",
+  );
 }
 if (!password || password.length < 12 || password.length > 128) {
   throw new Error("SET25_OWNER_PASSWORD must contain 12–128 characters.");
@@ -25,32 +28,32 @@ const db = new PrismaClient({
 try {
   const existingOwner = await db.staffUser.findFirst({
     where: { role: "OWNER" },
-    select: { email: true },
+    select: { username: true },
   });
   if (existingOwner) {
     throw new Error(
-      `An Owner already exists (${existingOwner.email}). No account was changed.`,
+      `An Owner already exists (${existingOwner.username}). No account was changed.`,
     );
   }
 
-  const existingEmail = await db.staffUser.findUnique({
-    where: { email },
+  const existingUsername = await db.staffUser.findUnique({
+    where: { username },
     select: { id: true },
   });
-  if (existingEmail) {
-    throw new Error("That email already belongs to a staff account.");
+  if (existingUsername) {
+    throw new Error("That username already belongs to a staff account.");
   }
 
   await db.staffUser.create({
     data: {
       name,
-      email,
+      username,
       passwordHash: await hashPassword(password),
       role: "OWNER",
       active: true,
     },
   });
-  console.info(`Created the initial SET25 Owner account for ${email}.`);
+  console.info(`Created the initial SET25 Owner account "${username}".`);
 } finally {
   await db.$disconnect();
 }

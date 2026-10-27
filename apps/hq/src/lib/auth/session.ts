@@ -27,7 +27,13 @@ export const getCurrentStaff = cache(
 
     const staff = await db.staffUser.findUnique({
       where: { id: session.user.id },
-      select: { id: true, name: true, email: true, role: true, active: true },
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        role: true,
+        active: true,
+      },
     });
     if (!staff?.active) return null;
     return staff;

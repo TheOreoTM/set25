@@ -39,7 +39,7 @@ The following map records implemented foundations and the direction for later mi
 
 ### Identity and access (implemented foundation)
 
-- `StaffUser` stores a unique normalised email, Argon2id password hash, OWNER / MANAGER / STAFF role, active status, and last successful login.
+- `StaffUser` stores a unique lowercase username (3–32 letters, digits, dots, underscores, or hyphens, starting with a letter or digit, enforced by a database check), Argon2id password hash, OWNER / MANAGER / STAFF role, active status, and last successful login.
 - Auth.js uses secure JWT session cookies containing the immutable staff ID. Privileged boundaries always reload `StaffUser`, so a stale cookie cannot preserve a removed role or bypass deactivation.
 - `InventoryMovement.createdById` is a nullable relation to `StaffUser`; earlier/demo movements remain readable without an actor.
 - A general `AuditEvent` remains deferred. Future operations can follow the same nullable actor-relation pattern where appropriate.

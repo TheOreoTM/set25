@@ -226,7 +226,9 @@ enum DiscountSource {
 model StaffUser {
   id           String    @id @default(cuid())
   name         String
-  email        String    @unique
+  // Lowercase sign-in name: 3–32 letters, digits, dots, underscores, or
+  // hyphens, starting with a letter or digit (database check enforces it).
+  username     String    @unique
   passwordHash String
   role         StaffRole @default(STAFF)
   active       Boolean   @default(true)

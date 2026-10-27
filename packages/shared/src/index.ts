@@ -16,6 +16,14 @@ export const MONEY_ENTRY_CURRENCIES = ["MVR", "USD"] as const;
 export type MoneyEntryCurrencyValue = (typeof MONEY_ENTRY_CURRENCIES)[number];
 export const DEFAULT_USD_TO_MVR_RATE = "15.42";
 
+/** Staff sign-in names: 3–32 lowercase letters, digits, dots, underscores, or
+ * hyphens, starting with a letter or digit. Mirrors the database check. */
+export const STAFF_USERNAME_PATTERN = /^[a-z0-9][a-z0-9._-]{2,31}$/;
+
+export function normalizeStaffUsername(value: string) {
+  return value.trim().toLowerCase();
+}
+
 export const PRODUCT_STATUSES = ["DRAFT", "ACTIVE", "ARCHIVED"] as const;
 export type ProductStatusValue = (typeof PRODUCT_STATUSES)[number];
 

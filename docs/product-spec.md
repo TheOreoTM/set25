@@ -58,7 +58,7 @@ HQ uses direct, plain English. Prefer labels such as Money In, Money Out, Profit
 
 ## Access and security
 
-HQ is private by design. Auth.js Credentials provides staff-only email/password sign-in with no public registration. Secure session cookies identify a staff record by immutable ID, while server authorization reloads the active database record before access or mutation. Navigation visibility is not authorization: Product, Variant, Stock, and staff-access mutations enforce roles on the server.
+HQ is private by design. Auth.js Credentials provides staff-only username/password sign-in with no public registration. Secure session cookies identify a staff record by immutable ID, while server authorization reloads the active database record before access or mutation. Navigation visibility is not authorization: Product, Variant, Stock, and staff-access mutations enforce roles on the server.
 
 Owners have complete HQ and staff-management access. Managers can perform ordinary Product, Stock, and Commerce operations. Staff currently have read access to Dashboard, Products, Stock, Orders, Preorders, Customers, and Teams; write access can be broadened later through the shared authorization helpers. Deactivated staff immediately fail the database-backed request boundary even if an older session cookie remains.
 

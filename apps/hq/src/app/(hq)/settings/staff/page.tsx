@@ -52,7 +52,7 @@ export default async function StaffPage({
     select: {
       id: true,
       name: true,
-      email: true,
+      username: true,
       role: true,
       active: true,
       lastLoginAt: true,
@@ -115,7 +115,7 @@ export default async function StaffPage({
             <div className="staff-row" key={member.id}>
               <span className="catalog-product">
                 <strong>{member.name}</strong>
-                <small>{member.email}</small>
+                <small>@{member.username}</small>
               </span>
               <span data-label="Role">
                 <form

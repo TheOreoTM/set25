@@ -9,7 +9,7 @@ export const staffRoleLabels: Record<StaffRole, string> = {
 export type StaffIdentity = {
   id: string;
   name: string;
-  email: string;
+  username: string;
   role: StaffRole;
 };
 

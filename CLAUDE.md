@@ -26,7 +26,7 @@ pnpm --filter @set25/database generate              # also runs on postinstall
 pnpm --filter @set25/database db:migrate            # prisma migrate dev
 pnpm --filter @set25/database exec prisma migrate deploy
 pnpm --filter @set25/database db:seed               # demo seed (sets ALLOW_DEMO_SEED=1)
-pnpm --filter @set25/database db:bootstrap-owner    # needs SET25_OWNER_NAME/EMAIL/PASSWORD in packages/database/.env
+pnpm --filter @set25/database db:bootstrap-owner    # needs SET25_OWNER_NAME/USERNAME/PASSWORD in packages/database/.env
 pnpm --filter @set25/database db:studio
 ```
 

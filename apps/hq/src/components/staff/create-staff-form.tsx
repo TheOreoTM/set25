@@ -23,18 +23,23 @@ export function CreateStaffForm() {
           ) : null}
         </label>
         <label className="field">
-          <span>Email</span>
+          <span>Username</span>
           <input
-            name="email"
-            type="email"
-            inputMode="email"
+            name="username"
             autoComplete="off"
-            maxLength={254}
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            minLength={3}
+            maxLength={32}
+            pattern="[A-Za-z0-9][A-Za-z0-9._\-]{2,31}"
             required
           />
-          {state.errors?.email ? (
-            <small className="field-error">{state.errors.email[0]}</small>
-          ) : null}
+          {state.errors?.username ? (
+            <small className="field-error">{state.errors.username[0]}</small>
+          ) : (
+            <small>Letters, digits, dots, underscores, or hyphens.</small>
+          )}
         </label>
         <label className="field">
           <span>Initial password</span>

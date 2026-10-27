@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { db } from "@set25/database";
+import { normalizeStaffUsername } from "@set25/shared";
 import { hashPassword, verifyPassword } from "@set25/database/password";
 
 let dummyPasswordHash: Promise<string> | undefined;
@@ -16,19 +17,19 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   providers: [
     Credentials({
       credentials: {
-        email: { label: "Email", type: "email" },
+        username: { label: "Username", type: "text" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        const email =
-          typeof credentials.email === "string"
-            ? credentials.email.trim().toLowerCase()
+        const username =
+          typeof credentials.username === "string"
+            ? normalizeStaffUsername(credentials.username)
             : "";
         const password =
           typeof credentials.password === "string" ? credentials.password : "";
 
         if (
-          email.length > 254 ||
+          username.length > 32 ||
           password.length < 1 ||
           password.length > 128
         ) {
@@ -36,11 +37,10 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         }
 
         const staff = await db.staffUser.findUnique({
-          where: { email },
+          where: { username },
           select: {
             id: true,
             name: true,
-            email: true,
             passwordHash: true,
             active: true,
           },
@@ -56,7 +56,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           where: { id: staff.id },
           data: { lastLoginAt: new Date() },
         });
-        return { id: staff.id, name: staff.name, email: staff.email };
+        return { id: staff.id, name: staff.name };
       },
     }),
   ],

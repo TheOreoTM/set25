@@ -31,7 +31,7 @@ export async function createStaffAction(
     await db.staffUser.create({
       data: {
         name: result.data.name,
-        email: result.data.email,
+        username: result.data.username,
         passwordHash: await hashPassword(result.data.password),
         role: result.data.role,
       },
@@ -43,8 +43,8 @@ export async function createStaffAction(
     ) {
       return {
         status: "error",
-        message: "A staff account already uses that email address.",
-        errors: { email: ["Use a different email address."] },
+        message: "A staff account already uses that username.",
+        errors: { username: ["Choose a different username."] },
       };
     }
     console.error(error);

@@ -21,7 +21,7 @@ export default async function AccountPage() {
           <p className="kicker">Signed in as</p>
           <div className="product-code-mark">{staffInitials(staff.name)}</div>
           <h2>{staff.name}</h2>
-          <p>{staff.email}</p>
+          <p>@{staff.username}</p>
         </div>
         <dl className="identity-facts">
           <div>

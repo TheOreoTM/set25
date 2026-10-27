@@ -20,7 +20,7 @@ export async function AccountMenu() {
       <div className="account-popover">
         <div className="account-identity">
           <strong>{staff.name}</strong>
-          <span>{staff.email}</span>
+          <span>@{staff.username}</span>
         </div>
         <Link href="/account">
           <UserRound aria-hidden="true" /> Account
