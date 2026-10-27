@@ -6297,3 +6297,41 @@ td strong {
     flex: none;
   }
 }
+
+/* Staff access: inline username change */
+.staff-username summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  cursor: pointer;
+  list-style: none;
+}
+.staff-username summary::-webkit-details-marker {
+  display: none;
+}
+.staff-username summary span {
+  color: var(--muted);
+  font-size: var(--text-meta);
+  font-weight: 650;
+  text-decoration: underline;
+}
+.staff-username[open] summary span {
+  display: none;
+}
+.staff-username form {
+  margin-top: 6px;
+}
+.staff-username input[name="username"] {
+  width: 140px;
+  min-height: 34px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  padding: 6px 8px;
+  font-size: var(--text-label);
+}
+.staff-username input[name="username"]:focus {
+  border-color: var(--onyx);
+  outline: none;
+  box-shadow: 0 0 0 2px var(--volt);
+}

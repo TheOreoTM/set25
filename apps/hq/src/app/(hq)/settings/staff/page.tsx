@@ -6,6 +6,7 @@ import { CreateStaffForm } from "@/components/staff/create-staff-form";
 import { requireStaff } from "@/lib/auth/session";
 import {
   changeStaffRoleAction,
+  changeStaffUsernameAction,
   toggleStaffStatusAction,
 } from "@/lib/staff/actions";
 
@@ -17,6 +18,9 @@ const errorMessages: Record<string, string> = {
   "last-owner": "SET25 must always have at least one active Owner.",
   missing: "That staff account no longer exists.",
   role: "Choose a valid staff role.",
+  username:
+    "Usernames use 3–32 letters, digits, dots, underscores, or hyphens, starting with a letter or digit.",
+  "username-taken": "Another staff account already uses that username.",
   save: "SET25 HQ could not save that access change. Please try again.",
 };
 
@@ -78,7 +82,9 @@ export default async function StaffPage({
       ) : null}
       {query.updated ? (
         <div className="success-banner" role="status">
-          Staff access updated.
+          {query.updated === "username"
+            ? "Username updated. It applies from the next sign-in."
+            : "Staff access updated."}
         </div>
       ) : null}
       {error ? (
@@ -115,7 +121,31 @@ export default async function StaffPage({
             <div className="staff-row" key={member.id}>
               <span className="catalog-product">
                 <strong>{member.name}</strong>
-                <small>@{member.username}</small>
+                <details className="staff-username">
+                  <summary>
+                    <small>@{member.username}</small>
+                    <span>Change</span>
+                  </summary>
+                  <form
+                    action={changeStaffUsernameAction}
+                    className="inline-role-form"
+                  >
+                    <input type="hidden" name="staffId" value={member.id} />
+                    <input
+                      name="username"
+                      defaultValue={member.username}
+                      aria-label={`New username for ${member.name}`}
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      minLength={3}
+                      maxLength={32}
+                      pattern="[A-Za-z0-9][A-Za-z0-9._\-]{2,31}"
+                      required
+                    />
+                    <button type="submit">Save</button>
+                  </form>
+                </details>
               </span>
               <span data-label="Role">
                 <form

@@ -38,7 +38,7 @@ export default async function AccountPage() {
       </section>
       <p className="account-page-note">
         Password changes and profile editing are intentionally deferred. Ask an
-        Owner if your access needs to change.
+        Owner if your username or access needs to change.
       </p>
     </main>
   );

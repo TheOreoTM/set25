@@ -4,6 +4,7 @@ import { db, Prisma, type StaffRole } from "@set25/database";
 import { hashPassword } from "@set25/database/password";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { normalizeStaffUsername, STAFF_USERNAME_PATTERN } from "@set25/shared";
 import { requireOwner } from "@/lib/auth/session";
 import {
   initialStaffFormState,
@@ -95,6 +96,37 @@ export async function changeStaffRoleAction(formData: FormData) {
 
   revalidatePath("/settings/staff");
   redirect("/settings/staff?updated=role");
+}
+
+// Sessions identify staff by ID, so a rename never signs anyone out; the new
+// username applies from their next sign-in.
+export async function changeStaffUsernameAction(formData: FormData) {
+  await requireOwner();
+  const staffId = String(formData.get("staffId") ?? "");
+  const username = normalizeStaffUsername(
+    String(formData.get("username") ?? ""),
+  );
+  if (!staffId) redirect("/settings/staff?error=missing");
+  if (!STAFF_USERNAME_PATTERN.test(username))
+    redirect("/settings/staff?error=username");
+
+  try {
+    await db.staffUser.update({
+      where: { id: staffId },
+      data: { username },
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002")
+        redirect("/settings/staff?error=username-taken");
+      if (error.code === "P2025") redirect("/settings/staff?error=missing");
+    }
+    console.error(error);
+    redirect("/settings/staff?error=save");
+  }
+
+  revalidatePath("/settings/staff");
+  redirect("/settings/staff?updated=username");
 }
 
 export async function toggleStaffStatusAction(formData: FormData) {
