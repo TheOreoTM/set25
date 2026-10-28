@@ -13,8 +13,6 @@ import {
   updateStoreSettingsAction,
 } from "@/lib/store/actions";
 
-export const instant = false;
-
 export const metadata = { title: "Store settings" };
 
 export default function StoreSettingsPage({

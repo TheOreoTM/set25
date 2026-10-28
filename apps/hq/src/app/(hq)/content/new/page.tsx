@@ -4,8 +4,6 @@ import { requireOperationalPageAccess } from "@/lib/auth/session";
 import { createContentAction } from "@/lib/content/actions";
 import { getContentFormOptions } from "@/lib/content/data";
 
-export const instant = false;
-
 export const metadata = { title: "New content" };
 
 export default async function NewContentPage({

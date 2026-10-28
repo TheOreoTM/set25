@@ -5,8 +5,6 @@ import { updateCustomerAction } from "@/lib/commerce/actions";
 import { getCustomer } from "@/lib/commerce/data";
 import { requireOperationalPageAccess } from "@/lib/auth/session";
 
-export const instant = false;
-
 export const metadata = { title: "Edit customer" };
 
 export default async function EditCustomerPage({

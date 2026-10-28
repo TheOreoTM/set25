@@ -3,8 +3,6 @@ import { PageHeader } from "@/components/page-header";
 import { createAmbassadorAction } from "@/lib/ambassadors/actions";
 import { requireOperationalPageAccess } from "@/lib/auth/session";
 
-export const instant = false;
-
 export const metadata = { title: "New ambassador" };
 
 export default async function NewAmbassadorPage() {

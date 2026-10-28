@@ -164,6 +164,20 @@ enum AmbassadorStatus {
   ENDED
 }
 
+enum WaitlistSource {
+  INSTAGRAM_DM
+  TIKTOK
+  IN_PERSON
+}
+
+enum WaitlistStatus {
+  NEW
+  CONTACTED
+  CONFIRMED
+  ORDERED
+  DROPPED
+}
+
 enum ContentPlatform {
   INSTAGRAM
   TIKTOK
@@ -253,6 +267,7 @@ model StaffUser {
   deletedFiles       FileAsset[]              @relation("FileDeletedBy")
   productMedia       ProductMedia[]           @relation("ProductMediaCreatedBy")
   storeSettings      StoreSettings[]          @relation("StoreSettingsUpdatedBy")
+  waitlistEntries    WaitlistEntry[]          @relation("WaitlistEntryCreatedBy")
 
   @@index([role, active])
 }
@@ -816,6 +831,34 @@ model Ambassador {
 
   @@index([status, name])
   @@index([name])
+}
+
+// Pre-launch interest captured from Instagram DMs, TikTok, or in person.
+// Customer contact stays on Instagram; HQ only tracks who is waiting and for
+// what. Handles are stored lowercase without "@" so the unique index is
+// case-insensitive in practice.
+model WaitlistEntry {
+  id                   String            @id @default(cuid())
+  instagramHandle      String?           @unique
+  name                 String?
+  phone                String?
+  source               WaitlistSource    @default(INSTAGRAM_DM)
+  interestedCategories ProductCategory[]
+  sizes                String[]
+  status               WaitlistStatus    @default(NEW)
+  statusChangedAt      DateTime          @default(now())
+  earlyBird            Boolean           @default(false)
+  // Stored uppercase, like ambassador discount codes.
+  earlyBirdCode        String?           @unique
+  notes                String?
+  createdById          String
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  createdBy StaffUser @relation("WaitlistEntryCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([status, createdAt])
+  @@index([createdAt])
 }
 
 // Append-only record of stock given to an ambassador. Product identity is

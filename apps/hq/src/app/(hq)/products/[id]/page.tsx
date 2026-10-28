@@ -23,8 +23,6 @@ import {
   publicMediaBaseUrl,
 } from "@/lib/files/storage";
 
-export const instant = false;
-
 export default function ProductDetailPage({
   params,
   searchParams,

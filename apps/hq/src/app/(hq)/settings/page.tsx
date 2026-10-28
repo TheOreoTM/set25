@@ -3,8 +3,6 @@ import { ArrowRight, Store, Users } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { requireOperationalPageAccess } from "@/lib/auth/session";
 
-export const instant = false;
-
 export const metadata = { title: "Settings" };
 
 export default async function SettingsPage() {

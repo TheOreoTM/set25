@@ -5,8 +5,6 @@ import { updateTeamAction } from "@/lib/commerce/actions";
 import { getTeam } from "@/lib/commerce/data";
 import { requireOperationalPageAccess } from "@/lib/auth/session";
 
-export const instant = false;
-
 export const metadata = { title: "Edit team" };
 
 export default async function EditTeamPage({

@@ -1,572 +1,394 @@
+import Link from "next/link";
 import {
   ArrowRight,
-  Box,
-  Check,
-  ClipboardList,
+  CalendarDays,
   CircleDollarSign,
-  FileArchive,
-  PackageCheck,
+  PackageSearch,
+  Plus,
+  Rocket,
   Sparkles,
-  ShoppingBag,
-  Truck,
 } from "lucide-react";
-import Link from "next/link";
-import { connection } from "next/server";
 import {
-  fulfilmentStatusLabels,
-  formatMVR,
-  formatImportNumber,
-  formatOrderNumber,
   contentPlatformLabels,
   contentStatusLabels,
   contentTypeLabels,
-  importShipmentStatusLabels,
-  paymentStatusLabels,
+  formatMVR,
+  formatSampleNumber,
+  sampleStatusLabels,
   taskPriorityLabels,
   taskStatusLabels,
+  waitlistStatusLabels,
 } from "@set25/shared";
 import { PageHeader } from "@/components/page-header";
 import { requireStaff } from "@/lib/auth/session";
-import { getDashboardContent } from "@/lib/content/data";
-import { formatPublishAt, publishTile } from "@/lib/content/presentation";
-import { getExpiredFileCount } from "@/lib/files/data";
-import { getCommerceDashboard } from "@/lib/commerce/data";
-import { paymentSummary } from "@/lib/commerce/money";
-import { getProfitSummary } from "@/lib/money/data";
-import { getDateRange, getTodayRange } from "@/lib/planning/date-range";
-import { getSupplyDashboard } from "@/lib/supply/data";
-import { formatDate as formatSupplyDate } from "@/lib/supply/presentation";
-import { getDashboardTasks } from "@/lib/tasks/data";
+import { getContentThisWeek } from "@/lib/content/data";
+import { publishTile } from "@/lib/content/presentation";
+import { getMoneySpentSummary } from "@/lib/money/data";
+import { getTodayRange } from "@/lib/planning/date-range";
+import { getSamplesAwaitingDecision } from "@/lib/supply/data";
+import { getDashboardTasks, getOpenTaskCounts } from "@/lib/tasks/data";
+import { getWaitlistSummary } from "@/lib/waitlist/data";
 
-export const instant = false;
+// The four pipeline steps that are still in play, in order.
+const pipeline = ["NEW", "CONTACTED", "CONFIRMED", "ORDERED"] as const;
 
-export default async function DashboardPage({
+export default async function TodayPage({
   searchParams,
 }: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
+  searchParams: Promise<{ forbidden?: string }>;
 }) {
-  await connection();
-  const monthRange = getDateRange({ preset: "this-month" });
   const staff = await requireStaff();
-  const [query, commerce, supply, tasks, profit, content, expiredFiles] =
+  const canWrite = staff.role !== "STAFF";
+  const [query, waitlist, samples, content, taskCounts, tasks, money] =
     await Promise.all([
       searchParams,
-      getCommerceDashboard(),
-      getSupplyDashboard(),
+      getWaitlistSummary(),
+      getSamplesAwaitingDecision(),
+      getContentThisWeek(),
+      getOpenTaskCounts(),
       getDashboardTasks(),
-      getProfitSummary(monthRange.start, monthRange.end),
-      getDashboardContent(),
-      getExpiredFileCount(staff.role),
+      getMoneySpentSummary(),
     ]);
   const { start: today, end: tomorrow } = getTodayRange();
-  const taskAttention = tasks.filter(
-    (task) =>
-      task.priority === "HIGH" ||
-      (task.dueAt !== null && new Date(task.dueAt) < today),
-  );
-  const openOrders = commerce.monthOrders.filter(
-    (order) => !["COMPLETED", "CANCELLED"].includes(order.fulfilmentStatus),
-  ).length;
-  const attentionCount =
-    commerce.attention.length +
-    commerce.lowStock.length +
-    supply.attention.length +
-    supply.unassignedPurchaseOrders.length +
-    taskAttention.length +
-    content.overdue.length +
-    (expiredFiles ? 1 : 0);
-  const monthName = new Intl.DateTimeFormat("en", {
-    month: "long",
-    timeZone: "Indian/Maldives",
-  }).format(new Date());
-  const metrics = [
-    {
-      label: "Sales this month",
-      value: formatMVR(profit.salesRevenue),
-      detail: "Completed orders",
-    },
-    {
-      label: "Sales Profit this month",
-      value: profit.salesProfit ? formatMVR(profit.salesProfit) : "Incomplete",
-      detail: profit.missingCostLines
-        ? `${profit.missingCostLines} sold ${profit.missingCostLines === 1 ? "line is" : "lines are"} missing cost`
-        : "Revenue less Cost of Items Sold",
-    },
-    {
-      label: "Orders this month",
-      value: String(commerce.monthOrders.length),
-      detail: `${openOrders} need fulfilment`,
-    },
-    {
-      label: "Stock value",
-      value: formatMVR(commerce.stockValue),
-      detail: commerce.unknownCostUnits
-        ? `${commerce.unknownCostUnits} ${commerce.unknownCostUnits === 1 ? "unit is" : "units are"} missing Cost Each`
-        : "At current product cost",
-    },
-  ];
+  const growth = waitlist.thisWeek - waitlist.lastWeek;
+  const weeklyMax = Math.max(...waitlist.weekly, 1);
+  const planned = content.items.length - content.posted;
 
   return (
-    <main className="page-wrap">
+    <main className="page-wrap today-page">
       <PageHeader
-        eyebrow="Overview / Dashboard"
-        title="Good morning, team."
-        description="Here’s what needs your attention today."
+        eyebrow="Pre-launch / Today"
+        title="Today"
+        description={todayLabel()}
       />
       {query.forbidden === "staff-role" ? (
         <div
           className="form-message form-message--error staff-page-message"
           role="alert"
         >
-          Your Staff role currently has read-only access to Dashboard, Products,
-          Stock, and Commerce records.
+          Your Staff role has read-only access to most of HQ.
         </div>
       ) : null}
-      <div className="demo-notice" role="note">
-        <span>Live operations</span> Commerce, supply, Sales Profit, stock, and
-        tasks now use current HQ records.
-      </div>
 
-      <section aria-labelledby="month-summary-title">
-        <div className="section-heading section-heading--quiet">
-          <h2 id="month-summary-title">{monthName} at a glance</h2>
-          <p>From current HQ records</p>
+      <section className="panel waitlist-hero" aria-labelledby="waitlist-hero">
+        <div className="section-heading">
+          <div>
+            <p className="kicker">Waitlist</p>
+            <h2 id="waitlist-hero">People waiting for launch</h2>
+          </div>
+          {canWrite ? (
+            <Link className="button button--dark" href="/waitlist#quick-add-title">
+              <Plus aria-hidden="true" /> Add
+            </Link>
+          ) : null}
         </div>
-        <div className="metric-grid">
-          {metrics.map((metric) => (
-            <article className="metric" key={metric.label}>
-              <p>{metric.label}</p>
-              <strong>{metric.value}</strong>
-              <span>
-                <Check aria-hidden="true" />
-                {metric.detail}
-              </span>
-            </article>
+        <div className="waitlist-hero-body">
+          <div className="waitlist-hero-number">
+            <strong>{waitlist.active}</strong>
+            <span>
+              {waitlist.thisWeek} joined this week
+              {" · "}
+              {growth === 0
+                ? "same as last week"
+                : `${Math.abs(growth)} ${growth > 0 ? "more" : "fewer"} than last week`}
+            </span>
+            <span>
+              {waitlist.earlyBird} Early Bird
+              {waitlist.byStatus.DROPPED
+                ? ` · ${waitlist.byStatus.DROPPED} dropped`
+                : ""}
+            </span>
+          </div>
+          <figure className="growth-chart">
+            <figcaption>Sign-ups per week, last 8 weeks</figcaption>
+            <div className="growth-bars" aria-hidden="true">
+              {waitlist.weekly.map((count, index) => {
+                const label = weekLabel(waitlist.weekly.length - 1 - index);
+                return (
+                  <div
+                    className="growth-bar"
+                    key={index}
+                    title={`${label}: ${count} ${count === 1 ? "sign-up" : "sign-ups"}`}
+                  >
+                    <span className="growth-bar-value">
+                      {index === waitlist.weekly.length - 1 ? count : ""}
+                    </span>
+                    <span
+                      className={
+                        index === waitlist.weekly.length - 1
+                          ? "growth-bar-fill is-current"
+                          : "growth-bar-fill"
+                      }
+                      style={{ height: `${(count / weeklyMax) * 100}%` }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            <div className="growth-axis" aria-hidden="true">
+              <span>8 wks ago</span>
+              <span>This week</span>
+            </div>
+            <table className="sr-only">
+              <caption>Waitlist sign-ups per week</caption>
+              <tbody>
+                {waitlist.weekly.map((count, index) => (
+                  <tr key={index}>
+                    <th scope="row">
+                      {weekLabel(waitlist.weekly.length - 1 - index)}
+                    </th>
+                    <td>{count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </figure>
+        </div>
+        <div className="pipeline-strip">
+          {pipeline.map((status) => (
+            <Link href={`/waitlist?status=${status}`} key={status}>
+              <span>{waitlistStatusLabels[status]}</span>
+              <strong>{waitlist.byStatus[status]}</strong>
+            </Link>
           ))}
         </div>
       </section>
 
-      <div className="dashboard-grid dashboard-grid--lead">
-        <section
-          className="panel panel--attention"
-          aria-labelledby="attention-title"
-        >
-          <div className="section-heading">
-            <div>
-              <p className="kicker">Action queue</p>
-              <h2 id="attention-title">Needs attention</h2>
-            </div>
-            <span className="count-badge">
-              {String(attentionCount).padStart(2, "0")}
-            </span>
-          </div>
-          <div className="attention-list">
-            {commerce.attention.map(({ order, summary }) => (
-              <Link
-                className="attention-item attention-item--attention"
-                href={`/${order.type === "PREORDER" ? "preorders" : "orders"}/${order.id}`}
-                key={order.id}
-              >
-                <span className="attention-icon">
-                  <CircleDollarSign aria-hidden="true" />
-                </span>
-                <span className="attention-copy">
-                  <span>{paymentStatusLabels[summary.status]}</span>
-                  <strong>
-                    {formatOrderNumber(order.orderNumber)} ·{" "}
-                    {order.customer?.name ??
-                      order.team?.name ??
-                      "Customer not recorded"}
-                  </strong>
-                  <small>{formatMVR(summary.balance)} balance left</small>
-                </span>
-                <ArrowRight className="row-arrow" aria-hidden="true" />
-              </Link>
-            ))}
-            {commerce.lowStock.map((variant) => (
-              <Link
-                className="attention-item attention-item--critical"
-                href={`/products/${variant.productId}`}
-                key={variant.id}
-              >
-                <span className="attention-icon">
-                  <Box aria-hidden="true" />
-                </span>
-                <span className="attention-copy">
-                  <span>Low stock</span>
-                  <strong>
-                    {variant.product.name} ·{" "}
-                    {[variant.color, variant.size].filter(Boolean).join(" / ")}
-                  </strong>
-                  <small>
-                    {variant.stockOnHand} available · Reorder at{" "}
-                    {variant.reorderAt}
-                  </small>
-                </span>
-                <ArrowRight className="row-arrow" aria-hidden="true" />
-              </Link>
-            ))}
-            {supply.attention.map((shipment) => (
-              <Link
-                className="attention-item attention-item--attention"
-                href={`/imports/${shipment.id}`}
-                key={shipment.id}
-              >
-                <span className="attention-icon">
-                  <Truck aria-hidden="true" />
-                </span>
-                <span className="attention-copy">
-                  <span>Shipment needs action</span>
-                  <strong>
-                    {formatImportNumber(shipment.importNumber)} ·{" "}
-                    {importShipmentStatusLabels[shipment.status]}
-                  </strong>
-                  <small>
-                    {shipment.estimatedArrival &&
-                    shipment.estimatedArrival < new Date()
-                      ? "ETA overdue"
-                      : `ETA ${formatSupplyDate(shipment.estimatedArrival)}`}
-                  </small>
-                </span>
-                <ArrowRight className="row-arrow" aria-hidden="true" />
-              </Link>
-            ))}
-            {supply.unassignedPurchaseOrders.map((po) => (
-              <Link
-                className="attention-item"
-                href={`/purchase-orders/${po.id}`}
-                key={po.id}
-              >
-                <span className="attention-icon">
-                  <PackageCheck aria-hidden="true" />
-                </span>
-                <span className="attention-copy">
-                  <span>Not assigned to an import</span>
-                  <strong>{po.supplier.name}</strong>
-                  <small>Placed purchase order</small>
-                </span>
-                <ArrowRight className="row-arrow" aria-hidden="true" />
-              </Link>
-            ))}
-            {taskAttention.slice(0, 4).map((task) => (
-              <Link
-                className="attention-item attention-item--attention"
-                href="/tasks?view=attention"
-                key={task.id}
-              >
-                <span className="attention-icon">
-                  <ClipboardList aria-hidden="true" />
-                </span>
-                <span className="attention-copy">
-                  <span>
-                    {task.dueAt && new Date(task.dueAt) < today
-                      ? "Overdue task"
-                      : `${taskPriorityLabels[task.priority]} priority`}
-                  </span>
-                  <strong>{task.title}</strong>
-                  <small>
-                    {task.assignedTo?.name ?? "Unassigned"}
-                    {task.dueAt
-                      ? ` · Due ${formatSupplyDate(new Date(task.dueAt))}`
-                      : " · No due date"}
-                  </small>
-                </span>
-                <ArrowRight className="row-arrow" aria-hidden="true" />
-              </Link>
-            ))}
-            {content.overdue.slice(0, 4).map((item) => (
-              <Link
-                className="attention-item attention-item--attention"
-                href={`/content/${item.id}`}
-                key={item.id}
-              >
-                <span className="attention-icon">
-                  <Sparkles aria-hidden="true" />
-                </span>
-                <span className="attention-copy">
-                  <span>Content not posted</span>
-                  <strong>{item.title}</strong>
-                  <small>
-                    Planned {formatPublishAt(item.publishAt!)} ·{" "}
-                    {item.owner ?? "No owner"}
-                  </small>
-                </span>
-                <ArrowRight className="row-arrow" aria-hidden="true" />
-              </Link>
-            ))}
-            {expiredFiles ? (
-              <Link className="attention-item" href="/files?retention=expired">
-                <span className="attention-icon">
-                  <FileArchive aria-hidden="true" />
-                </span>
-                <span className="attention-copy">
-                  <span>File retention ended</span>
-                  <strong>
-                    {expiredFiles} {expiredFiles === 1 ? "file" : "files"} to
-                    review
-                  </strong>
-                  <small>Blocked from download until removed</small>
-                </span>
-                <ArrowRight className="row-arrow" aria-hidden="true" />
-              </Link>
-            ) : null}
-            {!attentionCount ? (
-              <div className="inline-empty inline-empty--panel">
-                <p>Nothing needs attention right now.</p>
-              </div>
-            ) : null}
-          </div>
-        </section>
-
-        <section className="panel incoming" aria-labelledby="incoming-title">
-          <div className="section-heading">
-            <div>
-              <p className="kicker">Supply · Live</p>
-              <h2 id="incoming-title">Incoming</h2>
-            </div>
-            <Truck aria-hidden="true" />
-          </div>
-          {supply.shipments.length ? (
-            <div className="dashboard-incoming-list">
-              {supply.shipments.map((shipment) => (
-                <Link
-                  className="incoming-hero"
-                  href={`/imports/${shipment.id}`}
-                  key={shipment.id}
-                >
-                  <div>
-                    <p>{formatImportNumber(shipment.importNumber)}</p>
-                    <h3>
-                      {shipment.lines.reduce(
-                        (sum, line) => sum + line.quantityShipped,
-                        0,
-                      )}{" "}
-                      units · ETA {formatSupplyDate(shipment.estimatedArrival)}
-                    </h3>
-                  </div>
-                  <span
-                    className={`status status--${shipment.status.toLowerCase()}`}
-                  >
-                    {importShipmentStatusLabels[shipment.status]}
-                  </span>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <div className="inline-empty inline-empty--panel">
-              <p>No active imports right now.</p>
-            </div>
-          )}
-          <Link className="text-link" href="/imports">
-            View all imports <ArrowRight aria-hidden="true" />
+      <section aria-label="Pre-launch summary">
+        <div className="metric-grid today-metrics">
+          <Link className="metric" href="/samples">
+            <p>
+              <PackageSearch aria-hidden="true" /> Samples to decide
+            </p>
+            <strong>{samples.count}</strong>
+            <span>Pending or retest</span>
           </Link>
-        </section>
-      </div>
-
-      <section className="panel orders-panel" aria-labelledby="orders-title">
-        <div className="section-heading">
-          <div>
-            <p className="kicker">Commerce · Live</p>
-            <h2 id="orders-title">Recent orders</h2>
-          </div>
-          <Link className="text-link" href="/orders">
-            View all <ArrowRight aria-hidden="true" />
+          <Link className="metric" href="/content">
+            <p>
+              <Sparkles aria-hidden="true" /> Content this week
+            </p>
+            <strong>{content.items.length}</strong>
+            <span>
+              {content.posted} posted · {planned} to go
+              {content.overdue ? ` · ${content.overdue} overdue` : ""}
+            </span>
+          </Link>
+          <Link className="metric" href="/tasks">
+            <p>
+              <CalendarDays aria-hidden="true" /> Open tasks
+            </p>
+            <strong>{taskCounts.open}</strong>
+            <span>
+              {taskCounts.overdue
+                ? `${taskCounts.overdue} overdue`
+                : "Nothing overdue"}
+            </span>
+          </Link>
+          <Link className="metric" href="/money">
+            <p>
+              <CircleDollarSign aria-hidden="true" /> Spent so far
+            </p>
+            <strong className="metric-money">{formatMVR(money.total)}</strong>
+            <span>{formatMVR(money.thisMonth)} this month</span>
           </Link>
         </div>
-        {commerce.recentOrders.length ? (
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Order</th>
-                  <th>Customer</th>
-                  <th>Items</th>
-                  <th>Amount</th>
-                  <th>Payment</th>
-                  <th>Fulfilment</th>
-                  <th>
-                    <span className="sr-only">Open</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {commerce.recentOrders.map((order) => {
-                  const payment = paymentSummary(order.total, order.payments);
-                  return (
-                    <tr key={order.id}>
-                      <td data-label="Order">
-                        <strong>{formatOrderNumber(order.orderNumber)}</strong>
-                      </td>
-                      <td data-label="Customer">
-                        {order.customer?.name ??
-                          order.team?.name ??
-                          "Not recorded"}
-                      </td>
-                      <td data-label="Items">{order._count.lines}</td>
-                      <td data-label="Amount" className="numeric">
-                        {formatMVR(order.total)}
-                      </td>
-                      <td data-label="Payment">
-                        <span
-                          className={`status status--${payment.status.toLowerCase()}`}
-                        >
-                          {paymentStatusLabels[payment.status]}
-                        </span>
-                      </td>
-                      <td data-label="Fulfilment">
-                        <span
-                          className={`status status--${order.fulfilmentStatus.toLowerCase()}`}
-                        >
-                          {fulfilmentStatusLabels[order.fulfilmentStatus]}
-                        </span>
-                      </td>
-                      <td>
-                        <Link
-                          className="row-link"
-                          href={`/${order.type === "PREORDER" ? "preorders" : "orders"}/${order.id}`}
-                          aria-label={`Open ${formatOrderNumber(order.orderNumber)}`}
-                        >
-                          <ArrowRight aria-hidden="true" />
-                        </Link>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="inline-empty inline-empty--panel">
-            <p>No orders have been created yet.</p>
-            <Link href="/orders/new">
-              Create an order <ArrowRight aria-hidden="true" />
-            </Link>
-          </div>
-        )}
       </section>
 
-      <div className="dashboard-grid dashboard-grid--footer">
-        <section className="panel" aria-labelledby="tasks-title">
+      <div className="dashboard-grid today-grid">
+        <section className="panel" aria-labelledby="samples-title">
           <div className="section-heading">
             <div>
-              <p className="kicker">Planning · Live</p>
-              <h2 id="tasks-title">Upcoming</h2>
+              <p className="kicker">Supply</p>
+              <h2 id="samples-title">Samples awaiting a decision</h2>
             </div>
-            <Link className="text-link" href="/tasks">
-              View tasks <ArrowRight aria-hidden="true" />
+            <Link className="text-link" href="/samples">
+              All samples <ArrowRight aria-hidden="true" />
             </Link>
           </div>
-          <div className="task-list">
-            {tasks.map((task) => {
-              const date = dashboardTaskDate(task.dueAt);
-              return (
-                <Link className="task-item" href="/tasks" key={task.id}>
+          {samples.samples.length ? (
+            <div className="task-list">
+              {samples.samples.map((sample) => (
+                <Link
+                  className="task-item"
+                  href={`/samples/${sample.id}`}
+                  key={sample.id}
+                >
                   <span className="task-date">
-                    <strong>{date.day}</strong>
-                    <small>{date.month}</small>
+                    <strong>{sample._count.evaluations}</strong>
+                    <small>TESTS</small>
                   </span>
                   <span>
-                    <strong>{task.title}</strong>
+                    <strong>
+                      {formatSampleNumber(sample.sampleNumber)} · {sample.name}
+                    </strong>
                     <small>
-                      {taskDueState(task.dueAt, today, tomorrow)} ·{" "}
-                      {taskPriorityLabels[task.priority]} ·{" "}
-                      {taskStatusLabels[task.status]}
-                      {task.assignedTo
-                        ? ` · ${task.assignedTo.name}`
-                        : " · Unassigned"}
+                      {sample.supplier.name} ·{" "}
+                      {sampleStatusLabels[sample.status]}
+                      {sample.receivedAt ? "" : " · Not received yet"}
                     </small>
                   </span>
                   <ArrowRight aria-hidden="true" />
                 </Link>
-              );
-            })}
-            {!tasks.length ? (
-              <div className="inline-empty inline-empty--panel">
-                <p>No open tasks right now.</p>
-              </div>
-            ) : null}
-          </div>
-          {content.upcoming.length ? (
-            <>
-              <p className="dashboard-subhead">Content · next 7 days</p>
-              <div className="task-list">
-                {content.upcoming.map((item) => {
-                  const tile = publishTile(item.publishAt);
-                  return (
-                    <Link
-                      className="task-item"
-                      href={`/content/${item.id}`}
-                      key={item.id}
-                    >
-                      <span className="task-date">
-                        <strong>{tile.day}</strong>
-                        <small>{tile.month}</small>
-                      </span>
-                      <span>
-                        <strong>{item.title}</strong>
-                        <small>
-                          {contentPlatformLabels[item.platform]} ·{" "}
-                          {contentTypeLabels[item.type]} ·{" "}
-                          {contentStatusLabels[item.status]}
-                          {item.owner ? ` · ${item.owner}` : ""}
-                        </small>
-                      </span>
-                      <ArrowRight aria-hidden="true" />
-                    </Link>
-                  );
-                })}
-              </div>
-            </>
-          ) : null}
-        </section>
-        <section className="panel" aria-labelledby="activity-title">
-          <div className="section-heading">
-            <div>
-              <p className="kicker">Commerce · Live</p>
-              <h2 id="activity-title">Recent activity</h2>
-            </div>
-          </div>
-          {commerce.recentOrders.length ? (
-            <ol className="activity-list">
-              {commerce.recentOrders.slice(0, 3).map((order) => (
-                <li key={order.id}>
-                  <span className="activity-mark">
-                    <ShoppingBag aria-hidden="true" />
-                  </span>
-                  <div>
-                    <strong>
-                      {formatOrderNumber(order.orderNumber)} ·{" "}
-                      {fulfilmentStatusLabels[order.fulfilmentStatus]}
-                    </strong>
-                    <p>
-                      {order.customer?.name ??
-                        order.team?.name ??
-                        "Customer not recorded"}{" "}
-                      · {formatDate(order.createdAt)}
-                    </p>
-                  </div>
-                </li>
               ))}
-            </ol>
+            </div>
           ) : (
             <div className="inline-empty inline-empty--panel">
-              <p>Commerce activity will appear here.</p>
+              <p>No samples are waiting for a decision.</p>
             </div>
           )}
         </section>
+
+        <section className="panel" aria-labelledby="content-title">
+          <div className="section-heading">
+            <div>
+              <p className="kicker">Content</p>
+              <h2 id="content-title">This week</h2>
+            </div>
+            <Link className="text-link" href="/content">
+              Planner <ArrowRight aria-hidden="true" />
+            </Link>
+          </div>
+          {content.items.length ? (
+            <div className="task-list">
+              {content.items.slice(0, 6).map((item) => {
+                const tile = publishTile(item.publishAt ?? item.postedAt);
+                return (
+                  <Link
+                    className="task-item"
+                    href={`/content/${item.id}`}
+                    key={item.id}
+                  >
+                    <span className="task-date">
+                      <strong>{tile.day}</strong>
+                      <small>{tile.month}</small>
+                    </span>
+                    <span>
+                      <strong>{item.title}</strong>
+                      <small>
+                        {contentPlatformLabels[item.platform]} ·{" "}
+                        {contentTypeLabels[item.type]} ·{" "}
+                        {item.overdue
+                          ? "Overdue"
+                          : contentStatusLabels[item.status]}
+                        {item.owner ? ` · ${item.owner}` : ""}
+                      </small>
+                    </span>
+                    <ArrowRight aria-hidden="true" />
+                  </Link>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="inline-empty inline-empty--panel">
+              <p>Nothing is planned for this week.</p>
+              {canWrite ? (
+                <Link href="/content/new">
+                  Plan a post <ArrowRight aria-hidden="true" />
+                </Link>
+              ) : null}
+            </div>
+          )}
+        </section>
+
+        <section className="panel" aria-labelledby="tasks-title">
+          <div className="section-heading">
+            <div>
+              <p className="kicker">Planning</p>
+              <h2 id="tasks-title">Open tasks</h2>
+            </div>
+            <Link className="text-link" href="/tasks">
+              All tasks <ArrowRight aria-hidden="true" />
+            </Link>
+          </div>
+          {tasks.length ? (
+            <div className="task-list">
+              {tasks.map((task) => {
+                const tile = publishTile(task.dueAt);
+                return (
+                  <Link
+                    className="task-item"
+                    href="/tasks"
+                    key={task.id}
+                  >
+                    <span className="task-date">
+                      <strong>{tile.day}</strong>
+                      <small>{tile.month}</small>
+                    </span>
+                    <span>
+                      <strong>{task.title}</strong>
+                      <small>
+                        {taskDueState(task.dueAt, today, tomorrow)} ·{" "}
+                        {taskPriorityLabels[task.priority]} ·{" "}
+                        {taskStatusLabels[task.status]}
+                        {task.assignedTo
+                          ? ` · ${task.assignedTo.name}`
+                          : " · Unassigned"}
+                      </small>
+                    </span>
+                    <ArrowRight aria-hidden="true" />
+                  </Link>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="inline-empty inline-empty--panel">
+              <p>No open tasks right now.</p>
+            </div>
+          )}
+        </section>
+
+        <section className="panel" aria-labelledby="money-title">
+          <div className="section-heading">
+            <div>
+              <p className="kicker">Money</p>
+              <h2 id="money-title">Spent so far</h2>
+            </div>
+            <Link className="text-link" href="/money">
+              Money <ArrowRight aria-hidden="true" />
+            </Link>
+          </div>
+          <p className="money-total">{formatMVR(money.total)}</p>
+          {money.topCategories.length ? (
+            <dl className="money-breakdown">
+              {money.topCategories.map((row) => (
+                <div key={row.category}>
+                  <dt>{row.label}</dt>
+                  <dd>{formatMVR(row.amount)}</dd>
+                </div>
+              ))}
+            </dl>
+          ) : (
+            <div className="inline-empty inline-empty--panel">
+              <p>No Money Out has been recorded yet.</p>
+            </div>
+          )}
+          <p className="money-note">
+            Recorded Money Out entries in MVR, all time.
+          </p>
+        </section>
       </div>
+
+      <p className="today-launch-note">
+        <Rocket aria-hidden="true" /> Orders, Preorders, Stock, and Store
+        live under Launch in the menu.
+      </p>
     </main>
   );
 }
 
-function formatDate(value: Date) {
+function todayLabel() {
   return new Intl.DateTimeFormat("en-GB", {
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
     timeZone: "Indian/Maldives",
-  }).format(value);
+  }).format(new Date());
+}
+
+function weekLabel(weeksAgo: number) {
+  if (weeksAgo === 0) return "This week";
+  if (weeksAgo === 1) return "Last week";
+  return `${weeksAgo} weeks ago`;
 }
 
 function taskDueState(value: string | null, today: Date, tomorrow: Date) {
@@ -575,18 +397,4 @@ function taskDueState(value: string | null, today: Date, tomorrow: Date) {
   if (due < today) return "Overdue";
   if (due < tomorrow) return "Due today";
   return "Upcoming";
-}
-
-function dashboardTaskDate(value: string | null) {
-  if (!value) return { day: "—", month: "OPEN" };
-  const parts = new Intl.DateTimeFormat("en-GB", {
-    day: "2-digit",
-    month: "short",
-    timeZone: "Indian/Maldives",
-  }).formatToParts(new Date(value));
-  return {
-    day: parts.find((part) => part.type === "day")?.value ?? "—",
-    month:
-      parts.find((part) => part.type === "month")?.value.toUpperCase() ?? "—",
-  };
 }

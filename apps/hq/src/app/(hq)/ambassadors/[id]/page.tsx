@@ -18,8 +18,6 @@ import { formatPublishAt } from "@/lib/content/presentation";
 import { maldivesDateKey } from "@/lib/planning/date-range";
 import { formatDate } from "@/lib/supply/presentation";
 
-export const instant = false;
-
 export const metadata = { title: "Ambassador" };
 
 export default async function AmbassadorPage({

@@ -10,8 +10,6 @@ import {
   importShipmentStatusLabels,
 } from "@set25/shared";
 
-export const instant = false;
-
 export const metadata = { title: "Imports" };
 export default async function ImportsPage() {
   const [staff, imports] = await Promise.all([requireStaff(), getImports()]);

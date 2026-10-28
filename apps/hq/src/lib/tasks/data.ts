@@ -321,3 +321,13 @@ function taskRelated(
     };
   return null;
 }
+
+/** Dashboard: how many tasks are open, and how many of those are overdue. */
+export async function getOpenTaskCounts() {
+  const { start: today } = getTodayRange();
+  const [open, overdue] = await Promise.all([
+    db.task.count({ where: { status: { not: "DONE" } } }),
+    db.task.count({ where: { status: { not: "DONE" }, dueAt: { lt: today } } }),
+  ]);
+  return { open, overdue };
+}

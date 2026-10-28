@@ -18,8 +18,6 @@ import { requireStaff } from "@/lib/auth/session";
 import { getMoneyReport } from "@/lib/money/data";
 import { formatDate } from "@/lib/supply/presentation";
 
-export const instant = false;
-
 export const metadata = { title: "Money" };
 
 type SearchParams = {

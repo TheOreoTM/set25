@@ -20,8 +20,6 @@ import { updateTaskStatusAction } from "@/lib/tasks/actions";
 import { getTasks } from "@/lib/tasks/data";
 import { formatDate } from "@/lib/supply/presentation";
 
-export const instant = false;
-
 export const metadata = { title: "Tasks" };
 
 type SearchParams = {

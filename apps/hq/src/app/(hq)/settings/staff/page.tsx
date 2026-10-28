@@ -9,8 +9,6 @@ import {
   toggleStaffStatusAction,
 } from "@/lib/staff/actions";
 
-export const instant = false;
-
 export const metadata = { title: "Staff access" };
 
 const errorMessages: Record<string, string> = {

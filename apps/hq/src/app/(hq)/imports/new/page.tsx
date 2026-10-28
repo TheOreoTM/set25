@@ -7,8 +7,6 @@ import { requireOperationalPageAccess } from "@/lib/auth/session";
 import { createImportAction } from "@/lib/supply/actions";
 import { getEligiblePurchaseOrderLines } from "@/lib/supply/data";
 
-export const instant = false;
-
 export const metadata = { title: "New import" };
 export default async function NewImportPage() {
   await requireOperationalPageAccess("/imports?forbidden=write");

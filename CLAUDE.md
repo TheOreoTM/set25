@@ -46,7 +46,7 @@ HQ and Store share **one database and schema**. Separation comes from server-sid
 
 ### HQ domain modules (`apps/hq/src/lib/<domain>/`)
 
-Each domain (catalog, commerce, supply, money, tasks, staff, planning, auth) follows the same split:
+Each domain (catalog, commerce, supply, money, tasks, waitlist, staff, planning, auth) follows the same split:
 
 - `data.ts`: `import "server-only"`; Prisma read queries used by server-component pages.
 - `actions.ts`: `"use server"` mutations with the signature `(…boundArgs, _state, formData) => Promise<FormState>`, used with `useActionState`. The pattern: authorize → `validateX(formData)` → return a `failure(message, errors)` state on error → write to the DB (in `db.$transaction` for multi-step changes) → `revalidatePath` → `redirect` with a `?created=`/`?saved=` flag.
@@ -57,7 +57,7 @@ Client components (`src/components/<domain>/`) must never import `@set25/databas
 
 ### Auth and roles
 
-Auth.js v5 Credentials (`src/auth.ts`) uses JWT session cookies. `src/proxy.ts` redirects unauthenticated requests to `/sign-in`. **Navigation and proxy checks are not authorization.** Every page and action calls the helpers in `src/lib/auth/session.ts` (`requireStaff`, `requireOperationalAccess`, `requireOperationalPageAccess`, `requireOwner`). These reload the active `StaffUser` from the DB, so the DB role and `active` flag are authoritative. Roles:
+Auth.js v5 Credentials (`src/auth.ts`) uses JWT session cookies. `src/proxy.ts` redirects unauthenticated requests to `/sign-in`. **Navigation and proxy checks are not authorization.** The proxy only checks for a session cookie, and the `(hq)` layout renders a static shell with the navigation behind `<Suspense>`, so it does not gate pages. Every page and action calls the helpers in `src/lib/auth/session.ts` (`requireStaff`, `requireOperationalAccess`, `requireOperationalPageAccess`, `requireOwner`). These reload the active `StaffUser` from the DB, so the DB role and `active` flag are authoritative. Roles:
 
 - OWNER: everything, plus staff management.
 - MANAGER: operational writes.
@@ -74,7 +74,7 @@ Auth.js v5 Credentials (`src/auth.ts`) uses JWT session cookies. `src/proxy.ts` 
 
 ### UI
 
-Styling lives mostly in semantic classes in `apps/hq/src/app/globals.css` (a large file of brand tokens such as `--onyx`, `--volt`, and `--steel`), with Tailwind v4 imported. Pages are server components that use the shared `PageHeader`, `EmptyState`, and `page-wrap` layout. Follow `docs/design-system.md`:
+Styling lives mostly in semantic classes in `apps/hq/src/app/globals.css` (a large file of brand tokens such as `--onyx`, `--volt`, and `--steel`), with Tailwind v4 imported. Pages are server components that use the shared `PageHeader`, `EmptyState`, and `page-wrap` layout. Every route has a `loading.tsx` (usually the shared `PageSkeleton`) so it has a prefetchable static shell; don't add `export const instant = false`. Mobile navigation is the bottom tab bar plus More sheet in `components/navigation.tsx`. Follow `docs/design-system.md`:
 
 - restrained and high-contrast, with no gradients, glow, or glass effects;
 - Volt is for small signals only;

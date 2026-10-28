@@ -6,8 +6,6 @@ import { PageHeader } from "@/components/page-header";
 import { getAmbassadors } from "@/lib/ambassadors/data";
 import { requireStaff } from "@/lib/auth/session";
 
-export const instant = false;
-
 export const metadata = { title: "Ambassadors" };
 
 export default async function AmbassadorsPage({

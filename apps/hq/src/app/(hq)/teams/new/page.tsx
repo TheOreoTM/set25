@@ -3,8 +3,6 @@ import { TeamForm } from "@/components/commerce/contact-form";
 import { createTeamAction } from "@/lib/commerce/actions";
 import { requireOperationalPageAccess } from "@/lib/auth/session";
 
-export const instant = false;
-
 export const metadata = { title: "New team" };
 
 export default async function NewTeamPage() {

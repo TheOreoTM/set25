@@ -14,8 +14,6 @@ import { StockAdjustment } from "@/components/catalog/stock-adjustment";
 import { getStock } from "@/lib/catalog/data";
 import { requireStaff } from "@/lib/auth/session";
 
-export const instant = false;
-
 export const metadata = { title: "Stock" };
 
 export default function StockPage({

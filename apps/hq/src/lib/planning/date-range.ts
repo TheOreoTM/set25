@@ -86,3 +86,12 @@ export function getTodayRange() {
   const start = parseMaldivesDate(key)!;
   return { start, end: new Date(start.getTime() + 24 * 60 * 60 * 1000) };
 }
+
+/** The current Monday-to-Sunday week in Maldives time. */
+export function getWeekRange() {
+  const { start: today } = getTodayRange();
+  const weekday = new Date(today.getTime() + MALDIVES_OFFSET_MS).getUTCDay();
+  const day = 24 * 60 * 60 * 1000;
+  const start = new Date(today.getTime() - ((weekday + 6) % 7) * day);
+  return { start, end: new Date(start.getTime() + 7 * day) };
+}

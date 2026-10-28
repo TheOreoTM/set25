@@ -27,8 +27,6 @@ import {
 } from "@set25/shared";
 import { FileAttachmentsPanel } from "@/components/files/file-attachments-panel";
 
-export const instant = false;
-
 const journey = [
   "PLANNING",
   "SUPPLIER_SHIPPING",

@@ -13,8 +13,6 @@ import { requireStaff } from "@/lib/auth/session";
 import { getContentFormOptions, getContentPlanner } from "@/lib/content/data";
 import { formatPublishAt, publishTile } from "@/lib/content/presentation";
 
-export const instant = false;
-
 export const metadata = { title: "Content" };
 
 type SearchParams = {

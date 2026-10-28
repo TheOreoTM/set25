@@ -1,10 +1,12 @@
-export default function LoadingStock() {
+import { PageSkeleton } from "@/components/page-skeleton";
+
+export default function Loading() {
   return (
-    <main className="page-wrap" aria-busy="true">
-      <div className="skeleton skeleton--eyebrow" />
-      <div className="skeleton skeleton--title" />
-      <div className="skeleton skeleton--copy" />
-      <div className="skeleton skeleton--catalog" />
-    </main>
+    <PageSkeleton
+      kind="list"
+      eyebrow="Commerce / Stock"
+      title="Stock"
+      description="Available inventory across every active SET25 product variant."
+    />
   );
 }

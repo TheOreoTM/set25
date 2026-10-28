@@ -13,8 +13,6 @@ import { requireStaff } from "@/lib/auth/session";
 import { paymentSummary } from "@/lib/commerce/money";
 import { FileAttachmentsPanel } from "@/components/files/file-attachments-panel";
 
-export const instant = false;
-
 export default async function TeamDetailPage({
   params,
 }: {

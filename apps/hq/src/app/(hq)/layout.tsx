@@ -1,16 +1,23 @@
-import type { ReactNode } from "react";
-import { AppShell } from "@/components/app-shell";
+import { Suspense, type ReactNode } from "react";
+import { Navigation, NavigationFallback } from "@/components/navigation";
 import { requireStaff } from "@/lib/auth/session";
 
-// Every route in this group is private and reads live operational data.
-// Resolve staff access before rendering instead of caching session data or
-// forcing low-value streaming boundaries into each page.
-// This only covers navigations into the group: Next.js still validates
-// navigations between sibling pages, so every page.tsx here must also export
-// `instant = false`.
-export const instant = false;
+// The shell is static so it prerenders and every route can prefetch its
+// loading skeleton. Only the navigation, which depends on the staff role,
+// waits on the session. This is chrome, not authorization: every page and
+// action in this group still calls the session helpers itself.
+export default function HqLayout({ children }: { children: ReactNode }) {
+  return (
+    <div className="app-shell">
+      <Suspense fallback={<NavigationFallback />}>
+        <StaffNavigation />
+      </Suspense>
+      <div className="app-main">{children}</div>
+    </div>
+  );
+}
 
-export default async function HqLayout({ children }: { children: ReactNode }) {
+async function StaffNavigation() {
   const staff = await requireStaff();
-  return <AppShell staff={staff}>{children}</AppShell>;
+  return <Navigation staff={staff} />;
 }

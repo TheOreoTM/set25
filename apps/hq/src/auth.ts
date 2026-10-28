@@ -66,14 +66,12 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       if (token.sub) session.user.id = token.sub;
       return session;
     },
-    async authorized({ auth: session }) {
-      const staffId = session?.user?.id;
-      if (!staffId) return false;
-      const staff = await db.staffUser.findUnique({
-        where: { id: staffId },
-        select: { active: true },
-      });
-      return staff?.active === true;
+    // The proxy only turns away requests without a valid session cookie.
+    // Pages, actions, and route handlers reload the StaffUser themselves
+    // (lib/auth/session.ts), so a deactivated account is still refused there
+    // without an extra database round trip on every request and prefetch.
+    authorized({ auth: session }) {
+      return Boolean(session?.user?.id);
     },
   },
 });

@@ -19,8 +19,6 @@ import {
 } from "@set25/shared";
 import { FileAttachmentsPanel } from "@/components/files/file-attachments-panel";
 
-export const instant = false;
-
 export default async function SupplierPage({
   params,
 }: {

@@ -14,8 +14,6 @@ import { ProductListSkeleton } from "@/components/catalog/product-list-skeleton"
 import { getProducts } from "@/lib/catalog/data";
 import { requireStaff } from "@/lib/auth/session";
 
-export const instant = false;
-
 export const metadata = { title: "Products" };
 
 export default function ProductsPage({

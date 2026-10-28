@@ -3,11 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import {
   Boxes,
   Building2,
   CalendarDays,
-  ChevronRight,
   CircleDollarSign,
   ClipboardList,
   FileArchive,
@@ -15,15 +15,17 @@ import {
   Handshake,
   House,
   Import,
-  Menu,
+  LayoutGrid,
+  ListChecks,
+  LogOut,
   PackageSearch,
   Settings,
   Shirt,
   ShoppingBag,
-  Store,
-  LogOut,
   Sparkles,
+  Store,
   Truck,
+  UserRound,
   Users,
   X,
 } from "lucide-react";
@@ -32,46 +34,63 @@ import monogram from "@set25/brand/assets/S25_Monogram.svg";
 import { signOutAction } from "@/lib/auth/actions";
 import { staffRoleLabels, type StaffIdentity } from "@/lib/auth/types";
 
-const groups = [
+type NavItem = {
+  label: string;
+  href: string;
+  icon: typeof House;
+  ownerOnly?: boolean;
+};
+
+// Pre-launch work comes first. Launch-only areas stay reachable but grouped
+// together so they do not crowd the daily routine.
+const groups: { label: string; items: NavItem[] }[] = [
   {
-    label: "Overview",
-    items: [{ label: "Dashboard", href: "/", icon: House }],
-  },
-  {
-    label: "Commerce",
+    label: "Pre-launch",
     items: [
-      { label: "Orders", href: "/orders", icon: ShoppingBag },
-      { label: "Products", href: "/products", icon: Shirt },
-      { label: "Stock", href: "/stock", icon: Boxes },
-      { label: "Preorders", href: "/preorders", icon: ClipboardList },
-      { label: "Customers", href: "/customers", icon: Users },
-      { label: "Teams", href: "/teams", icon: Building2 },
+      { label: "Today", href: "/", icon: House },
+      { label: "Waitlist", href: "/waitlist", icon: ListChecks },
+      { label: "Samples", href: "/samples", icon: PackageSearch },
+      { label: "Content", href: "/content", icon: Sparkles },
+      { label: "Tasks", href: "/tasks", icon: CalendarDays },
     ],
   },
   {
     label: "Supply",
     items: [
+      { label: "Products", href: "/products", icon: Shirt },
       { label: "Suppliers", href: "/suppliers", icon: Truck },
       { label: "Purchase Orders", href: "/purchase-orders", icon: FileText },
       { label: "Imports", href: "/imports", icon: Import },
-      { label: "Samples", href: "/samples", icon: PackageSearch },
+    ],
+  },
+  {
+    label: "People",
+    items: [
+      { label: "Ambassadors", href: "/ambassadors", icon: Handshake },
+      { label: "Customers", href: "/customers", icon: Users },
+      { label: "Teams", href: "/teams", icon: Building2 },
     ],
   },
   {
     label: "Company",
     items: [
       { label: "Money", href: "/money", icon: CircleDollarSign },
-      { label: "Tasks", href: "/tasks", icon: CalendarDays },
-      { label: "Ambassadors", href: "/ambassadors", icon: Handshake },
-      { label: "Content", href: "/content", icon: Sparkles },
       { label: "Files", href: "/files", icon: FileArchive },
+    ],
+  },
+  {
+    label: "Launch",
+    items: [
+      { label: "Orders", href: "/orders", icon: ShoppingBag },
+      { label: "Preorders", href: "/preorders", icon: ClipboardList },
+      { label: "Stock", href: "/stock", icon: Boxes },
+      { label: "Store", href: "/settings/store", icon: Store },
     ],
   },
   {
     label: "System",
     items: [
       { label: "Settings", href: "/settings", icon: Settings },
-      { label: "Store", href: "/settings/store", icon: Store },
       {
         label: "Staff access",
         href: "/settings/staff",
@@ -82,8 +101,18 @@ const groups = [
   },
 ];
 
+/** The bottom tab bar on mobile. Everything else lives in the More sheet. */
+const tabs: NavItem[] = [
+  { label: "Today", href: "/", icon: House },
+  { label: "Waitlist", href: "/waitlist", icon: ListChecks },
+  { label: "Samples", href: "/samples", icon: PackageSearch },
+  { label: "Content", href: "/content", icon: Sparkles },
+];
+const tabHrefs = new Set(tabs.map((tab) => tab.href));
+
 const staffRoutes = new Set([
   "/",
+  "/waitlist",
   "/orders",
   "/products",
   "/stock",
@@ -101,33 +130,45 @@ const staffRoutes = new Set([
   "/files",
 ]);
 
-function NavigationLinks({
-  staff,
-  mobile = false,
-}: {
-  staff: StaffIdentity;
-  mobile?: boolean;
-}) {
-  const pathname = usePathname();
-  // Highlight only the most specific match, so /settings/store does not
-  // light up both Settings and Store.
-  const activeHref = groups
+function visibleGroups(staff: StaffIdentity) {
+  return groups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter(
+        (item) =>
+          (!item.ownerOnly || staff.role === "OWNER") &&
+          (staff.role !== "STAFF" || staffRoutes.has(item.href)),
+      ),
+    }))
+    .filter((group) => group.items.length);
+}
+
+// Highlight only the most specific match, so /settings/store does not light
+// up both Settings and Store.
+function activeHrefFor(pathname: string) {
+  return groups
     .flatMap((group) => group.items.map((item) => item.href))
     .filter(
       (href) =>
         pathname === href || (href !== "/" && pathname.startsWith(`${href}/`)),
     )
     .sort((a, b) => b.length - a.length)[0];
+}
+
+function NavigationLinks({
+  staff,
+  exclude,
+  onNavigate,
+}: {
+  staff: StaffIdentity;
+  exclude?: Set<string>;
+  onNavigate?: () => void;
+}) {
+  const activeHref = activeHrefFor(usePathname());
   return (
     <nav className="nav-groups" aria-label="HQ navigation">
-      {groups.map((group) => {
-        const items = group.items.filter(
-          (item) =>
-            (!("ownerOnly" in item) ||
-              !item.ownerOnly ||
-              staff.role === "OWNER") &&
-            (staff.role !== "STAFF" || staffRoutes.has(item.href)),
-        );
+      {visibleGroups(staff).map((group) => {
+        const items = group.items.filter((item) => !exclude?.has(item.href));
         if (!items.length) return null;
         return (
           <div className="nav-group" key={group.label}>
@@ -141,12 +182,10 @@ function NavigationLinks({
                   href={item.href}
                   key={item.href}
                   aria-current={active ? "page" : undefined}
+                  onClick={onNavigate}
                 >
                   <Icon aria-hidden="true" />
                   <span>{item.label}</span>
-                  {mobile ? (
-                    <ChevronRight className="nav-chevron" aria-hidden="true" />
-                  ) : null}
                 </Link>
               );
             })}
@@ -157,63 +196,172 @@ function NavigationLinks({
   );
 }
 
+function SidebarBrand() {
+  return (
+    <Link className="sidebar-brand" href="/" aria-label="SET25 HQ today">
+      <Image src={wordmark} alt="SET25" width={132} height={44} priority />
+      <span>HQ / OPERATIONS</span>
+    </Link>
+  );
+}
+
+function MobileBar() {
+  return (
+    <header className="mobile-bar">
+      <Link href="/" aria-label="SET25 HQ today">
+        <Image src={wordmark} alt="SET25" width={102} height={34} priority />
+      </Link>
+    </header>
+  );
+}
+
+function TabLink({ item, active }: { item: NavItem; active: boolean }) {
+  const Icon = item.icon;
+  return (
+    <Link
+      className={active ? "tab-link is-active" : "tab-link"}
+      href={item.href}
+      aria-current={active ? "page" : undefined}
+    >
+      <Icon aria-hidden="true" />
+      <span>{item.label}</span>
+    </Link>
+  );
+}
+
 export function Navigation({ staff }: { staff: StaffIdentity }) {
+  const pathname = usePathname();
+  const activeHref = activeHrefFor(pathname);
+  // The sheet remembers the path it was opened on, so any navigation closes
+  // it without an effect resetting state.
+  const [openedOn, setOpenedOn] = useState<string | null>(null);
+  const moreOpen = openedOn === pathname;
+  const close = () => setOpenedOn(null);
+  const sheet = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const dialog = sheet.current;
+    if (!dialog) return;
+    if (moreOpen && !dialog.open) dialog.showModal();
+    if (!moreOpen && dialog.open) dialog.close();
+  }, [moreOpen]);
+
   return (
     <>
       <aside className="sidebar">
-        <Link
-          className="sidebar-brand"
-          href="/"
-          aria-label="SET25 HQ dashboard"
-        >
-          <Image src={wordmark} alt="SET25" width={132} height={44} priority />
-          <span>HQ / OPERATIONS</span>
-        </Link>
+        <SidebarBrand />
         <NavigationLinks staff={staff} />
         <div className="sidebar-footer">
           <span className="monogram-frame">
             <Image src={monogram} alt="" width={38} height={38} />
           </span>
-          <div>
+          <Link className="sidebar-account" href="/account">
             <strong>{staff.name}</strong>
             <span>{staffRoleLabels[staff.role]}</span>
-          </div>
+          </Link>
+          <form action={signOutAction}>
+            <button className="sidebar-sign-out" type="submit">
+              <LogOut aria-hidden="true" />
+              <span className="sr-only">Sign out</span>
+            </button>
+          </form>
         </div>
       </aside>
 
-      <header className="mobile-bar">
-        <Link href="/" aria-label="SET25 HQ dashboard">
-          <Image src={wordmark} alt="SET25" width={102} height={34} priority />
-        </Link>
-        <details className="mobile-menu">
-          <summary>
-            <Menu className="menu-open" aria-hidden="true" />
-            <X className="menu-close" aria-hidden="true" />
-            <span className="sr-only">Toggle navigation</span>
-          </summary>
-          <div className="mobile-drawer">
-            <div className="mobile-drawer-head">
-              <span>HQ / NAVIGATION</span>
-              <span>SET25</span>
+      <MobileBar />
+
+      <nav className="tab-bar" aria-label="Primary">
+        {tabs.map((item) => (
+          <TabLink
+            item={item}
+            active={!moreOpen && item.href === activeHref}
+            key={item.href}
+          />
+        ))}
+        <button
+          className={
+            moreOpen || (activeHref && !tabHrefs.has(activeHref)) ||
+            pathname === "/account"
+              ? "tab-link is-active"
+              : "tab-link"
+          }
+          type="button"
+          aria-haspopup="dialog"
+          aria-expanded={moreOpen}
+          onClick={() => setOpenedOn(moreOpen ? null : pathname)}
+        >
+          <LayoutGrid aria-hidden="true" />
+          <span>More</span>
+        </button>
+      </nav>
+
+      <dialog
+        className="more-sheet"
+        ref={sheet}
+        aria-label="More"
+        onClose={close}
+        onClick={(event) => {
+          // A click on the backdrop lands on the dialog element itself.
+          if (event.target === event.currentTarget) close();
+        }}
+      >
+        <div className="more-sheet-panel">
+          <div className="more-sheet-head">
+            <span>HQ / MORE</span>
+            <button type="button" onClick={close}>
+              <X aria-hidden="true" />
+              <span className="sr-only">Close</span>
+            </button>
+          </div>
+          <NavigationLinks staff={staff} exclude={tabHrefs} onNavigate={close} />
+          <div className="more-account">
+            <div>
+              <strong>{staff.name}</strong>
+              <span>{staffRoleLabels[staff.role]}</span>
             </div>
-            <NavigationLinks staff={staff} mobile />
-            <div className="mobile-account">
-              <div>
-                <strong>{staff.name}</strong>
-                <span>{staffRoleLabels[staff.role]}</span>
-              </div>
-              <div className="mobile-account-actions">
-                <Link href="/account">Account</Link>
-                <form action={signOutAction}>
-                  <button type="submit">
-                    <LogOut aria-hidden="true" /> Sign out
-                  </button>
-                </form>
-              </div>
+            <div className="more-account-actions">
+              <Link href="/account" onClick={close}>
+                <UserRound aria-hidden="true" /> Account
+              </Link>
+              <form action={signOutAction}>
+                <button type="submit">
+                  <LogOut aria-hidden="true" /> Sign out
+                </button>
+              </form>
             </div>
           </div>
-        </details>
-      </header>
+        </div>
+      </dialog>
+    </>
+  );
+}
+
+/**
+ * Static stand-in rendered while the staff session streams in. It keeps the
+ * shell (and the tab bar's main links) in the prerendered page, so a cold
+ * load paints immediately.
+ */
+export function NavigationFallback() {
+  return (
+    <>
+      <aside className="sidebar" aria-busy="true">
+        <SidebarBrand />
+        <div className="nav-groups nav-groups--loading" aria-hidden="true">
+          {Array.from({ length: 8 }, (_, index) => (
+            <span className="nav-skeleton" key={index} />
+          ))}
+        </div>
+      </aside>
+      <MobileBar />
+      <nav className="tab-bar" aria-label="Primary">
+        {tabs.map((item) => (
+          <TabLink item={item} active={false} key={item.href} />
+        ))}
+        <span className="tab-link" aria-disabled="true">
+          <LayoutGrid aria-hidden="true" />
+          <span>More</span>
+        </span>
+      </nav>
     </>
   );
 }

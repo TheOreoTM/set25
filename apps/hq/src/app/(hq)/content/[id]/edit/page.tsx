@@ -6,8 +6,6 @@ import { updateContentAction } from "@/lib/content/actions";
 import { getContentFormOptions, getContentItem } from "@/lib/content/data";
 import { maldivesDateTimeKey } from "@/lib/content/presentation";
 
-export const instant = false;
-
 export const metadata = { title: "Edit content" };
 
 export default async function EditContentPage({

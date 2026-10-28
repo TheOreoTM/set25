@@ -16,8 +16,6 @@ import { formatDate, formatDateTime } from "@/lib/supply/presentation";
 import { formatSampleNumber, sampleStatusLabels } from "@set25/shared";
 import { FileAttachmentsPanel } from "@/components/files/file-attachments-panel";
 
-export const instant = false;
-
 const criteria = [
   "quality",
   "comfort",

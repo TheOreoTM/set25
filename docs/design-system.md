@@ -106,11 +106,11 @@ Status always combines wording with a visual signal. Do not rely on colour alone
 
 ## Navigation
 
-Desktop uses a fixed-width Onyx sidebar with the canonical white wordmark, grouped labels, clear current-page treatment, and compact iconography. Mobile uses a persistent top bar and an accessible menu drawer. Navigation labels are plain English and routes remain stable across breakpoints.
+Desktop uses a fixed-width Onyx sidebar with the canonical white wordmark, grouped labels, clear current-page treatment, compact iconography, and the signed-in staff member with Account and Sign out at the foot. Mobile uses a slim top bar with the wordmark and an Onyx bottom tab bar (Today, Waitlist, Samples, Content, More) with icon and label, at least 60px tall, padded for the device safe area, and a short Volt rule above the current tab. More opens a bottom sheet (a native modal `<dialog>`: focus is trapped, Escape and the backdrop close it) holding every other destination, Account, and Sign out; any navigation closes it. Navigation labels are plain English and routes remain stable across breakpoints.
 
 ## Responsive behaviour
 
-- **Mobile (< 768px):** top bar, drawer navigation, single-column summaries, stacked operational records, 16px page gutters.
+- **Mobile (≤ 820px):** top bar, bottom tab bar with a More sheet, single-column summaries, stacked operational records, 16px page gutters. Every page is checked at 375px wide.
 - **Tablet (768–1023px):** compact sidebar or drawer depending on usable width; two-column summaries where appropriate.
 - **Desktop (>= 1024px):** persistent sidebar, four-column primary summary, editorial multi-column dashboard.
 
@@ -118,7 +118,7 @@ The order of content on small screens follows urgency: page context, needs atten
 
 ## Loading and empty states
 
-Loading skeletons mirror the final hierarchy using flat neutral blocks and restrained pulse animation, respecting reduced-motion preferences. Empty states explain what is absent and, when a workflow exists, what the user can do next. Placeholder routes explicitly say the area is planned rather than presenting fake controls.
+Loading skeletons mirror the final hierarchy using flat neutral blocks and restrained pulse animation, respecting reduced-motion preferences. Every HQ route has a `loading.tsx`; list, record, and form pages use the shared `PageSkeleton`, which renders the real page header where the title is static, so a prefetched navigation shows the destination immediately. Empty states explain what is absent and, when a workflow exists, what the user can do next. Placeholder routes explicitly say the area is planned rather than presenting fake controls.
 
 ## Accessibility
 

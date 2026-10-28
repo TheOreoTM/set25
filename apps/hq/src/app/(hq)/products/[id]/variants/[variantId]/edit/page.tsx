@@ -6,8 +6,6 @@ import { updateVariantAction } from "@/lib/catalog/actions";
 import { getVariant } from "@/lib/catalog/data";
 import { requireOperationalPageAccess } from "@/lib/auth/session";
 
-export const instant = false;
-
 export default function EditVariantPage({
   params,
 }: {

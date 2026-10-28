@@ -5,8 +5,6 @@ import { PageHeader } from "@/components/page-header";
 import { requireStaff } from "@/lib/auth/session";
 import { getSuppliers } from "@/lib/supply/data";
 
-export const instant = false;
-
 export const metadata = { title: "Suppliers" };
 
 export default async function SuppliersPage({

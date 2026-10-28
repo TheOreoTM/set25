@@ -7,7 +7,7 @@ import {
   type ContentPlatformValue,
   type ContentStatusValue,
 } from "@set25/shared";
-import { getTodayRange } from "@/lib/planning/date-range";
+import { getTodayRange, getWeekRange } from "@/lib/planning/date-range";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -219,5 +219,36 @@ export async function getDashboardContent() {
   return {
     overdue: rows.filter((row) => row.overdue),
     upcoming: rows.filter((row) => !row.overdue).slice(0, 5),
+  };
+}
+
+/** Dashboard: everything planned for this Maldives week, plus what slipped. */
+export async function getContentThisWeek() {
+  const now = new Date();
+  const { start, end } = getWeekRange();
+  const [items, overdue] = await Promise.all([
+    db.contentItem.findMany({
+      where: {
+        status: { not: "CANCELLED" },
+        OR: [
+          { publishAt: { gte: start, lt: end } },
+          { postedAt: { gte: start, lt: end } },
+        ],
+      },
+      select: listSelect,
+      orderBy: { publishAt: "asc" },
+    }),
+    db.contentItem.count({
+      where: {
+        status: { notIn: ["POSTED", "CANCELLED"] },
+        publishAt: { lt: now },
+      },
+    }),
+  ]);
+  const rows = items.map((item) => toRow(item, now));
+  return {
+    items: rows,
+    posted: rows.filter((row) => row.status === "POSTED").length,
+    overdue,
   };
 }

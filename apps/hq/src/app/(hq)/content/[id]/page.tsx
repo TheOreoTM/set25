@@ -14,8 +14,6 @@ import { changeContentStatusAction } from "@/lib/content/actions";
 import { getContentItem } from "@/lib/content/data";
 import { formatPublishAt } from "@/lib/content/presentation";
 
-export const instant = false;
-
 export const metadata = { title: "Content" };
 
 export default async function ContentItemPage({

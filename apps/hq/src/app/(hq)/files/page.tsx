@@ -13,8 +13,6 @@ import {
 } from "@/lib/files/policy";
 import { isStorageConfigured, maxUploadBytes } from "@/lib/files/storage";
 
-export const instant = false;
-
 export const metadata = { title: "Files" };
 
 type SearchParams = {

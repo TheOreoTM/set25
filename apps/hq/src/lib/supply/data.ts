@@ -384,3 +384,28 @@ export function decimalTotal(
     new Prisma.Decimal(0),
   );
 }
+
+/** Dashboard: samples still waiting for an approve / reject decision. */
+export async function getSamplesAwaitingDecision() {
+  const where: Prisma.SampleWhereInput = {
+    status: { in: ["PENDING", "RETEST"] },
+  };
+  const [samples, count] = await Promise.all([
+    db.sample.findMany({
+      where,
+      select: {
+        id: true,
+        sampleNumber: true,
+        name: true,
+        status: true,
+        receivedAt: true,
+        supplier: { select: { name: true } },
+        _count: { select: { evaluations: true } },
+      },
+      orderBy: { createdAt: "asc" },
+      take: 5,
+    }),
+    db.sample.count({ where }),
+  ]);
+  return { samples, count };
+}
