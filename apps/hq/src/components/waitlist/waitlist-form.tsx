@@ -29,6 +29,7 @@ type Action = (
 
 type Defaults = {
   instagramHandle: string;
+  tiktokHandle: string;
   name: string;
   phone: string;
   source: WaitlistSourceValue;
@@ -147,9 +148,14 @@ export function WaitlistQuickAdd({ action }: { action: Action }) {
       </div>
       <form ref={formRef} onSubmit={onSubmit} noValidate>
         <TextField
-          name="instagramHandle"
-          label="Instagram handle"
-          error={error("instagramHandle")}
+          name="handle"
+          label="Handle"
+          error={
+            error("handle") ??
+            error("instagramHandle") ??
+            error("tiktokHandle")
+          }
+          hint="Instagram, or TikTok when the source is TikTok."
           enterKeyHint="done"
           {...handleInputProps}
         />
@@ -267,9 +273,9 @@ export function WaitlistQuickAdd({ action }: { action: Action }) {
             </span>
             <span className="waitlist-actions">
               <CopyDmButton message={state.added.message} />
-              {state.added.handle ? (
+              {state.added.contact ? (
                 <OpenDmLink
-                  handle={state.added.handle}
+                  contact={state.added.contact}
                   message={state.added.message}
                 />
               ) : null}
@@ -307,7 +313,10 @@ export function WaitlistForm({
         <div className="form-section-title">
           <p className="kicker">Person</p>
           <h2>Who and where from</h2>
-          <p>Contact stays on Instagram. A phone number is optional.</p>
+          <p>
+            Contact stays in Instagram or TikTok DMs. A phone number is
+            optional.
+          </p>
         </div>
         <div className="form-stack">
           <div className="form-grid">
@@ -316,6 +325,13 @@ export function WaitlistForm({
               label="Instagram handle"
               defaultValue={defaults.instagramHandle}
               error={error("instagramHandle")}
+              {...handleInputProps}
+            />
+            <TextField
+              name="tiktokHandle"
+              label="TikTok handle"
+              defaultValue={defaults.tiktokHandle}
+              error={error("tiktokHandle")}
               {...handleInputProps}
             />
             <TextField

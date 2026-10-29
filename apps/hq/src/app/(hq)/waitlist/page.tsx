@@ -20,6 +20,7 @@ import {
 } from "@/lib/waitlist/actions";
 import { getWaitlist } from "@/lib/waitlist/data";
 import {
+  waitlistContact,
   waitlistDisplayName,
   waitlistDmMessage,
   waitlistInterest,
@@ -53,7 +54,7 @@ export default async function WaitlistPage({
       <PageHeader
         eyebrow="Pre-launch / Waitlist"
         title="Waitlist"
-        description="People waiting for the first drop. Contact stays on Instagram."
+        description="People waiting for the first drop. Contact stays in Instagram and TikTok DMs."
       />
       <div className="resource-toolbar">
         <form
@@ -125,6 +126,7 @@ export default async function WaitlistPage({
           >
             {entries.map((entry) => {
               const message = waitlistDmMessage(entry);
+              const contact = waitlistContact(entry);
               const interest = waitlistInterest(entry);
               return (
                 <li className="waitlist-row" key={entry.id}>
@@ -135,7 +137,7 @@ export default async function WaitlistPage({
                     <strong>{waitlistDisplayName(entry)}</strong>
                     <small>
                       {[
-                        entry.instagramHandle ? entry.name : null,
+                        contact ? entry.name : null,
                         waitlistSourceLabels[entry.source],
                         formatDate(entry.createdAt),
                       ]
@@ -157,9 +159,9 @@ export default async function WaitlistPage({
                     ) : null}
                   </span>
                   <span className="waitlist-actions">
-                    {entry.instagramHandle ? (
+                    {contact ? (
                       <OpenDmLink
-                        handle={entry.instagramHandle}
+                        contact={contact}
                         message={message}
                         compact
                       />

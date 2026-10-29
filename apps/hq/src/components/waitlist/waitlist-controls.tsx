@@ -11,10 +11,13 @@ import {
   instagramDmUrl,
   instagramProfileUrl,
   nextWaitlistStatus,
+  tiktokProfileUrl,
+  waitlistPlatformLabels,
   waitlistStatusActionLabels,
 } from "@/lib/waitlist/presentation";
 import {
   initialWaitlistFormState,
+  type WaitlistContact,
   type WaitlistFormState,
 } from "@/lib/waitlist/validation";
 
@@ -72,46 +75,61 @@ export function CopyDmButton({
 }
 
 /**
- * Copies the message, then opens the Instagram DM thread so it can be pasted
- * straight in: one tap from the waitlist to a ready reply.
+ * Copies the message, then opens the conversation so it can be pasted straight
+ * in: one tap from the waitlist to a ready reply. Instagram opens the DM
+ * thread; TikTok has no DM link, so it opens the profile and its Message
+ * button.
  */
 export function OpenDmLink({
-  handle,
+  contact,
   message,
   compact = false,
 }: {
-  handle: string;
+  contact: WaitlistContact;
   message: string;
   compact?: boolean;
 }) {
+  const tiktok = contact.platform === "tiktok";
   return (
     <a
       className="button button--dark waitlist-action"
-      href={instagramDmUrl(handle)}
+      href={
+        tiktok
+          ? tiktokProfileUrl(contact.handle)
+          : instagramDmUrl(contact.handle)
+      }
       target="_blank"
       rel="noopener noreferrer"
       onClick={() => void copyText(message)}
     >
       <MessageCircle aria-hidden="true" />
       <span className={compact ? "sr-only" : undefined}>
-        Copy &amp; open DM
+        {tiktok ? "Copy & open TikTok" : "Copy & open DM"}
       </span>
       {compact ? (
-        <span className="sr-only">with @{handle} (copies the message)</span>
+        <span className="sr-only">
+          with @{contact.handle} on {waitlistPlatformLabels[contact.platform]}{" "}
+          (copies the message)
+        </span>
       ) : null}
     </a>
   );
 }
 
-export function InstagramProfileLink({ handle }: { handle: string }) {
+export function ProfileLink({ contact }: { contact: WaitlistContact }) {
   return (
     <a
       className="button button--secondary waitlist-action"
-      href={instagramProfileUrl(handle)}
+      href={
+        contact.platform === "tiktok"
+          ? tiktokProfileUrl(contact.handle)
+          : instagramProfileUrl(contact.handle)
+      }
       target="_blank"
       rel="noopener noreferrer"
     >
-      <ExternalLink aria-hidden="true" /> Profile
+      <ExternalLink aria-hidden="true" />{" "}
+      {waitlistPlatformLabels[contact.platform]} profile
     </a>
   );
 }

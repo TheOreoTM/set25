@@ -6,7 +6,10 @@ import {
   type WaitlistStatusValue,
 } from "@set25/shared";
 import { getTodayRange } from "@/lib/planning/date-range";
-import { normalizeInstagramHandle } from "./validation";
+import {
+  normalizeInstagramHandle,
+  normalizeTikTokHandle,
+} from "./validation";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -15,6 +18,7 @@ export type WaitlistFilters = { search?: string; status?: string };
 const listSelect = {
   id: true,
   instagramHandle: true,
+  tiktokHandle: true,
   name: true,
   phone: true,
   source: true,
@@ -29,6 +33,7 @@ const listSelect = {
 export async function getWaitlist(filters: WaitlistFilters = {}) {
   const search = filters.search?.trim();
   const handle = search ? normalizeInstagramHandle(search) : "";
+  const tiktokHandle = search ? normalizeTikTokHandle(search) : "";
   const status = WAITLIST_STATUSES.includes(
     filters.status as WaitlistStatusValue,
   )
@@ -39,6 +44,9 @@ export async function getWaitlist(filters: WaitlistFilters = {}) {
         OR: [
           ...(handle
             ? [{ instagramHandle: { contains: handle } }]
+            : []),
+          ...(tiktokHandle
+            ? [{ tiktokHandle: { contains: tiktokHandle } }]
             : []),
           { name: { contains: search, mode: "insensitive" } },
           { phone: { contains: search } },
@@ -80,6 +88,7 @@ export function toWaitlistFormDto(
 ) {
   return {
     instagramHandle: entry.instagramHandle ?? "",
+    tiktokHandle: entry.tiktokHandle ?? "",
     name: entry.name ?? "",
     phone: entry.phone ?? "",
     source: entry.source,

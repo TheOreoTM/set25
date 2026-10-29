@@ -9,8 +9,8 @@ import {
 import { PageHeader } from "@/components/page-header";
 import {
   CopyDmButton,
-  InstagramProfileLink,
   OpenDmLink,
+  ProfileLink,
   StatusPicker,
 } from "@/components/waitlist/waitlist-controls";
 import { requireStaff } from "@/lib/auth/session";
@@ -18,7 +18,9 @@ import { formatDate } from "@/lib/supply/presentation";
 import { setWaitlistStatusAction } from "@/lib/waitlist/actions";
 import { getWaitlistEntry } from "@/lib/waitlist/data";
 import {
+  waitlistContact,
   waitlistDisplayName,
+  waitlistPlatformLabels,
   waitlistDmMessage,
   waitlistInterest,
 } from "@/lib/waitlist/presentation";
@@ -41,6 +43,7 @@ export default async function WaitlistEntryPage({
   const entry = await getWaitlistEntry(id);
   if (!entry) notFound();
   const message = waitlistDmMessage(entry);
+  const contact = waitlistContact(entry);
 
   return (
     <main className="page-wrap supply-detail-page waitlist-page">
@@ -78,18 +81,21 @@ export default async function WaitlistEntryPage({
       <section className="detail-section waitlist-contact">
         <div className="detail-section-head">
           <div>
-            <p className="kicker">Instagram</p>
+            <p className="kicker">
+              {contact ? waitlistPlatformLabels[contact.platform] : "Contact"}
+            </p>
             <h2>Message</h2>
           </div>
         </div>
         <blockquote className="waitlist-dm-preview">{message}</blockquote>
         <div className="waitlist-actions">
-          {entry.instagramHandle ? (
-            <OpenDmLink handle={entry.instagramHandle} message={message} />
-          ) : null}
+          {contact ? <OpenDmLink contact={contact} message={message} /> : null}
           <CopyDmButton message={message} />
-          {entry.instagramHandle ? (
-            <InstagramProfileLink handle={entry.instagramHandle} />
+          {contact ? <ProfileLink contact={contact} /> : null}
+          {entry.instagramHandle && entry.tiktokHandle ? (
+            <ProfileLink
+              contact={{ platform: "tiktok", handle: entry.tiktokHandle }}
+            />
           ) : null}
           {entry.phone ? (
             <a
@@ -130,6 +136,10 @@ export default async function WaitlistEntryPage({
           <Fact
             label="Instagram"
             value={entry.instagramHandle ? `@${entry.instagramHandle}` : "—"}
+          />
+          <Fact
+            label="TikTok"
+            value={entry.tiktokHandle ? `@${entry.tiktokHandle}` : "—"}
           />
           <Fact label="Phone" value={entry.phone ?? "—"} />
           <Fact label="Source" value={waitlistSourceLabels[entry.source]} />

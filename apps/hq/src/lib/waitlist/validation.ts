@@ -14,9 +14,15 @@ export type WaitlistFormState = {
   message: string;
   errors?: Record<string, string[]>;
   /** Set after a quick-add so the form can offer the follow-up DM. */
-  added?: { id: string; handle: string | null; message: string };
+  added?: { id: string; contact: WaitlistContact | null; message: string };
   /** Set when the handle already exists, to link to that entry. */
   existingId?: string;
+};
+
+/** Where a person can be messaged: Instagram first, then TikTok. */
+export type WaitlistContact = {
+  platform: "instagram" | "tiktok";
+  handle: string;
 };
 
 export const initialWaitlistFormState: WaitlistFormState = {
@@ -50,18 +56,42 @@ export function normalizeInstagramHandle(value: string) {
     .toLowerCase();
 }
 
+/** Same idea for TikTok: "@Handle", "handle", or a tiktok.com/@handle link. */
+export function normalizeTikTokHandle(value: string) {
+  return value
+    .trim()
+    .replace(/^https?:\/\/(www\.|m\.)?tiktok\.com\//i, "")
+    .replace(/[/?#].*$/, "")
+    .replace(/^@+/, "")
+    .toLowerCase();
+}
+
 export function normalizeEarlyBirdCode(value: string) {
   return value.trim().toUpperCase();
 }
 
 export function validateWaitlistEntry(formData: FormData) {
   const errors: Errors = {};
+  const source = text(formData, "source") as WaitlistSourceValue;
+  // Quick add has one "handle" field; the source says which platform it is.
+  const quickHandle = formData.has("handle") ? text(formData, "handle") : null;
+  const tiktokSource = source === "TIKTOK";
   const instagramHandle = normalizeInstagramHandle(
-    text(formData, "instagramHandle"),
+    quickHandle === null
+      ? text(formData, "instagramHandle")
+      : tiktokSource
+        ? ""
+        : quickHandle,
+  );
+  const tiktokHandle = normalizeTikTokHandle(
+    quickHandle === null
+      ? text(formData, "tiktokHandle")
+      : tiktokSource
+        ? quickHandle
+        : "",
   );
   const name = text(formData, "name");
   const phone = text(formData, "phone");
-  const source = text(formData, "source") as WaitlistSourceValue;
   const status = (text(formData, "status") || "NEW") as WaitlistStatusValue;
   const interestedCategories = [
     ...new Set(list(formData, "interestedCategories")),
@@ -76,9 +106,14 @@ export function validateWaitlistEntry(formData: FormData) {
     errors.instagramHandle = [
       "Use the handle only: letters, numbers, dots, and underscores.",
     ];
-  if (!instagramHandle && !name) {
-    errors.instagramHandle = ["Enter an Instagram handle or a name."];
-    errors.name = ["Enter an Instagram handle or a name."];
+  if (tiktokHandle && !/^[a-z0-9._]{2,24}$/.test(tiktokHandle))
+    errors.tiktokHandle = [
+      "Use the handle only: letters, numbers, dots, and underscores.",
+    ];
+  if (!instagramHandle && !tiktokHandle && !name) {
+    errors.instagramHandle = ["Enter a handle or a name."];
+    errors.tiktokHandle = ["Enter a handle or a name."];
+    errors.name = ["Enter a handle or a name."];
   }
   if (name.length > 120) errors.name = ["Keep the name under 120 characters."];
   if (phone && !/^\+?[\d\s-]{7,20}$/.test(phone))
@@ -102,11 +137,18 @@ export function validateWaitlistEntry(formData: FormData) {
   if (notes.length > 2000)
     errors.notes = ["Keep notes under 2,000 characters."];
 
+  if (quickHandle !== null) {
+    const handleErrors =
+      errors[tiktokSource ? "tiktokHandle" : "instagramHandle"];
+    if (handleErrors) errors.handle = handleErrors;
+  }
+
   if (Object.keys(errors).length) return { success: false as const, errors };
   return {
     success: true as const,
     data: {
       instagramHandle: instagramHandle || null,
+      tiktokHandle: tiktokHandle || null,
       name: name || null,
       phone: phone || null,
       source,
