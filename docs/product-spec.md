@@ -54,10 +54,10 @@ Routes are stable; only grouping changed.
 
 The waitlist tracks people who want SET25 gear before launch. Most arrive by Instagram DM, some by TikTok or in person.
 
-- **Quick add** sits at the top of `/waitlist` and works one-handed: type the handle, tap source, products, and sizes, optionally tap Early Bird, then Add. Name, phone, Early Bird code, and notes are behind "Name, phone, code, notes". The form clears for the next person and offers the new person's DM straight away. A duplicate handle is refused with a link to the existing entry.
-- **Search** covers handle, name, phone, Early Bird code, and notes. Status tabs show counts and filter the list.
+- **Quick add** sits at the top of `/waitlist` and works one-handed: type the handle, tap source (the handle is saved as a TikTok handle when the source is TikTok, otherwise as Instagram), products, and sizes, optionally tap Early Bird, then Add. Name, phone, Early Bird code, and notes are behind "Name, phone, code, notes". The form clears for the next person and offers the new person's DM straight away. A duplicate handle is refused with a link to the existing entry.
+- **Search** covers Instagram and TikTok handles, name, phone, Early Bird code, and notes. Status tabs show counts and filter the list.
 - **Status changes** are one tap: each row has a next-step button (Mark contacted → Mark confirmed → Mark ordered), and the entry page has every status, including Drop.
-- **Contact stays on Instagram.** HQ prepares a DM for the person's status (welcome, confirmed, ordered, check-in), with their products, sizes, and Early Bird code. "Copy & open DM" copies the message and opens the Instagram conversation (`ig.me/m/<handle>`) so it can be pasted straight in. Copy DM and Profile links are also available. HQ never sends messages.
+- **Contact stays in Instagram or TikTok DMs.** HQ prepares a DM for the person's status (welcome, confirmed, ordered, check-in), with their products, sizes, and Early Bird code. "Copy & open DM" copies the message and opens the Instagram conversation (`ig.me/m/<handle>`) so it can be pasted straight in. For someone with only a TikTok handle, "Copy & open TikTok" copies the message and opens their TikTok profile (TikTok has no direct DM link), where Message opens the chat. The entry page edits both handles and links to each profile. Copy DM is always available. HQ never sends messages.
 - Owners and Managers add and change entries. Staff can view the waitlist and copy DMs.
 
 ## Product language

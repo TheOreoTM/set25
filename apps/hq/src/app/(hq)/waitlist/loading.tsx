@@ -10,7 +10,7 @@ export default function Loading() {
       <PageHeader
         eyebrow="Pre-launch / Waitlist"
         title="Waitlist"
-        description="People waiting for the first drop. Contact stays on Instagram."
+        description="People waiting for the first drop. Contact stays in Instagram and TikTok DMs."
       />
       <div aria-hidden="true">
         <div className="resource-toolbar resource-toolbar--loading">

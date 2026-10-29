@@ -840,6 +840,7 @@ model Ambassador {
 model WaitlistEntry {
   id                   String            @id @default(cuid())
   instagramHandle      String?           @unique
+  tiktokHandle         String?           @unique
   name                 String?
   phone                String?
   source               WaitlistSource    @default(INSTAGRAM_DM)

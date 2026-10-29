@@ -176,12 +176,12 @@ Giving product runs in one transaction: verify the ambassador is not Ended and t
 
 ### Waitlist (pre-launch)
 
-Migration `20261028120000_waitlist` is additive.
+Migrations `20261028120000_waitlist` and `20261029120000_waitlist_tiktok` are additive.
 
-- `WaitlistEntry` stores an optional Instagram handle, optional name, optional phone, source (`INSTAGRAM_DM`/`TIKTOK`/`IN_PERSON`), interested product categories (a `ProductCategory[]`, so interest can be captured before products exist), sizes (`String[]`, limited to `WAITLIST_SIZES` by validation), status, `statusChangedAt`, an Early Bird flag, an optional Early Bird code, notes, and creator.
+- `WaitlistEntry` stores an optional Instagram handle, optional TikTok handle, optional name, optional phone, source (`INSTAGRAM_DM`/`TIKTOK`/`IN_PERSON`), interested product categories (a `ProductCategory[]`, so interest can be captured before products exist), sizes (`String[]`, limited to `WAITLIST_SIZES` by validation), status, `statusChangedAt`, an Early Bird flag, an optional Early Bird code, notes, and creator.
 - Status is New → Contacted → Confirmed → Ordered, with Dropped available from anywhere. Any transition is allowed (a dropped person can come back); `statusChangedAt` updates whenever the status changes.
-- The handle is stored lowercase without `@` and is unique, so the same person cannot be added twice; a database check enforces the normalised form. The Early Bird code is uppercase and unique, like ambassador discount codes. A code implies the Early Bird flag.
-- A database check requires a handle or a name. Customer contact happens on Instagram; HQ stores no message history and sends nothing.
+- Each handle is stored lowercase without `@` and is unique per platform, so the same person cannot be added twice; database checks enforce the normalised forms (Instagram 1–30, TikTok 2–24 letters, numbers, dots, underscores). The same handle may exist once on each platform. The Early Bird code is uppercase and unique, like ambassador discount codes. A code implies the Early Bird flag.
+- A database check requires an Instagram handle, a TikTok handle, or a name. Customer contact happens in Instagram or TikTok DMs; HQ stores no message history and sends nothing.
 - Entries are not linked to `Customer` or `Order` yet. When orders open, Ordered is set by hand.
 
 ### Store and checkout (Milestone 8)

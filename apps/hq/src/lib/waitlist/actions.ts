@@ -4,7 +4,11 @@ import { db, Prisma } from "@set25/database";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireOperationalAccess } from "@/lib/auth/session";
-import { waitlistDisplayName, waitlistDmMessage } from "./presentation";
+import {
+  waitlistContact,
+  waitlistDisplayName,
+  waitlistDmMessage,
+} from "./presentation";
 import {
   validateWaitlistEntry,
   validateWaitlistStatus,
@@ -21,7 +25,11 @@ function failure(
 
 /** Explains which unique field clashed and links to the existing entry. */
 async function duplicateFailure(
-  data: { instagramHandle: string | null; earlyBirdCode: string | null },
+  data: {
+    instagramHandle: string | null;
+    tiktokHandle: string | null;
+    earlyBirdCode: string | null;
+  },
   exceptId?: string,
 ) {
   if (data.instagramHandle) {
@@ -33,6 +41,18 @@ async function duplicateFailure(
       return failure(
         `@${data.instagramHandle} is already on the waitlist.`,
         { instagramHandle: ["This handle is already on the waitlist."] },
+        existing.id,
+      );
+  }
+  if (data.tiktokHandle) {
+    const existing = await db.waitlistEntry.findUnique({
+      where: { tiktokHandle: data.tiktokHandle },
+      select: { id: true },
+    });
+    if (existing && existing.id !== exceptId)
+      return failure(
+        `@${data.tiktokHandle} on TikTok is already on the waitlist.`,
+        { tiktokHandle: ["This handle is already on the waitlist."] },
         existing.id,
       );
   }
@@ -97,7 +117,7 @@ export async function createWaitlistEntryAction(
     message: `Added ${waitlistDisplayName(result.data)}.`,
     added: {
       id,
-      handle: result.data.instagramHandle,
+      contact: waitlistContact(result.data),
       message: waitlistDmMessage(result.data),
     },
   };
