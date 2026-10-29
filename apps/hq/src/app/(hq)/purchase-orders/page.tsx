@@ -11,8 +11,6 @@ import {
 } from "@set25/shared";
 import { formatDate } from "@/lib/supply/presentation";
 
-export const instant = false;
-
 export const metadata = { title: "Purchase Orders" };
 export default async function PurchaseOrdersPage({
   searchParams,
@@ -36,7 +34,10 @@ export default async function PurchaseOrdersPage({
         description="Agreed supplier quantities, prices, and incoming stock."
       />
       <div className="resource-toolbar">
-        <form className="filter-bar" action="/purchase-orders">
+        <form
+          className="filter-bar filter-bar--single"
+          action="/purchase-orders"
+        >
           <label className="search-field">
             <Search aria-hidden="true" />
             <span className="sr-only">Search purchase orders</span>
@@ -87,9 +88,9 @@ export default async function PurchaseOrdersPage({
               <span>Purchase Order</span>
               <span>Supplier</span>
               <span>Status</span>
-              <span>Items</span>
-              <span>Ordered</span>
-              <span>Received</span>
+              <span className="num col-desktop">Items</span>
+              <span className="num">Ordered</span>
+              <span className="num col-desktop">Received</span>
               <span>ETA</span>
               <span />
             </div>
@@ -117,16 +118,22 @@ export default async function PurchaseOrdersPage({
                     </small>
                   </span>
                   <span data-label="Supplier">{po.supplier.name}</span>
-                  <span data-label="Status">
+                  <span data-label="Status" className="row-status">
                     <span
                       className={`status status--${po.status.toLowerCase()}`}
                     >
                       {purchaseOrderStatusLabels[po.status]}
                     </span>
                   </span>
-                  <span data-label="Items">{po.lines.length}</span>
-                  <span data-label="Ordered">{ordered}</span>
-                  <span data-label="Received">{received}</span>
+                  <span data-label="Items" className="num col-desktop">
+                    {po.lines.length}
+                  </span>
+                  <span data-label="Ordered" className="num">
+                    {ordered}
+                  </span>
+                  <span data-label="Received" className="num col-desktop">
+                    {received}
+                  </span>
                   <span data-label="ETA">{formatDate(po.expectedAt)}</span>
                   <span className="catalog-arrow">
                     <ArrowRight aria-hidden="true" />

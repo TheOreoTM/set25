@@ -5,8 +5,6 @@ import { updateAmbassadorAction } from "@/lib/ambassadors/actions";
 import { getAmbassador, toAmbassadorFormDto } from "@/lib/ambassadors/data";
 import { requireOperationalPageAccess } from "@/lib/auth/session";
 
-export const instant = false;
-
 export const metadata = { title: "Edit ambassador" };
 
 export default async function EditAmbassadorPage({
@@ -23,7 +21,7 @@ export default async function EditAmbassadorPage({
   return (
     <main className="page-wrap">
       <PageHeader
-        eyebrow="Company / Ambassadors / Edit"
+        eyebrow="People / Ambassadors / Edit"
         title={`Edit ${ambassador.name}`}
         description="Update contact details, status, and reference terms."
       />

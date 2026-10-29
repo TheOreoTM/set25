@@ -174,6 +174,16 @@ Giving product runs in one transaction: verify the ambassador is not Ended and t
 - Database checks: size > 0; Permanent ⇔ no `retentionUntil`; Until date ⇔ `retentionUntil` set; Available ⇒ `finalizedAt` set; Deleted ⇔ `deletedAt` set.
 - Expiry is derived from `retentionUntil` (the start of the chosen Maldives date) rather than stored as a separate status, so it can never drift from the date.
 
+### Waitlist (pre-launch)
+
+Migration `20261028120000_waitlist` is additive.
+
+- `WaitlistEntry` stores an optional Instagram handle, optional name, optional phone, source (`INSTAGRAM_DM`/`TIKTOK`/`IN_PERSON`), interested product categories (a `ProductCategory[]`, so interest can be captured before products exist), sizes (`String[]`, limited to `WAITLIST_SIZES` by validation), status, `statusChangedAt`, an Early Bird flag, an optional Early Bird code, notes, and creator.
+- Status is New → Contacted → Confirmed → Ordered, with Dropped available from anywhere. Any transition is allowed (a dropped person can come back); `statusChangedAt` updates whenever the status changes.
+- The handle is stored lowercase without `@` and is unique, so the same person cannot be added twice; a database check enforces the normalised form. The Early Bird code is uppercase and unique, like ambassador discount codes. A code implies the Early Bird flag.
+- A database check requires a handle or a name. Customer contact happens on Instagram; HQ stores no message history and sends nothing.
+- Entries are not linked to `Customer` or `Order` yet. When orders open, Ordered is set by hand.
+
 ### Store and checkout (Milestone 8)
 
 Migration `20261019120000_store_checkout` is additive and backfills only `Customer.phoneKey`.

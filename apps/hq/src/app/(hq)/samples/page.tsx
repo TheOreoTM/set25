@@ -11,8 +11,6 @@ import {
 } from "@set25/shared";
 import { formatDate } from "@/lib/supply/presentation";
 
-export const instant = false;
-
 export const metadata = { title: "Samples" };
 export default async function SamplesPage({
   searchParams,
@@ -31,12 +29,12 @@ export default async function SamplesPage({
   return (
     <main className="page-wrap">
       <PageHeader
-        eyebrow="Supply / Samples"
+        eyebrow="Pre-launch / Samples"
         title="Samples"
         description="Supplier samples, tester feedback, and product decisions."
       />
       <div className="resource-toolbar">
-        <form className="filter-bar" action="/samples">
+        <form className="filter-bar filter-bar--single" action="/samples">
           <label className="search-field">
             <Search aria-hidden="true" />
             <span className="sr-only">Search samples</span>
@@ -78,15 +76,16 @@ export default async function SamplesPage({
               {samples.length} {samples.length === 1 ? "sample" : "samples"}
             </h2>
           </div>
+          <p>Newest first</p>
         </div>
         {samples.length ? (
           <div className="supply-list">
             <div className="supply-row supply-row--sample supply-row--head">
               <span>Sample</span>
               <span>Supplier</span>
-              <span>Product</span>
+              <span className="col-desktop">Product</span>
               <span>Status</span>
-              <span>Evaluations</span>
+              <span className="num">Evaluations</span>
               <span>Received</span>
               <span />
             </div>
@@ -101,17 +100,17 @@ export default async function SamplesPage({
                   <small>{sample.name}</small>
                 </span>
                 <span data-label="Supplier">{sample.supplier.name}</span>
-                <span data-label="Product">
+                <span data-label="Product" className="col-desktop">
                   {sample.product?.name ?? "Not linked"}
                 </span>
-                <span data-label="Status">
+                <span data-label="Status" className="row-status">
                   <span
                     className={`status status--${sample.status.toLowerCase()}`}
                   >
                     {sampleStatusLabels[sample.status]}
                   </span>
                 </span>
-                <span data-label="Evaluations">
+                <span data-label="Evaluations" className="num">
                   {sample._count.evaluations}
                 </span>
                 <span data-label="Received">

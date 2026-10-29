@@ -295,3 +295,40 @@ export async function getRecordedMoneyOut(where: {
   });
   return result._sum.amount ?? new Prisma.Decimal(0);
 }
+
+/**
+ * Dashboard: recorded Money Out to date. Pre-launch this is effectively the
+ * investment so far; refunds to customers are Payments, not spending.
+ */
+export async function getMoneySpentSummary() {
+  const month = getDateRange({ preset: "this-month" });
+  const [total, thisMonth, byCategory] = await Promise.all([
+    db.moneyEntry.aggregate({
+      where: { direction: "OUT" },
+      _sum: { amount: true },
+    }),
+    db.moneyEntry.aggregate({
+      where: {
+        direction: "OUT",
+        occurredAt: { gte: month.start, lt: month.end },
+      },
+      _sum: { amount: true },
+    }),
+    db.moneyEntry.groupBy({
+      by: ["category"],
+      where: { direction: "OUT" },
+      _sum: { amount: true },
+      orderBy: { _sum: { amount: "desc" } },
+      take: 4,
+    }),
+  ]);
+  return {
+    total: total._sum.amount ?? new Prisma.Decimal(0),
+    thisMonth: thisMonth._sum.amount ?? new Prisma.Decimal(0),
+    topCategories: byCategory.map((group) => ({
+      category: group.category,
+      label: moneyCategoryLabels[group.category],
+      amount: group._sum.amount ?? new Prisma.Decimal(0),
+    })),
+  };
+}

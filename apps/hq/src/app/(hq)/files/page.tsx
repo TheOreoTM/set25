@@ -1,4 +1,5 @@
-import { Search, SlidersHorizontal } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Search, SlidersHorizontal } from "lucide-react";
 import { Select } from "@/components/ui/select";
 import { fileAccessLevelLabels } from "@set25/shared";
 import { FileRow } from "@/components/files/file-row";
@@ -12,8 +13,6 @@ import {
   canUploadFiles,
 } from "@/lib/files/policy";
 import { isStorageConfigured, maxUploadBytes } from "@/lib/files/storage";
-
-export const instant = false;
 
 export const metadata = { title: "Files" };
 
@@ -36,6 +35,9 @@ export default async function FilesPage({
     canUpload ? getAttachmentTargetOptions() : Promise.resolve([]),
   ]);
   const levels = accessibleLevels(staff.role);
+  const filtered = Boolean(
+    query.search || query.access || query.category || query.retention,
+  );
 
   return (
     <main className="page-wrap">
@@ -51,7 +53,10 @@ export default async function FilesPage({
         </div>
       ) : null}
       <div className="resource-toolbar">
-        <form className="filter-bar files-filter-bar" action="/files">
+        <form
+          className="filter-bar commerce-filter-bar files-filter-bar"
+          action="/files"
+        >
           <label className="search-field">
             <Search aria-hidden="true" />
             <span className="sr-only">Search files</span>
@@ -118,7 +123,7 @@ export default async function FilesPage({
           <p>Newest first</p>
         </div>
         {files.length ? (
-          <div className="file-list file-list--library">
+          <div className="file-list">
             <div className="file-row file-row--head">
               <span>File / Attached to</span>
               <span>Type</span>
@@ -134,7 +139,22 @@ export default async function FilesPage({
           </div>
         ) : (
           <div className="inline-empty">
-            <p>No files match these filters.</p>
+            {filtered ? (
+              <>
+                <p>No files match these filters.</p>
+                <span>Try a different search or filter.</span>
+                <Link href="/files">
+                  Clear filters <ArrowRight aria-hidden="true" />
+                </Link>
+              </>
+            ) : (
+              <>
+                <p>No files yet.</p>
+                {canUpload ? (
+                  <span>Use Upload file to add the first document.</span>
+                ) : null}
+              </>
+            )}
           </div>
         )}
       </section>

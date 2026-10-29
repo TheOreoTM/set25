@@ -28,13 +28,15 @@ export function FileRow({
         <Link className="file-name" href={`/files/${file.id}`}>
           {file.originalName}
         </Link>
-        <small>
-          {showAttachment
-            ? file.attachedTo
+        {showAttachment ? (
+          <small>
+            {file.attachedTo
               ? `${file.attachedTo.type} · ${file.attachedTo.label}`
-              : "General document"
-            : (file.description ?? file.category)}
-        </small>
+              : "General document"}
+          </small>
+        ) : file.description ? (
+          <small>{file.description}</small>
+        ) : null}
       </span>
       <span data-label="Type">{file.category}</span>
       <span data-label="Size">{formatFileSize(file.sizeBytes)}</span>

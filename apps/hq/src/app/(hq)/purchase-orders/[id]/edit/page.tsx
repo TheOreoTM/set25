@@ -11,8 +11,6 @@ import {
 import { dateInput } from "@/lib/supply/presentation";
 import { toSupplierOptionDto } from "@/lib/supply/dto";
 
-export const instant = false;
-
 export const metadata = { title: "Edit purchase order" };
 export default async function EditPurchaseOrderPage({
   params,
@@ -42,6 +40,7 @@ export default async function EditPurchaseOrderPage({
         description="Once placed, quantities and agreed prices become historical facts."
       />
       <PurchaseOrderForm
+        mode="edit"
         action={updatePurchaseOrderAction.bind(null, id)}
         suppliers={suppliers.map(toSupplierOptionDto)}
         variants={variants}

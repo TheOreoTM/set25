@@ -25,32 +25,40 @@ Milestone 1 establishes the visual, technical, and navigational reference for HQ
 
 Milestone 1 does **not** implement business workflows or CRUD for orders, inventory, suppliers, imports, finance, preorders, customers, teams, samples, ambassadors, content, ecommerce, or checkout.
 
-## Dashboard purpose
+## Today (pre-launch dashboard)
 
-The dashboard answers one question first: **What needs my attention right now?**
+SET25 has not launched yet, so the home page, **Today** (`/`), answers: **How close are we to launch, and what needs doing?** It shows live data only:
 
-It presents:
+- waitlist size (excluding Dropped), sign-ups this week against last week, an eight-week sign-up chart, Early Bird count, and the New / Contacted / Confirmed / Ordered pipeline;
+- samples awaiting a decision (Pending or Retest);
+- content planned or posted this Maldives week (Monday to Sunday), plus overdue content;
+- open tasks and how many are overdue;
+- money spent so far: all recorded Money Out, this month's Money Out, and the largest categories.
 
-- sales, profit, orders, and stock value summaries;
-- needs-attention items with severity and a clear next destination;
-- incoming stock status;
-- recent orders;
-- upcoming tasks;
-- recent operational activity.
-
-Until the relevant models and workflows exist, dashboard values are explicitly marked as demonstration data. The UI must never imply that demo values came from live operations.
+Sales, orders, and stock summaries return after launch.
 
 ## Information architecture
 
-The navigation reserves stable destinations for future work:
+Desktop uses the sidebar. Mobile uses a bottom tab bar with **Today, Waitlist, Samples, Content, More**; More opens a sheet with every other destination plus Account and Sign out. Both use the same groups:
 
-- **Overview:** Dashboard
-- **Commerce:** Orders, Products, Stock, Preorders, Customers, Teams
-- **Supply:** Suppliers, Imports, Samples
-- **Company:** Money, Tasks, Ambassadors, Content, Files
-- **System:** Settings
+- **Pre-launch:** Today, Waitlist, Samples, Content, Tasks
+- **Supply:** Products, Suppliers, Purchase Orders, Imports
+- **People:** Ambassadors, Customers, Teams
+- **Company:** Money, Files
+- **Launch:** Orders, Preorders, Stock, Store (launch-only areas, kept together until the Store opens)
+- **System:** Settings, Staff access (Owner)
 
-Unimplemented destinations render safe, branded empty states. They do not contain premature workflows.
+Routes are stable; only grouping changed.
+
+## Waitlist
+
+The waitlist tracks people who want SET25 gear before launch. Most arrive by Instagram DM, some by TikTok or in person.
+
+- **Quick add** sits at the top of `/waitlist` and works one-handed: type the handle, tap source, products, and sizes, optionally tap Early Bird, then Add. Name, phone, Early Bird code, and notes are behind "Name, phone, code, notes". The form clears for the next person and offers the new person's DM straight away. A duplicate handle is refused with a link to the existing entry.
+- **Search** covers handle, name, phone, Early Bird code, and notes. Status tabs show counts and filter the list.
+- **Status changes** are one tap: each row has a next-step button (Mark contacted → Mark confirmed → Mark ordered), and the entry page has every status, including Drop.
+- **Contact stays on Instagram.** HQ prepares a DM for the person's status (welcome, confirmed, ordered, check-in), with their products, sizes, and Early Bird code. "Copy & open DM" copies the message and opens the Instagram conversation (`ig.me/m/<handle>`) so it can be pasted straight in. Copy DM and Profile links are also available. HQ never sends messages.
+- Owners and Managers add and change entries. Staff can view the waitlist and copy DMs.
 
 ## Product language
 

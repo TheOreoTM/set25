@@ -1,4 +1,4 @@
-import { LockKeyhole, ShieldAlert } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
 import { Select } from "@/components/ui/select";
 import { db } from "@set25/database";
 import { PageHeader } from "@/components/page-header";
@@ -8,8 +8,6 @@ import {
   changeStaffRoleAction,
   toggleStaffStatusAction,
 } from "@/lib/staff/actions";
-
-export const instant = false;
 
 export const metadata = { title: "Staff access" };
 
@@ -34,7 +32,7 @@ export default async function StaffPage({
     return (
       <main className="page-wrap">
         <PageHeader
-          eyebrow="System / Staff"
+          eyebrow="System / Staff access"
           title="Staff access"
           description="Owner access is required to manage SET25 staff."
         />
@@ -67,17 +65,17 @@ export default async function StaffPage({
   return (
     <main className="page-wrap">
       <PageHeader
-        eyebrow="System / Staff"
+        eyebrow="System / Staff access"
         title="Staff access"
         description="Create accounts and control who can operate SET25 HQ."
       />
       {query.created === "1" ? (
-        <div className="success-banner" role="status">
+        <div className="form-message form-message--success" role="status">
           Staff account created.
         </div>
       ) : null}
       {query.updated ? (
-        <div className="success-banner" role="status">
+        <div className="form-message form-message--success" role="status">
           Staff access updated.
         </div>
       ) : null}
@@ -132,7 +130,9 @@ export default async function StaffPage({
                     <option value="MANAGER">Manager</option>
                     <option value="STAFF">Staff</option>
                   </Select>
-                  <button type="submit">Save</button>
+                  <button className="button button--secondary" type="submit">
+                    Save
+                  </button>
                 </form>
               </span>
               <span data-label="Status">
@@ -159,7 +159,7 @@ export default async function StaffPage({
                 <form action={toggleStaffStatusAction}>
                   <input type="hidden" name="staffId" value={member.id} />
                   <button
-                    className="staff-status-action"
+                    className={`button staff-status-action ${member.active ? "button--danger" : "button--secondary"}`}
                     type="submit"
                     disabled={
                       member.active &&
@@ -180,11 +180,8 @@ export default async function StaffPage({
           aria-labelledby="create-staff-title"
         >
           <div className="staff-create-heading">
-            <LockKeyhole aria-hidden="true" />
-            <div>
-              <p className="kicker">Owner action</p>
-              <h2 id="create-staff-title">Create staff account</h2>
-            </div>
+            <p className="kicker">Owner action</p>
+            <h2 id="create-staff-title">Create staff account</h2>
           </div>
           <p>
             Create a Manager or Staff account with an initial password. There is

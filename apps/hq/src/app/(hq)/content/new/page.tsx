@@ -4,8 +4,6 @@ import { requireOperationalPageAccess } from "@/lib/auth/session";
 import { createContentAction } from "@/lib/content/actions";
 import { getContentFormOptions } from "@/lib/content/data";
 
-export const instant = false;
-
 export const metadata = { title: "New content" };
 
 export default async function NewContentPage({
@@ -21,7 +19,7 @@ export default async function NewContentPage({
   return (
     <main className="page-wrap">
       <PageHeader
-        eyebrow="Company / Content / New"
+        eyebrow="Pre-launch / Content / New"
         title="New content"
         description="Capture the idea now; scheduling and posting details can follow."
       />

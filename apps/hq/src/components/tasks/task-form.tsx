@@ -3,7 +3,6 @@
 import { Select } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import Link from "next/link";
-import { useActionState } from "react";
 import { ArrowLeft, Check, Save } from "lucide-react";
 import {
   TASK_PRIORITIES,
@@ -17,6 +16,7 @@ import {
   initialTaskFormState,
   type TaskFormState,
 } from "@/lib/tasks/validation";
+import { useFormAction } from "@/components/ui/use-form-action";
 
 type Action = (
   state: TaskFormState,
@@ -46,18 +46,21 @@ export function TaskForm({
   defaults?: Defaults;
   submitLabel: string;
 }) {
-  const [state, formAction, pending] = useActionState(
+  const { formRef, state, pending, onSubmit, error } = useFormAction(
     action,
     initialTaskFormState,
   );
-  const error = (field: string) => state.errors?.[field]?.[0];
   const groups = relatedOptions.reduce(
     (map, option) =>
       map.set(option.group, [...(map.get(option.group) ?? []), option]),
     new Map<string, typeof relatedOptions>(),
   );
   return (
-    <form action={formAction} className="editor-form task-editor-form">
+    <form
+      ref={formRef}
+      onSubmit={onSubmit}
+      className="editor-form task-editor-form"
+    >
       <section className="form-section">
         <div className="form-section-title">
           <p className="kicker">Planning</p>
@@ -82,19 +85,27 @@ export function TaskForm({
           </label>
           <label className="field">
             <span>Status</span>
-            <Select name="status" defaultValue={defaults?.status ?? "TODO"}>
+            <Select
+              name="status"
+              defaultValue={defaults?.status ?? "TODO"}
+              aria-invalid={Boolean(error("status"))}
+            >
               {TASK_STATUSES.map((status) => (
                 <option value={status} key={status}>
                   {taskStatusLabels[status]}
                 </option>
               ))}
             </Select>
+            {error("status") ? (
+              <small className="field-error">{error("status")}</small>
+            ) : null}
           </label>
           <label className="field">
             <span>Priority</span>
             <Select
               name="priority"
               defaultValue={defaults?.priority ?? "MEDIUM"}
+              aria-invalid={Boolean(error("priority"))}
             >
               {TASK_PRIORITIES.map((priority) => (
                 <option value={priority} key={priority}>
@@ -102,10 +113,17 @@ export function TaskForm({
                 </option>
               ))}
             </Select>
+            {error("priority") ? (
+              <small className="field-error">{error("priority")}</small>
+            ) : null}
           </label>
           <label className="field">
             <span>Due date</span>
-            <DatePicker name="dueAt" defaultValue={defaults?.dueAt ?? ""} />
+            <DatePicker
+              name="dueAt"
+              defaultValue={defaults?.dueAt ?? ""}
+              invalid={Boolean(error("dueAt"))}
+            />
             {error("dueAt") ? (
               <small className="field-error">{error("dueAt")}</small>
             ) : null}
@@ -115,6 +133,7 @@ export function TaskForm({
             <Select
               name="assignedToId"
               defaultValue={defaults?.assignedToId ?? ""}
+              aria-invalid={Boolean(error("assignedToId"))}
             >
               <option value="">Unassigned</option>
               {staff.map((person) => (
@@ -129,7 +148,11 @@ export function TaskForm({
           </label>
           <label className="field field--wide">
             <span>Related record</span>
-            <Select name="related" defaultValue={defaults?.related ?? ""}>
+            <Select
+              name="related"
+              defaultValue={defaults?.related ?? ""}
+              aria-invalid={Boolean(error("related"))}
+            >
               <option value="">No related record</option>
               {[...groups.entries()].map(([group, options]) => (
                 <optgroup label={group} key={group}>
@@ -159,7 +182,11 @@ export function TaskForm({
             rows={5}
             maxLength={2000}
             defaultValue={defaults?.description ?? ""}
+            aria-invalid={Boolean(error("description"))}
           />
+          {error("description") ? (
+            <small className="field-error">{error("description")}</small>
+          ) : null}
         </label>
       </section>
       {state.message ? (
@@ -190,13 +217,13 @@ export function TaskStatusControl({
   action: Action;
   current: TaskStatusValue;
 }) {
-  const [state, formAction, pending] = useActionState(
+  const { state, pending, onSubmit } = useFormAction(
     action,
     initialTaskFormState,
   );
   return (
     <div className="task-status-control">
-      <form action={formAction} className="task-status-form">
+      <form onSubmit={onSubmit} className="task-status-form">
         <label>
           <span className="sr-only">Change task status</span>
           <Select name="status" defaultValue={current} disabled={pending}>
@@ -216,7 +243,7 @@ export function TaskStatusControl({
         </button>
       </form>
       {current !== "DONE" ? (
-        <form action={formAction}>
+        <form onSubmit={onSubmit}>
           <input type="hidden" name="status" value="DONE" />
           <button
             className="button button--dark task-done-button"

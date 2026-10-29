@@ -3,14 +3,15 @@
 import { Select } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { ArrowLeft, Plus, Save, Trash2 } from "lucide-react";
-import { formatMVR } from "@set25/shared";
+import { formatMoney, formatMVR } from "@set25/shared";
 import {
   initialSupplyFormState,
   type SupplyFormState,
 } from "@/lib/supply/validation";
-import { FormResult } from "./supplier-forms";
+import { useFormAction } from "@/components/ui/use-form-action";
+import { FieldError, FormResult } from "./supplier-forms";
 
 type VariantOption = {
   id: string;
@@ -32,6 +33,7 @@ export function PurchaseOrderForm({
   idempotencyKey,
   defaults,
   cancelHref,
+  mode,
 }: {
   action: (
     state: SupplyFormState,
@@ -50,8 +52,9 @@ export function PurchaseOrderForm({
     lines: Omit<Line, "key">[];
   };
   cancelHref: string;
+  mode: "create" | "edit";
 }) {
-  const [state, formAction, pending] = useActionState(
+  const { formRef, state, pending, onSubmit, error } = useFormAction(
     action,
     initialSupplyFormState,
   );
@@ -77,7 +80,11 @@ export function PurchaseOrderForm({
       current.map((line) => (line.key === key ? { ...line, ...value } : line)),
     );
   return (
-    <form action={formAction} className="editor-form supply-editor">
+    <form
+      ref={formRef}
+      onSubmit={onSubmit}
+      className="editor-form supply-editor"
+    >
       <input type="hidden" name="idempotencyKey" value={idempotencyKey} />
       <section className="form-section">
         <div className="form-section-title">
@@ -92,6 +99,7 @@ export function PurchaseOrderForm({
               name="supplierId"
               required
               defaultValue={defaults?.supplierId ?? ""}
+              aria-invalid={Boolean(error("supplierId"))}
             >
               <option value="" disabled>
                 Choose a supplier
@@ -102,6 +110,7 @@ export function PurchaseOrderForm({
                 </option>
               ))}
             </Select>
+            <FieldError message={error("supplierId")} />
           </label>
           <label className="field">
             <span>Supplier reference</span>
@@ -120,7 +129,9 @@ export function PurchaseOrderForm({
               onChange={(event) =>
                 setCurrency(event.target.value.toUpperCase())
               }
+              aria-invalid={Boolean(error("currency"))}
             />
+            <FieldError message={error("currency")} />
           </label>
           <label className="field">
             <span>Exchange rate to MVR</span>
@@ -130,15 +141,22 @@ export function PurchaseOrderForm({
               inputMode="decimal"
               value={rate}
               onChange={(event) => setRate(event.target.value)}
+              aria-invalid={Boolean(error("exchangeRateToMvr"))}
             />
-            <small>1 {currency || "unit"} × rate = MVR</small>
+            {error("exchangeRateToMvr") ? (
+              <FieldError message={error("exchangeRateToMvr")} />
+            ) : (
+              <small>1 {currency || "unit"} × rate = MVR</small>
+            )}
           </label>
           <label className="field">
             <span>ETA</span>
             <DatePicker
               name="expectedAt"
               defaultValue={defaults?.expectedAt ?? ""}
+              invalid={Boolean(error("expectedAt"))}
             />
+            <FieldError message={error("expectedAt")} />
           </label>
         </div>
       </section>
@@ -157,7 +175,7 @@ export function PurchaseOrderForm({
               <span className="order-line-index">
                 {String(index + 1).padStart(2, "0")}
               </span>
-              <label className="field">
+              <label className="field order-line-variant">
                 <span>Variant</span>
                 <Select
                   name="variantId"
@@ -204,10 +222,10 @@ export function PurchaseOrderForm({
               <div className="order-line-total">
                 <span>Line total</span>
                 <strong>
-                  {currency}{" "}
-                  {(
-                    (Number(line.unitCost) || 0) * (Number(line.quantity) || 0)
-                  ).toFixed(2)}
+                  {formatMoney(
+                    (Number(line.unitCost) || 0) * (Number(line.quantity) || 0),
+                    currency,
+                  )}
                 </strong>
               </div>
               <button
@@ -225,35 +243,34 @@ export function PurchaseOrderForm({
               </button>
             </div>
           ))}
-        </div>
-        <button
-          className="button button--secondary order-add-line"
-          type="button"
-          onClick={() =>
-            setLines((current) => [
-              ...current,
-              {
-                key: crypto.randomUUID(),
-                variantId: "",
-                quantity: 1,
-                unitCost: "0.00",
-              },
-            ])
-          }
-        >
-          <Plus aria-hidden="true" /> Add item
-        </button>
-      </section>
-      <section className="form-section supply-total-strip">
-        <div>
-          <span>Supplier total</span>
-          <strong>
-            {currency} {supplierTotal.toFixed(2)}
-          </strong>
-        </div>
-        <div>
-          <span>Product cost in MVR</span>
-          <strong>{formatMVR(supplierTotal * (Number(rate) || 0))}</strong>
+          <FieldError message={error("lines")} />
+          <button
+            className="button button--secondary order-add-line"
+            type="button"
+            onClick={() =>
+              setLines((current) => [
+                ...current,
+                {
+                  key: crypto.randomUUID(),
+                  variantId: "",
+                  quantity: 1,
+                  unitCost: "0.00",
+                },
+              ])
+            }
+          >
+            <Plus aria-hidden="true" /> Add item
+          </button>
+          <dl className="supply-line-summary">
+            <div>
+              <dt>Supplier total</dt>
+              <dd>{formatMoney(supplierTotal, currency)}</dd>
+            </div>
+            <div>
+              <dt>Product cost in MVR</dt>
+              <dd>{formatMVR(supplierTotal * (Number(rate) || 0))}</dd>
+            </div>
+          </dl>
         </div>
       </section>
       <section className="form-section">
@@ -282,7 +299,11 @@ export function PurchaseOrderForm({
           disabled={pending}
         >
           <Save aria-hidden="true" />{" "}
-          {pending ? "Saving…" : defaults ? "Save draft" : "Create draft PO"}
+          {pending
+            ? "Saving…"
+            : mode === "edit"
+              ? "Save draft"
+              : "Create draft PO"}
         </button>
       </div>
     </form>

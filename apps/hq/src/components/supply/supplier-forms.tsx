@@ -2,8 +2,10 @@
 
 import { Select } from "@/components/ui/select";
 import Link from "next/link";
-import { useActionState, useState } from "react";
-import { ArrowLeft, Pencil, Plus, Save, X } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, Pencil, Plus, Save } from "lucide-react";
+import { ModalDialog } from "@/components/ui/modal-dialog";
+import { useFormAction } from "@/components/ui/use-form-action";
 import {
   initialSupplyFormState,
   type SupplyFormState,
@@ -35,13 +37,12 @@ export function SupplierForm({
   cancelHref: string;
   submitLabel: string;
 }) {
-  const [state, formAction, pending] = useActionState(
+  const { formRef, state, pending, onSubmit, error } = useFormAction(
     action,
     initialSupplyFormState,
   );
-  const error = (name: string) => state.errors?.[name]?.[0];
   return (
-    <form action={formAction} className="editor-form">
+    <form ref={formRef} onSubmit={onSubmit} className="editor-form">
       <section className="form-section">
         <div className="form-section-title">
           <p className="kicker">Supplier</p>
@@ -178,38 +179,20 @@ export function SupplierProductEditor({
         {label}
       </button>
       {open ? (
-        <div className="dialog-backdrop" role="presentation">
-          <section
-            className="dialog-panel supply-editor-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="supplier-terms-title"
-          >
-            <div className="dialog-head">
-              <div>
-                <p className="kicker">Supplier product</p>
-                <h2 id="supplier-terms-title">
-                  {defaults ? "Edit product terms" : "Add product terms"}
-                </h2>
-              </div>
-              <button
-                className="icon-button"
-                type="button"
-                aria-label="Close"
-                onClick={() => setOpen(false)}
-              >
-                <X aria-hidden="true" />
-              </button>
-            </div>
-            <div className="dialog-body">
-              <SupplierProductForm
-                action={action}
-                products={products}
-                defaults={defaults}
-              />
-            </div>
-          </section>
-        </div>
+        <ModalDialog
+          titleId="supplier-terms-title"
+          kicker="Supplier product"
+          title={defaults ? "Edit product terms" : "Add product terms"}
+          onClose={() => setOpen(false)}
+          className="supply-editor-dialog"
+        >
+          <SupplierProductForm
+            action={action}
+            products={products}
+            defaults={defaults}
+            onCancel={() => setOpen(false)}
+          />
+        </ModalDialog>
       ) : null}
     </>
   );
@@ -219,6 +202,7 @@ function SupplierProductForm({
   action,
   products,
   defaults,
+  onCancel,
 }: {
   action: (
     state: SupplyFormState,
@@ -226,79 +210,109 @@ function SupplierProductForm({
   ) => Promise<SupplyFormState>;
   products: { id: string; name: string; code: string }[];
   defaults?: SupplierTermsDefaults;
+  onCancel: () => void;
 }) {
-  const [state, formAction, pending] = useActionState(
+  const { formRef, state, pending, onSubmit, error } = useFormAction(
     action,
     initialSupplyFormState,
   );
   return (
-    <form action={formAction} className="supply-inline-form">
-      <div className="form-grid">
-        <label className="field">
-          <span>SET25 product</span>
-          <Select
-            name="productId"
-            required
-            defaultValue={defaults?.productId ?? ""}
-          >
-            <option value="" disabled>
-              Choose a product
-            </option>
-            {products.map((product) => (
-              <option key={product.id} value={product.id}>
-                {product.code} · {product.name}
+    <form ref={formRef} onSubmit={onSubmit}>
+      <div className="dialog-body">
+        <div className="form-grid">
+          <label className="field">
+            <span>SET25 product</span>
+            <Select
+              name="productId"
+              required
+              defaultValue={defaults?.productId ?? ""}
+              aria-invalid={Boolean(error("productId"))}
+            >
+              <option value="" disabled>
+                Choose a product
               </option>
-            ))}
-          </Select>
-        </label>
-        <Field
-          name="productUrl"
-          label="Alibaba / product link"
-          type="url"
-          defaultValue={defaults?.productUrl ?? ""}
-        />
-        <Field
-          name="supplierSku"
-          label="Supplier SKU"
-          defaultValue={defaults?.supplierSku ?? ""}
-        />
-        <Field
-          name="moq"
-          label="MOQ"
-          type="number"
-          min={1}
-          step={1}
-          defaultValue={defaults?.moq ?? ""}
-        />
-        <Field
-          name="sampleCost"
-          label="Sample cost"
-          inputMode="decimal"
-          defaultValue={defaults?.sampleCost ?? ""}
-        />
-        <Field
-          name="bulkUnitPrice"
-          label="Bulk unit price"
-          inputMode="decimal"
-          defaultValue={defaults?.bulkUnitPrice ?? ""}
-        />
-        <Field
-          name="currency"
-          label="Currency"
-          defaultValue={defaults?.currency ?? "USD"}
-          maxLength={3}
-          required
-        />
-        <Field
-          name="notes"
-          label="Terms notes"
-          defaultValue={defaults?.notes ?? ""}
-        />
+              {products.map((product) => (
+                <option key={product.id} value={product.id}>
+                  {product.code} · {product.name}
+                </option>
+              ))}
+            </Select>
+            <FieldError message={error("productId")} />
+          </label>
+          <Field
+            name="productUrl"
+            label="Alibaba / product link"
+            type="url"
+            defaultValue={defaults?.productUrl ?? ""}
+          />
+          <Field
+            name="supplierSku"
+            label="Supplier SKU"
+            defaultValue={defaults?.supplierSku ?? ""}
+          />
+          <Field
+            name="moq"
+            label="MOQ"
+            type="number"
+            min={1}
+            step={1}
+            defaultValue={defaults?.moq ?? ""}
+            error={error("moq")}
+          />
+          <Field
+            name="sampleCost"
+            label="Sample cost"
+            inputMode="decimal"
+            defaultValue={defaults?.sampleCost ?? ""}
+            error={error("sampleCost")}
+          />
+          <Field
+            name="bulkUnitPrice"
+            label="Bulk unit price"
+            inputMode="decimal"
+            defaultValue={defaults?.bulkUnitPrice ?? ""}
+            error={error("bulkUnitPrice")}
+          />
+          <Field
+            name="currency"
+            label="Currency"
+            defaultValue={defaults?.currency ?? "USD"}
+            maxLength={3}
+            required
+            error={error("currency")}
+          />
+          <label className="field field--wide">
+            <span>Terms notes</span>
+            <textarea
+              name="notes"
+              rows={3}
+              maxLength={2000}
+              defaultValue={defaults?.notes ?? ""}
+              aria-invalid={Boolean(error("notes"))}
+            />
+            <FieldError message={error("notes")} />
+          </label>
+        </div>
+        <FormResult state={state} />
       </div>
-      <FormResult state={state} />
-      <button className="button button--dark" type="submit" disabled={pending}>
-        <Plus aria-hidden="true" /> {pending ? "Saving…" : "Save product terms"}
-      </button>
+      <div className="dialog-actions">
+        <button
+          className="button button--secondary"
+          type="button"
+          onClick={onCancel}
+          disabled={pending}
+        >
+          Cancel
+        </button>
+        <button
+          className="button button--dark"
+          type="submit"
+          disabled={pending}
+        >
+          <Save aria-hidden="true" />{" "}
+          {pending ? "Saving…" : "Save product terms"}
+        </button>
+      </div>
     </form>
   );
 }
@@ -315,9 +329,13 @@ function Field({
     <label className="field">
       <span>{label}</span>
       <input aria-invalid={Boolean(error)} {...props} />
-      {error ? <small className="field-error">{error}</small> : null}
+      <FieldError message={error} />
     </label>
   );
+}
+
+export function FieldError({ message }: { message?: string }) {
+  return message ? <small className="field-error">{message}</small> : null;
 }
 
 export function FormResult({ state }: { state: SupplyFormState }) {

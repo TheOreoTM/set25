@@ -91,7 +91,10 @@ export async function getTasks(filters: TaskFilters = {}) {
       orderBy: [{ dueAt: "asc" }, { createdAt: "desc" }],
       take: 300,
     }),
-    db.task.findMany({ select: { status: true, dueAt: true } }),
+    // One light read feeds the summary strip and every view tab's count.
+    db.task.findMany({
+      select: { status: true, priority: true, dueAt: true },
+    }),
     db.staffUser.findMany({
       where: { active: true },
       select: { id: true, name: true },
@@ -109,26 +112,35 @@ export async function getTasks(filters: TaskFilters = {}) {
         (b.dueAt?.getTime() ?? Number.MAX_SAFE_INTEGER)
     );
   });
+  // Same rules as viewWhere above, so each count matches its tab's rows
+  // before search and filters narrow them.
+  const openRecords = summaryRecords.filter((task) => task.status !== "DONE");
+  const summary = {
+    overdue: openRecords.filter((task) => task.dueAt && task.dueAt < today)
+      .length,
+    today: openRecords.filter(
+      (task) => task.dueAt && task.dueAt >= today && task.dueAt < tomorrow,
+    ).length,
+    upcoming: openRecords.filter((task) => task.dueAt && task.dueAt >= tomorrow)
+      .length,
+    waiting: summaryRecords.filter((task) => task.status === "WAITING").length,
+  };
   return {
     tasks: tasks.map(toTaskDto),
     staff,
-    summary: {
-      overdue: summaryRecords.filter(
-        (task) => task.status !== "DONE" && task.dueAt && task.dueAt < today,
-      ).length,
-      today: summaryRecords.filter(
+    summary,
+    viewCounts: {
+      "": openRecords.length,
+      attention: openRecords.filter(
         (task) =>
-          task.status !== "DONE" &&
-          task.dueAt &&
-          task.dueAt >= today &&
-          task.dueAt < tomorrow,
+          (task.dueAt && task.dueAt < tomorrow) || task.priority === "HIGH",
       ).length,
-      upcoming: summaryRecords.filter(
-        (task) =>
-          task.status !== "DONE" && task.dueAt && task.dueAt >= tomorrow,
-      ).length,
-      waiting: summaryRecords.filter((task) => task.status === "WAITING")
-        .length,
+      overdue: summary.overdue,
+      today: summary.today,
+      upcoming: summary.upcoming,
+      waiting: summary.waiting,
+      completed: summaryRecords.length - openRecords.length,
+      all: summaryRecords.length,
     },
     today,
   };
@@ -320,4 +332,14 @@ function taskRelated(
       value: `TEAM:${task.team.id}`,
     };
   return null;
+}
+
+/** Dashboard: how many tasks are open, and how many of those are overdue. */
+export async function getOpenTaskCounts() {
+  const { start: today } = getTodayRange();
+  const [open, overdue] = await Promise.all([
+    db.task.count({ where: { status: { not: "DONE" } } }),
+    db.task.count({ where: { status: { not: "DONE" }, dueAt: { lt: today } } }),
+  ]);
+  return { open, overdue };
 }

@@ -27,7 +27,7 @@ export async function updateStoreSettingsAction(
   const staff = await requireOperationalAccess();
   const result = validateStoreSettings(formData);
   if (!result.success)
-    return failure("Check the highlighted settings.", result.errors);
+    return failure("Check the highlighted details.", result.errors);
   try {
     await db.storeSettings.upsert({
       where: { id: "store" },

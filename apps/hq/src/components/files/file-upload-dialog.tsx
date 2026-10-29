@@ -2,9 +2,10 @@
 
 import { Select } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
+import { ModalDialog } from "@/components/ui/modal-dialog";
 import { useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FileUp, Upload, X } from "lucide-react";
+import { FileUp, Upload } from "lucide-react";
 import {
   fileAccessLevelLabels,
   formatFileSize,
@@ -134,196 +135,176 @@ export function FileUploadDialog({
         <Upload aria-hidden="true" /> Upload file
       </button>
       {open ? (
-        <div className="dialog-backdrop" role="presentation">
-          <section
-            className="dialog-panel supply-editor-dialog file-upload-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="file-upload-title"
-          >
-            <div className="dialog-head">
-              <div>
-                <p className="kicker">Private file</p>
-                <h2 id="file-upload-title">Upload file</h2>
+        <ModalDialog
+          titleId={titleId}
+          kicker="Private file"
+          title="Upload file"
+          onClose={close}
+          busy={busy}
+          className="supply-editor-dialog file-upload-dialog"
+        >
+          <form className="dialog-body" ref={form} onSubmit={submit}>
+            <div className="field">
+              <span>File</span>
+              <div
+                className={`file-drop${dragging ? " is-dragging" : ""}${file ? " has-file" : ""}`}
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  if (!busy) setDragging(true);
+                }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  setDragging(false);
+                  const dropped = event.dataTransfer.files?.[0];
+                  if (!busy && dropped) {
+                    setFile(dropped);
+                    setPhase({ name: "idle" });
+                  }
+                }}
+              >
+                <input
+                  id={`${titleId}-file`}
+                  className="file-drop-input"
+                  type="file"
+                  name="file"
+                  accept={ACCEPT_ATTRIBUTE}
+                  disabled={busy}
+                  onChange={(event) => {
+                    setFile(event.currentTarget.files?.[0] ?? null);
+                    setPhase({ name: "idle" });
+                  }}
+                />
+                <label className="file-drop-zone" htmlFor={`${titleId}-file`}>
+                  <FileUp aria-hidden="true" />
+                  {file ? (
+                    <span>
+                      <strong>{file.name}</strong>
+                      <small>
+                        {formatFileSize(file.size)} · Choose a different file
+                      </small>
+                    </span>
+                  ) : (
+                    <span>
+                      <strong>Choose a file or drag it here</strong>
+                      <small>
+                        {ALLOWED_TYPES_LABEL} · up to {formatFileSize(maxBytes)}
+                      </small>
+                    </span>
+                  )}
+                </label>
               </div>
+            </div>
+            {target ? (
+              <div className="file-upload-target">
+                <span>Attach to</span>
+                <strong>{targetLabel ?? "This record"}</strong>
+              </div>
+            ) : targetOptions ? (
+              <label className="field">
+                <span>Attach to</span>
+                <Select name="target" defaultValue="" disabled={busy}>
+                  <option value="">Not attached (general document)</option>
+                  {[...groups.entries()].map(([group, options]) => (
+                    <optgroup label={group} key={group}>
+                      {options.map((option) => (
+                        <option value={option.value} key={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </Select>
+              </label>
+            ) : null}
+            <div className="form-grid form-grid--dialog">
+              <label className="field">
+                <span>Access</span>
+                <Select
+                  name="accessLevel"
+                  defaultValue={
+                    accessLevels.includes("MANAGER_AND_OWNER")
+                      ? "MANAGER_AND_OWNER"
+                      : accessLevels[0]
+                  }
+                  disabled={busy}
+                >
+                  {accessLevels.map((level) => (
+                    <option value={level} key={level}>
+                      {fileAccessLevelLabels[level]}
+                    </option>
+                  ))}
+                </Select>
+              </label>
+              <label className="field">
+                <span>Retention</span>
+                <Select
+                  name="retentionPolicy"
+                  value={retention}
+                  onChange={(event) => setRetention(event.target.value)}
+                  disabled={busy}
+                >
+                  <option value="PERMANENT">Permanent</option>
+                  <option value="UNTIL_DATE">Until date</option>
+                </Select>
+              </label>
+              {retention === "UNTIL_DATE" ? (
+                <label className="field">
+                  <span>Expires on</span>
+                  <DatePicker name="retentionUntil" required disabled={busy} />
+                </label>
+              ) : null}
+            </div>
+            <label className="field">
+              <span>Note</span>
+              <input
+                name="description"
+                maxLength={500}
+                placeholder="Optional, e.g. signed agreement or customs invoice"
+                disabled={busy}
+              />
+            </label>
+            {phase.name === "uploading" || phase.name === "finalizing" ? (
+              <div className="file-upload-progress" role="status">
+                <div>
+                  <span
+                    style={{
+                      width: `${phase.name === "finalizing" ? 100 : phase.progress}%`,
+                    }}
+                  />
+                </div>
+                <small>
+                  {phase.name === "finalizing"
+                    ? "Confirming upload…"
+                    : `Uploading… ${phase.progress}%`}
+                </small>
+              </div>
+            ) : null}
+            {phase.name === "error" ? (
+              <div className="form-message form-message--error" role="alert">
+                {phase.message}
+              </div>
+            ) : null}
+            <div className="dialog-actions">
               <button
-                className="icon-button"
                 type="button"
-                aria-label="Close"
+                className="button button--secondary"
                 onClick={close}
                 disabled={busy}
               >
-                <X aria-hidden="true" />
+                Cancel
+              </button>
+              <button
+                className="button button--dark"
+                type="submit"
+                disabled={!file || busy}
+              >
+                <Upload aria-hidden="true" />
+                {busy ? "Uploading…" : "Upload"}
               </button>
             </div>
-            <form className="dialog-body" ref={form} onSubmit={submit}>
-              <div className="field">
-                <span>File</span>
-                <div
-                  className={`file-drop${dragging ? " is-dragging" : ""}${file ? " has-file" : ""}`}
-                  onDragOver={(event) => {
-                    event.preventDefault();
-                    if (!busy) setDragging(true);
-                  }}
-                  onDragLeave={() => setDragging(false)}
-                  onDrop={(event) => {
-                    event.preventDefault();
-                    setDragging(false);
-                    const dropped = event.dataTransfer.files?.[0];
-                    if (!busy && dropped) {
-                      setFile(dropped);
-                      setPhase({ name: "idle" });
-                    }
-                  }}
-                >
-                  <input
-                    id={`${titleId}-file`}
-                    className="file-drop-input"
-                    type="file"
-                    name="file"
-                    accept={ACCEPT_ATTRIBUTE}
-                    disabled={busy}
-                    onChange={(event) => {
-                      setFile(event.currentTarget.files?.[0] ?? null);
-                      setPhase({ name: "idle" });
-                    }}
-                  />
-                  <label className="file-drop-zone" htmlFor={`${titleId}-file`}>
-                    <FileUp aria-hidden="true" />
-                    {file ? (
-                      <span>
-                        <strong>{file.name}</strong>
-                        <small>
-                          {formatFileSize(file.size)} · Choose a different file
-                        </small>
-                      </span>
-                    ) : (
-                      <span>
-                        <strong>Choose a file or drag it here</strong>
-                        <small>
-                          {ALLOWED_TYPES_LABEL} · up to{" "}
-                          {formatFileSize(maxBytes)}
-                        </small>
-                      </span>
-                    )}
-                  </label>
-                </div>
-              </div>
-              {target ? (
-                <div className="file-upload-target">
-                  <span>Attach to</span>
-                  <strong>{targetLabel ?? "This record"}</strong>
-                </div>
-              ) : targetOptions ? (
-                <label className="field">
-                  <span>Attach to</span>
-                  <Select name="target" defaultValue="" disabled={busy}>
-                    <option value="">Not attached (general document)</option>
-                    {[...groups.entries()].map(([group, options]) => (
-                      <optgroup label={group} key={group}>
-                        {options.map((option) => (
-                          <option value={option.value} key={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </Select>
-                </label>
-              ) : null}
-              <div className="form-grid form-grid--dialog">
-                <label className="field">
-                  <span>Access</span>
-                  <Select
-                    name="accessLevel"
-                    defaultValue={
-                      accessLevels.includes("MANAGER_AND_OWNER")
-                        ? "MANAGER_AND_OWNER"
-                        : accessLevels[0]
-                    }
-                    disabled={busy}
-                  >
-                    {accessLevels.map((level) => (
-                      <option value={level} key={level}>
-                        {fileAccessLevelLabels[level]}
-                      </option>
-                    ))}
-                  </Select>
-                </label>
-                <label className="field">
-                  <span>Retention</span>
-                  <Select
-                    name="retentionPolicy"
-                    value={retention}
-                    onChange={(event) => setRetention(event.target.value)}
-                    disabled={busy}
-                  >
-                    <option value="PERMANENT">Permanent</option>
-                    <option value="UNTIL_DATE">Until date</option>
-                  </Select>
-                </label>
-                {retention === "UNTIL_DATE" ? (
-                  <label className="field">
-                    <span>Expires on</span>
-                    <DatePicker
-                      name="retentionUntil"
-                      required
-                      disabled={busy}
-                    />
-                  </label>
-                ) : null}
-              </div>
-              <label className="field">
-                <span>Note</span>
-                <input
-                  name="description"
-                  maxLength={500}
-                  placeholder="Optional, e.g. signed agreement or customs invoice"
-                  disabled={busy}
-                />
-              </label>
-              {phase.name === "uploading" || phase.name === "finalizing" ? (
-                <div className="file-upload-progress" role="status">
-                  <div>
-                    <span
-                      style={{
-                        width: `${phase.name === "finalizing" ? 100 : phase.progress}%`,
-                      }}
-                    />
-                  </div>
-                  <small>
-                    {phase.name === "finalizing"
-                      ? "Confirming upload…"
-                      : `Uploading… ${phase.progress}%`}
-                  </small>
-                </div>
-              ) : null}
-              {phase.name === "error" ? (
-                <div className="form-message form-message--error" role="alert">
-                  {phase.message}
-                </div>
-              ) : null}
-              <div className="dialog-actions">
-                <button
-                  type="button"
-                  className="button button--secondary"
-                  onClick={close}
-                  disabled={busy}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="button button--dark"
-                  type="submit"
-                  disabled={!file || busy}
-                >
-                  <Upload aria-hidden="true" />
-                  {busy ? "Uploading…" : "Upload"}
-                </button>
-              </div>
-            </form>
-          </section>
-        </div>
+          </form>
+        </ModalDialog>
       ) : null}
     </>
   );

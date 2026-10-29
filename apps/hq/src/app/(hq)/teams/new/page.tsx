@@ -3,8 +3,6 @@ import { TeamForm } from "@/components/commerce/contact-form";
 import { createTeamAction } from "@/lib/commerce/actions";
 import { requireOperationalPageAccess } from "@/lib/auth/session";
 
-export const instant = false;
-
 export const metadata = { title: "New team" };
 
 export default async function NewTeamPage() {
@@ -12,7 +10,7 @@ export default async function NewTeamPage() {
   return (
     <main className="page-wrap page-wrap--editor">
       <PageHeader
-        eyebrow="Commerce / Teams / New"
+        eyebrow="People / Teams / New"
         title="New team"
         description="Create an organisation record without replacing the individual customer contact."
       />

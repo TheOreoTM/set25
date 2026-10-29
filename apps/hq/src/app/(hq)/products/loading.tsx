@@ -5,7 +5,7 @@ export default function LoadingProducts() {
   return (
     <main className="page-wrap">
       <PageHeader
-        eyebrow="Commerce / Products"
+        eyebrow="Supply / Products"
         title="Products"
         description="The shared catalogue for SET25 HQ and the future Store."
       />

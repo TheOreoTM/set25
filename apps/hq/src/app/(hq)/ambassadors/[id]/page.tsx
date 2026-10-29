@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft, Pencil, Plus } from "lucide-react";
 import {
   ambassadorStatusLabels,
   contentPlatformLabels,
@@ -17,8 +17,6 @@ import { requireStaff } from "@/lib/auth/session";
 import { formatPublishAt } from "@/lib/content/presentation";
 import { maldivesDateKey } from "@/lib/planning/date-range";
 import { formatDate } from "@/lib/supply/presentation";
-
-export const instant = false;
 
 export const metadata = { title: "Ambassador" };
 
@@ -55,7 +53,7 @@ export default async function AmbassadorPage({
   return (
     <main className="page-wrap supply-detail-page">
       <PageHeader
-        eyebrow="Company / Ambassadors"
+        eyebrow="People / Ambassadors"
         title={ambassador.name}
         titleMeta={
           <span className={`status status--${ambassador.status.toLowerCase()}`}>
@@ -117,8 +115,8 @@ export default async function AmbassadorPage({
           }
         />
         <SummaryFact
-          label="Started"
-          value={ambassador.startedAt ? formatDate(ambassador.startedAt) : "—"}
+          label="Term"
+          value={ambassadorTerm(ambassador.startedAt, ambassador.endedAt)}
         />
         <SummaryFact
           label="Products Given"
@@ -128,12 +126,13 @@ export default async function AmbassadorPage({
 
       <div className="supply-detail-grid">
         <div className="ambassador-main">
-          <section className="detail-section compact-detail-section">
-            <div className="detail-section-head">
+          <section className="resource-panel">
+            <div className="resource-panel-head">
               <div>
                 <p className="kicker">Inventory</p>
                 <h2>Products given</h2>
               </div>
+              <p>{ambassador.grants.length} total</p>
             </div>
             {ambassador.grants.length ? (
               <div className="grant-list">
@@ -158,22 +157,24 @@ export default async function AmbassadorPage({
                 ))}
               </div>
             ) : (
-              <p className="file-panel-empty">No products given yet.</p>
+              <div className="inline-empty inline-empty--compact">
+                <p>No products given yet.</p>
+              </div>
             )}
           </section>
 
-          <section className="detail-section compact-detail-section">
-            <div className="detail-section-head">
+          <section className="resource-panel">
+            <div className="resource-panel-head resource-panel-head--action">
               <div>
                 <p className="kicker">Content</p>
                 <h2>Featuring {ambassador.name.split(" ")[0]}</h2>
               </div>
               {canWrite ? (
                 <Link
-                  className="text-link"
+                  className="button button--secondary"
                   href={`/content/new?ambassador=${id}`}
                 >
-                  Plan content
+                  <Plus aria-hidden="true" /> Plan content
                 </Link>
               ) : null}
             </div>
@@ -206,9 +207,9 @@ export default async function AmbassadorPage({
                 ))}
               </div>
             ) : (
-              <p className="file-panel-empty">
-                No content features this ambassador yet.
-              </p>
+              <div className="inline-empty inline-empty--compact">
+                <p>No content features this ambassador yet.</p>
+              </div>
             )}
           </section>
         </div>
@@ -222,12 +223,28 @@ export default async function AmbassadorPage({
               </div>
             </div>
             <dl className="rail-stat-list rail-stat-list--text">
-              <TextStat label="Phone" value={ambassador.phone ?? "—"} />
-              <TextStat label="Email" value={ambassador.email ?? "—"} />
               <TextStat
-                label="Ended"
+                label="Phone"
                 value={
-                  ambassador.endedAt ? formatDate(ambassador.endedAt) : "—"
+                  ambassador.phone ? (
+                    <a href={`tel:${ambassador.phone.replace(/\s/g, "")}`}>
+                      {ambassador.phone}
+                    </a>
+                  ) : (
+                    "—"
+                  )
+                }
+              />
+              <TextStat
+                label="Email"
+                value={
+                  ambassador.email ? (
+                    <a href={`mailto:${ambassador.email}`}>
+                      {ambassador.email}
+                    </a>
+                  ) : (
+                    "—"
+                  )
                 }
               />
               <TextStat label="Added By" value={ambassador.createdBy.name} />
@@ -260,11 +277,18 @@ function SummaryFact({ label, value }: { label: string; value: string }) {
   );
 }
 
-function TextStat({ label, value }: { label: string; value: string }) {
+function TextStat({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
       <dt>{label}</dt>
       <dd>{value}</dd>
     </div>
   );
+}
+
+// Start and end dates read as one term, e.g. "12 Jan 2026 – present".
+function ambassadorTerm(startedAt: Date | null, endedAt: Date | null) {
+  if (!startedAt && !endedAt) return "—";
+  const start = startedAt ? formatDate(startedAt) : "Start not set";
+  return `${start} – ${endedAt ? formatDate(endedAt) : "present"}`;
 }

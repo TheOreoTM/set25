@@ -1,6 +1,4 @@
 import type { ReactNode } from "react";
-import { Search } from "lucide-react";
-import { AccountMenu } from "./account-menu";
 
 type PageHeaderProps = {
   eyebrow: string;
@@ -9,6 +7,8 @@ type PageHeaderProps = {
   description?: string;
 };
 
+// Static on purpose: loading skeletons render the same header, so a
+// navigation shows the real page title before any data arrives.
 export function PageHeader({
   eyebrow,
   title,
@@ -24,18 +24,6 @@ export function PageHeader({
           {titleMeta}
         </div>
         {description ? <p className="page-description">{description}</p> : null}
-      </div>
-      <div className="header-actions">
-        <button
-          className="command-trigger"
-          type="button"
-          aria-label="Search HQ (coming soon)"
-        >
-          <Search aria-hidden="true" />
-          <span>Search HQ</span>
-          <kbd>⌘ K</kbd>
-        </button>
-        <AccountMenu />
       </div>
     </header>
   );

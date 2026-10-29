@@ -38,7 +38,7 @@ export async function createProductAction(
   if (!result.success)
     return {
       status: "error",
-      message: "Check the highlighted fields.",
+      message: "Check the highlighted details.",
       errors: result.errors,
     };
 
@@ -66,7 +66,7 @@ export async function updateProductAction(
   if (!result.success)
     return {
       status: "error",
-      message: "Check the highlighted fields.",
+      message: "Check the highlighted details.",
       errors: result.errors,
     };
   try {
@@ -89,7 +89,7 @@ export async function createVariantAction(
   if (!result.success)
     return {
       status: "error",
-      message: "Check the highlighted fields.",
+      message: "Check the highlighted details.",
       errors: result.errors,
     };
   try {
@@ -114,7 +114,7 @@ export async function updateVariantAction(
   if (!result.success)
     return {
       status: "error",
-      message: "Check the highlighted fields.",
+      message: "Check the highlighted details.",
       errors: result.errors,
     };
   try {

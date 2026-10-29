@@ -6,8 +6,6 @@ import { createMoneyEntryAction } from "@/lib/money/actions";
 import { getMoneyFormOptions } from "@/lib/money/data";
 import { maldivesDateKey } from "@/lib/planning/date-range";
 
-export const instant = false;
-
 export const metadata = { title: "Record Money" };
 
 export default async function NewMoneyEntryPage({
@@ -24,7 +22,7 @@ export default async function NewMoneyEntryPage({
   return (
     <main className="page-wrap">
       <PageHeader
-        eyebrow="Company / Money / Record"
+        eyebrow="Company / Money / New"
         title={
           selectedDirection === "IN" ? "Record Money In" : "Record Money Out"
         }

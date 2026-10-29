@@ -3,11 +3,13 @@
 import { Select } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import Link from "next/link";
-import { useActionState, useState } from "react";
-import { ArrowLeft, Check, Plus, RotateCcw, Save, X, XCircle } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, Check, Link2, Plus, RotateCcw, Save, XCircle } from "lucide-react";
 import { SAMPLE_STATUSES, sampleStatusLabels } from "@set25/shared";
 import { initialSupplyFormState, type SupplyFormState } from "@/lib/supply/validation";
-import { FormResult } from "./supplier-forms";
+import { ModalDialog } from "@/components/ui/modal-dialog";
+import { useFormAction } from "@/components/ui/use-form-action";
+import { FieldError, FormResult } from "./supplier-forms";
 
 type Action = (state: SupplyFormState, formData: FormData) => Promise<SupplyFormState>;
 
@@ -30,7 +32,7 @@ export function SampleForm({
         }[];
     }[];
 }) {
-    const [state, formAction, pending] = useActionState(action, initialSupplyFormState);
+    const { formRef, state, pending, onSubmit, error } = useFormAction(action, initialSupplyFormState);
     const variants = products.flatMap((product) =>
         product.variants.map((variant) => ({
             ...variant,
@@ -38,7 +40,7 @@ export function SampleForm({
         })),
     );
     return (
-        <form action={formAction} className="editor-form">
+        <form ref={formRef} onSubmit={onSubmit} className="editor-form">
             <section className="form-section">
                 <div className="form-section-title">
                     <p className="kicker">Sample</p>
@@ -48,11 +50,17 @@ export function SampleForm({
                 <div className="form-grid">
                     <label className="field">
                         <span>Sample name</span>
-                        <input name="name" required />
+                        <input name="name" required aria-invalid={Boolean(error("name"))} />
+                        <FieldError message={error("name")} />
                     </label>
                     <label className="field">
                         <span>Supplier</span>
-                        <Select name="supplierId" required defaultValue="">
+                        <Select
+                            name="supplierId"
+                            required
+                            defaultValue=""
+                            aria-invalid={Boolean(error("supplierId"))}
+                        >
                             <option value="" disabled>
                                 Choose a supplier
                             </option>
@@ -62,6 +70,7 @@ export function SampleForm({
                                 </option>
                             ))}
                         </Select>
+                        <FieldError message={error("supplierId")} />
                     </label>
                     <label className="field">
                         <span>Related product</span>
@@ -88,19 +97,31 @@ export function SampleForm({
                     </label>
                     <label className="field">
                         <span>Sample cost</span>
-                        <input name="sampleCost" inputMode="decimal" />
+                        <input
+                            name="sampleCost"
+                            inputMode="decimal"
+                            aria-invalid={Boolean(error("sampleCost"))}
+                        />
+                        <FieldError message={error("sampleCost")} />
                     </label>
                     <label className="field">
                         <span>Currency</span>
-                        <input name="currency" maxLength={3} defaultValue="USD" />
+                        <input
+                            name="currency"
+                            maxLength={3}
+                            defaultValue="USD"
+                            aria-invalid={Boolean(error("currency"))}
+                        />
+                        <FieldError message={error("currency")} />
                     </label>
                     <label className="field">
                         <span>Ordered date</span>
-                        <DatePicker name="orderedAt" />
+                        <DatePicker name="orderedAt" invalid={Boolean(error("dates"))} />
                     </label>
                     <label className="field">
                         <span>Received date</span>
-                        <DatePicker name="receivedAt" />
+                        <DatePicker name="receivedAt" invalid={Boolean(error("dates"))} />
+                        <FieldError message={error("dates")} />
                     </label>
                 </div>
             </section>
@@ -134,70 +155,62 @@ export function EvaluationEditor({ action }: { action: Action }) {
             <button className="button button--dark" type="button" onClick={() => setOpen(true)}>
                 <Plus aria-hidden="true" /> Add evaluation
             </button>
-            {open ? (
-                <div className="dialog-backdrop" role="presentation">
-                    <section
-                        className="dialog-panel supply-editor-dialog"
-                        role="dialog"
-                        aria-modal="true"
-                        aria-labelledby="evaluation-title"
-                    >
-                        <div className="dialog-head">
-                            <div>
-                                <p className="kicker">Sample test</p>
-                                <h2 id="evaluation-title">Add evaluation</h2>
-                            </div>
-                            <button
-                                className="icon-button"
-                                type="button"
-                                aria-label="Close"
-                                onClick={() => setOpen(false)}
-                            >
-                                <X aria-hidden="true" />
-                            </button>
-                        </div>
-                        <div className="dialog-body">
-                            <EvaluationForm action={action} />
-                        </div>
-                    </section>
-                </div>
-            ) : null}
+            {open ? <EvaluationDialog action={action} onClose={() => setOpen(false)} /> : null}
         </>
     );
 }
 
-function EvaluationForm({ action }: { action: Action }) {
-    const [state, formAction, pending] = useActionState(action, initialSupplyFormState);
+function EvaluationDialog({ action, onClose }: { action: Action; onClose: () => void }) {
+    const { formRef, state, pending, onSubmit, error } = useFormAction(action, initialSupplyFormState);
     const scores = ["quality", "comfort", "fit", "protection", "durability", "branding", "value"];
     return (
-        <form action={formAction} className="supply-inline-form">
-            <label className="field">
-                <span>Tester name</span>
-                <input name="testerName" required />
-            </label>
-            <div className="sample-score-grid">
-                {scores.map((score) => (
-                    <label className="field" key={score}>
-                        <span>{score[0].toUpperCase() + score.slice(1)}</span>
-                        <Select name={score} defaultValue="5">
-                            {[1, 2, 3, 4, 5].map((value) => (
-                                <option value={value} key={value}>
-                                    {value}
-                                </option>
-                            ))}
-                        </Select>
+        <ModalDialog
+            titleId="evaluation-title"
+            kicker="Sample test"
+            title="Add evaluation"
+            onClose={onClose}
+            busy={pending}
+            className="supply-editor-dialog"
+        >
+            <form ref={formRef} onSubmit={onSubmit}>
+                <div className="dialog-body">
+                    <label className="field">
+                        <span>Tester name</span>
+                        <input name="testerName" required aria-invalid={Boolean(error("testerName"))} />
+                        <FieldError message={error("testerName")} />
                     </label>
-                ))}
-            </div>
-            <label className="field">
-                <span>Evaluation notes</span>
-                <textarea name="notes" rows={3} maxLength={2000} />
-            </label>
-            <FormResult state={state} />
-            <button className="button button--dark" type="submit" disabled={pending}>
-                <Save aria-hidden="true" /> {pending ? "Saving…" : "Add evaluation"}
-            </button>
-        </form>
+                    <div className="sample-score-grid">
+                        {scores.map((score) => (
+                            <label className="field" key={score}>
+                                <span>{score[0].toUpperCase() + score.slice(1)}</span>
+                                <Select name={score} defaultValue="5" aria-invalid={Boolean(error(score))}>
+                                    {[1, 2, 3, 4, 5].map((value) => (
+                                        <option value={value} key={value}>
+                                            {value}
+                                        </option>
+                                    ))}
+                                </Select>
+                                <FieldError message={error(score)} />
+                            </label>
+                        ))}
+                    </div>
+                    <label className="field">
+                        <span>Evaluation notes</span>
+                        <textarea name="notes" rows={3} maxLength={2000} aria-invalid={Boolean(error("notes"))} />
+                        <FieldError message={error("notes")} />
+                    </label>
+                    <FormResult state={state} />
+                </div>
+                <div className="dialog-actions">
+                    <button className="button button--secondary" type="button" onClick={onClose} disabled={pending}>
+                        Cancel
+                    </button>
+                    <button className="button button--dark" type="submit" disabled={pending}>
+                        <Save aria-hidden="true" /> {pending ? "Saving…" : "Add evaluation"}
+                    </button>
+                </div>
+            </form>
+        </ModalDialog>
     );
 }
 
@@ -231,19 +244,13 @@ function DecisionButton({
     label: string;
     icon: "approve" | "retest" | "reject";
 }) {
-    const [state, formAction, pending] = useActionState(action, initialSupplyFormState);
+    const { state, pending, onSubmit } = useFormAction(action, initialSupplyFormState);
     const Icon = icon === "approve" ? Check : icon === "retest" ? RotateCcw : XCircle;
     return (
-        <form action={formAction}>
+        <form onSubmit={onSubmit}>
             <input type="hidden" name="status" value={status} />
             <button
-                className={
-                    icon === "reject"
-                        ? "button button--danger-solid"
-                        : icon === "approve"
-                          ? "button button--dark"
-                          : "button button--secondary"
-                }
+                className={icon === "reject" ? "button button--danger" : "button button--secondary"}
                 type="submit"
                 disabled={pending}
             >
@@ -267,9 +274,9 @@ export function PreorderSupplyForm({
     purchaseOrders: { id: string; label: string }[];
     current?: string | null;
 }) {
-    const [state, formAction, pending] = useActionState(action, initialSupplyFormState);
+    const { state, pending, onSubmit } = useFormAction(action, initialSupplyFormState);
     return (
-        <form action={formAction} className="compact-action-form">
+        <form onSubmit={onSubmit} className="compact-action-form">
             <label className="field">
                 <span>Purchase order</span>
                 <Select name="purchaseOrderId" defaultValue={current ?? ""}>
@@ -282,7 +289,7 @@ export function PreorderSupplyForm({
                 </Select>
             </label>
             <button className="button button--secondary" type="submit" disabled={pending}>
-                {pending ? "Saving…" : "Save supply link"}
+                <Link2 aria-hidden="true" /> {pending ? "Saving…" : "Save supply link"}
             </button>
             {state.message ? <p className="field-error">{state.message}</p> : null}
         </form>

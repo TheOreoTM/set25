@@ -546,3 +546,31 @@ export const publicAvailabilityLabels: Record<PublicAvailability, string> = {
   LOW_STOCK: "Low Stock",
   SOLD_OUT: "Sold Out",
 };
+
+export const WAITLIST_SOURCES = ["INSTAGRAM_DM", "TIKTOK", "IN_PERSON"] as const;
+export type WaitlistSourceValue = (typeof WAITLIST_SOURCES)[number];
+export const waitlistSourceLabels: Record<WaitlistSourceValue, string> = {
+  INSTAGRAM_DM: "IG DM",
+  TIKTOK: "TikTok",
+  IN_PERSON: "In person",
+};
+
+/** Pipeline order. ORDERED and DROPPED are the two end states. */
+export const WAITLIST_STATUSES = [
+  "NEW",
+  "CONTACTED",
+  "CONFIRMED",
+  "ORDERED",
+  "DROPPED",
+] as const;
+export type WaitlistStatusValue = (typeof WAITLIST_STATUSES)[number];
+export const waitlistStatusLabels: Record<WaitlistStatusValue, string> = {
+  NEW: "New",
+  CONTACTED: "Contacted",
+  CONFIRMED: "Confirmed",
+  ORDERED: "Ordered",
+  DROPPED: "Dropped",
+};
+
+export const WAITLIST_SIZES = ["XS", "S", "M", "L", "XL", "XXL"] as const;
+export type WaitlistSizeValue = (typeof WAITLIST_SIZES)[number];

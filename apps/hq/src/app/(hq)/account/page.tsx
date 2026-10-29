@@ -1,8 +1,6 @@
 import { PageHeader } from "@/components/page-header";
 import { requireStaff } from "@/lib/auth/session";
-import { staffInitials, staffRoleLabels } from "@/lib/auth/types";
-
-export const instant = false;
+import { staffRoleLabels } from "@/lib/auth/types";
 
 export const metadata = { title: "Account" };
 
@@ -16,14 +14,22 @@ export default async function AccountPage() {
         title="Account"
         description="Your current SET25 staff identity and access level."
       />
-      <section className="product-identity account-page-panel">
-        <div className="identity-lead">
-          <p className="kicker">Signed in as</p>
-          <div className="product-code-mark">{staffInitials(staff.name)}</div>
-          <h2>{staff.name}</h2>
-          <p>{staff.email}</p>
+      <section className="resource-panel" aria-labelledby="account-title">
+        <div className="resource-panel-head">
+          <div>
+            <p className="kicker">Signed in as</p>
+            <h2 id="account-title">{staff.name}</h2>
+          </div>
         </div>
-        <dl className="identity-facts">
+        <dl className="account-facts">
+          <div>
+            <dt>Name</dt>
+            <dd>{staff.name}</dd>
+          </div>
+          <div>
+            <dt>Email</dt>
+            <dd>{staff.email}</dd>
+          </div>
           <div>
             <dt>Role</dt>
             <dd>{staffRoleLabels[staff.role]}</dd>

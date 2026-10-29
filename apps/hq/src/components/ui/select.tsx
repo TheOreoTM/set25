@@ -124,7 +124,17 @@ export function Select({
     const popover = popoverRef.current;
     if (!trigger || !popover) return;
     const rect = trigger.getBoundingClientRect();
-    popover.style.minWidth = `${Math.max(rect.width, 180)}px`;
+    const minWidth = Math.max(rect.width, 180);
+    if (window.matchMedia("(max-width: 820px)").matches) {
+      // Touch layouts: match the trigger so long options wrap inside the
+      // form (or dialog) instead of running past it.
+      const width = Math.min(minWidth, window.innerWidth - 16);
+      popover.style.minWidth = "";
+      popover.style.width = `${width}px`;
+    } else {
+      popover.style.width = "";
+      popover.style.minWidth = `${minWidth}px`;
+    }
     const height = popover.offsetHeight;
     const width = popover.offsetWidth;
     const below = rect.bottom + 4;

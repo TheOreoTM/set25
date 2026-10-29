@@ -5,8 +5,6 @@ import { updateTeamAction } from "@/lib/commerce/actions";
 import { getTeam } from "@/lib/commerce/data";
 import { requireOperationalPageAccess } from "@/lib/auth/session";
 
-export const instant = false;
-
 export const metadata = { title: "Edit team" };
 
 export default async function EditTeamPage({
@@ -21,7 +19,7 @@ export default async function EditTeamPage({
   return (
     <main className="page-wrap page-wrap--editor">
       <PageHeader
-        eyebrow="Commerce / Teams / Edit"
+        eyebrow="People / Teams / Edit"
         title={`Edit ${team.name}`}
         description="Update organisation details without changing order history."
       />

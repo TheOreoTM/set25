@@ -2,13 +2,14 @@
 
 import { Select } from "@/components/ui/select";
 import Link from "next/link";
-import { useActionState } from "react";
 import { ArrowLeft, Save } from "lucide-react";
 import { TEAM_TYPES, teamTypeLabels, type TeamTypeValue } from "@set25/shared";
 import {
   initialCommerceFormState,
   type CommerceFormState,
 } from "@/lib/commerce/validation";
+import { useFormAction } from "@/components/ui/use-form-action";
+import { Field, NotesSection } from "@/components/ui/form-fields";
 
 type CustomerDefaults = {
   name?: string;
@@ -41,13 +42,12 @@ export function CustomerForm({
   cancelHref: string;
   submitLabel: string;
 }) {
-  const [state, formAction, pending] = useActionState(
+  const { formRef, state, pending, onSubmit, error } = useFormAction(
     action,
     initialCommerceFormState,
   );
-  const error = (name: string) => state.errors?.[name]?.[0];
   return (
-    <form action={formAction} className="editor-form">
+    <form ref={formRef} onSubmit={onSubmit} className="editor-form">
       <div className="form-section">
         <div className="form-section-title">
           <p className="kicker">Customer</p>
@@ -90,7 +90,7 @@ export function CustomerForm({
           />
         </div>
       </div>
-      <Notes defaultValue={defaults.notes} error={error("notes")} />
+      <NotesSection defaultValue={defaults.notes} error={error("notes")} />
       <FormFooter
         state={state}
         pending={pending}
@@ -115,13 +115,12 @@ export function TeamForm({
   cancelHref: string;
   submitLabel: string;
 }) {
-  const [state, formAction, pending] = useActionState(
+  const { formRef, state, pending, onSubmit, error } = useFormAction(
     action,
     initialCommerceFormState,
   );
-  const error = (name: string) => state.errors?.[name]?.[0];
   return (
-    <form action={formAction} className="editor-form">
+    <form ref={formRef} onSubmit={onSubmit} className="editor-form">
       <div className="form-section">
         <div className="form-section-title">
           <p className="kicker">Team</p>
@@ -141,7 +140,11 @@ export function TeamForm({
           />
           <label className="field">
             <span>Team type</span>
-            <Select name="type" defaultValue={defaults.type ?? "OTHER"}>
+            <Select
+              name="type"
+              defaultValue={defaults.type ?? "OTHER"}
+              aria-invalid={Boolean(error("type"))}
+            >
               {TEAM_TYPES.map((type) => (
                 <option value={type} key={type}>
                   {teamTypeLabels[type]}
@@ -174,7 +177,7 @@ export function TeamForm({
           />
         </div>
       </div>
-      <Notes defaultValue={defaults.notes} error={error("notes")} />
+      <NotesSection defaultValue={defaults.notes} error={error("notes")} />
       <FormFooter
         state={state}
         pending={pending}
@@ -182,62 +185,6 @@ export function TeamForm({
         submitLabel={submitLabel}
       />
     </form>
-  );
-}
-
-function Notes({
-  defaultValue,
-  error,
-}: {
-  defaultValue?: string | null;
-  error?: string;
-}) {
-  return (
-    <div className="form-section">
-      <div className="form-section-title">
-        <p className="kicker">Context</p>
-        <h2>Notes</h2>
-        <p>Keep only useful operational context here.</p>
-      </div>
-      <label className="field">
-        <span>Notes</span>
-        <textarea
-          name="notes"
-          rows={5}
-          maxLength={2000}
-          defaultValue={defaultValue ?? ""}
-        />
-        {error ? (
-          <small className="field-error">{error}</small>
-        ) : (
-          <small>Optional · maximum 2,000 characters</small>
-        )}
-      </label>
-    </div>
-  );
-}
-
-function Field({
-  label,
-  name,
-  error,
-  prefix,
-  ...props
-}: {
-  label: string;
-  name: string;
-  error?: string;
-  prefix?: string;
-} & React.InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <label className="field">
-      <span>{label}</span>
-      <div className={prefix ? "input-with-prefix" : undefined}>
-        {prefix ? <span>{prefix}</span> : null}
-        <input name={name} aria-invalid={Boolean(error)} {...props} />
-      </div>
-      {error ? <small className="field-error">{error}</small> : null}
-    </label>
   );
 }
 

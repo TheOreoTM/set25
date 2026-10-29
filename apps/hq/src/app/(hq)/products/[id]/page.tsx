@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { randomUUID } from "node:crypto";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Edit3, Plus } from "lucide-react";
+import { ArrowLeft, Edit3, Pencil, Plus } from "lucide-react";
 import {
   formatMVR,
   getEffectivePrice,
@@ -22,8 +22,6 @@ import {
   isPublicMediaConfigured,
   publicMediaBaseUrl,
 } from "@/lib/files/storage";
-
-export const instant = false;
 
 export default function ProductDetailPage({
   params,
@@ -76,20 +74,10 @@ async function ProductDetail({
   return (
     <>
       <PageHeader
-        eyebrow={`Commerce / Products / ${product.code}`}
+        eyebrow={`Supply / Products / ${product.code}`}
         title={product.name}
         description={product.shortDescription || "Shared SET25 product record."}
       />
-      {query.adjusted === "1" ? (
-        <div className="success-banner" role="status">
-          Stock updated and movement recorded.
-        </div>
-      ) : null}
-      {query.saved ? (
-        <div className="success-banner" role="status">
-          {query.saved === "variant" ? "Variant saved." : "Product saved."}
-        </div>
-      ) : null}
       <div className="detail-actions">
         <Link className="text-link back-link" href="/products">
           <ArrowLeft aria-hidden="true" /> All products
@@ -107,7 +95,7 @@ async function ProductDetail({
                 className="button button--secondary"
                 href={`/products/${product.id}/edit`}
               >
-                <Edit3 aria-hidden="true" /> Edit product
+                <Pencil aria-hidden="true" /> Edit product
               </Link>
               <Link
                 className="button button--dark"
@@ -119,6 +107,16 @@ async function ProductDetail({
           ) : null}
         </div>
       </div>
+      {query.adjusted === "1" ? (
+        <div className="form-message form-message--success" role="status">
+          Stock updated and movement recorded.
+        </div>
+      ) : null}
+      {query.saved ? (
+        <div className="form-message form-message--success" role="status">
+          {query.saved === "variant" ? "Variant saved." : "Product saved."}
+        </div>
+      ) : null}
       <section className="product-identity">
         <div className="identity-lead">
           <p className="kicker">Product identity</p>
@@ -178,12 +176,12 @@ async function ProductDetail({
           <div className="variant-table">
             <div className="variant-row variant-row--head">
               <span>SKU / Variant</span>
-              <span className="num">On Hand</span>
+              <span className="num">On hand</span>
               <span className="num">Incoming</span>
-              <span className="num">Cost Each</span>
-              <span className="num">Sell Price</span>
-              <span className="num">Reorder At</span>
-              <span>Stock Status</span>
+              <span className="num col-desktop">Cost each</span>
+              <span className="num">Sell price</span>
+              <span className="num">Reorder at</span>
+              <span>Stock status</span>
               <span />
             </div>
             {product.variants.map((variant) => {
@@ -202,16 +200,16 @@ async function ProductDetail({
                       {variant.active ? "" : " · Inactive"}
                     </small>
                   </span>
-                  <span data-label="On Hand" className="stock-number num">
+                  <span data-label="On hand" className="stock-number num">
                     {variant.stockOnHand}
                   </span>
                   <span data-label="Incoming" className="muted-value num">
                     {variant.incoming}
                   </span>
-                  <span data-label="Cost Each" className="num">
+                  <span data-label="Cost each" className="num col-desktop">
                     {variant.cost ? formatMVR(variant.cost) : "—"}
                   </span>
-                  <span data-label="Sell Price" className="num">
+                  <span data-label="Sell price" className="num">
                     {formatMVR(
                       getEffectivePrice(
                         product.retailPrice,
@@ -222,10 +220,10 @@ async function ProductDetail({
                       <small className="price-note">Override</small>
                     ) : null}
                   </span>
-                  <span data-label="Reorder At" className="num">
+                  <span data-label="Reorder at" className="num">
                     {variant.reorderAt}
                   </span>
-                  <span data-label="Stock Status">
+                  <span data-label="Stock status" className="row-status">
                     <span className={`status status--${status.toLowerCase()}`}>
                       {stockStatusLabels[status]}
                     </span>
@@ -302,6 +300,7 @@ async function ProductDetail({
                   {new Intl.DateTimeFormat("en-GB", {
                     dateStyle: "medium",
                     timeStyle: "short",
+                    timeZone: "Indian/Maldives",
                   }).format(movement.createdAt)}
                 </time>
               </div>

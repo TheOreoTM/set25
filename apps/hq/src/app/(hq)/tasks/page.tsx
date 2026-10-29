@@ -20,8 +20,6 @@ import { updateTaskStatusAction } from "@/lib/tasks/actions";
 import { getTasks } from "@/lib/tasks/data";
 import { formatDate } from "@/lib/supply/presentation";
 
-export const instant = false;
-
 export const metadata = { title: "Tasks" };
 
 type SearchParams = {
@@ -43,23 +41,29 @@ export default async function TasksPage({
   const [staff, query] = await Promise.all([requireStaff(), searchParams]);
   const result = await getTasks(query);
   const canWrite = staff.role !== "STAFF";
+  const filterKeys = ["search", "status", "priority", "assignee"] as const;
+  // Views and summary tiles keep the active search and filters.
+  const viewHref = (view: string) => {
+    const params = new URLSearchParams();
+    if (view) params.set("view", view);
+    for (const key of filterKeys) if (query[key]) params.set(key, query[key]!);
+    const value = params.toString();
+    return value ? `/tasks?${value}` : "/tasks";
+  };
+  // Clearing keeps the view; the tabs are views, not filters.
+  const filtered = filterKeys.some((key) => query[key]);
+  const clearHref = query.view
+    ? `/tasks?view=${encodeURIComponent(query.view)}`
+    : "/tasks";
+  const count = result.tasks.length;
 
   return (
     <main className="page-wrap tasks-page">
       <PageHeader
-        eyebrow="Company / Tasks"
+        eyebrow="Pre-launch / Tasks"
         title="Tasks"
         description="Operational work that needs a clear owner, priority, and next state."
       />
-      <div className="detail-actions detail-actions--end">
-        {canWrite ? (
-          <div>
-            <Link className="button button--dark" href="/tasks/new">
-              <Plus aria-hidden="true" /> New task
-            </Link>
-          </div>
-        ) : null}
-      </div>
       {query.created || query.saved ? (
         <div className="form-message form-message--success" role="status">
           Task {query.created ? "created" : "updated"}.
@@ -71,53 +75,8 @@ export default async function TasksPage({
           editing tasks needs an Owner or Manager.
         </div>
       ) : null}
-
-      <section className="task-summary-strip" aria-label="Task summary">
-        <TaskSummary
-          href="/tasks?view=overdue"
-          label="Overdue"
-          value={result.summary.overdue}
-          urgent={result.summary.overdue > 0}
-        />
-        <TaskSummary
-          href="/tasks?view=today"
-          label="Due Today"
-          value={result.summary.today}
-        />
-        <TaskSummary
-          href="/tasks?view=upcoming"
-          label="Upcoming"
-          value={result.summary.upcoming}
-        />
-        <TaskSummary
-          href="/tasks?view=waiting"
-          label="Waiting"
-          value={result.summary.waiting}
-        />
-      </section>
-
-      <section className="detail-section task-list-panel">
-        <div className="detail-section-head">
-          <div>
-            <p className="kicker">Planning Queue</p>
-            <h2>{viewTitle(query.view)}</h2>
-          </div>
-          <Link className="text-link" href="/tasks">
-            Clear filters
-          </Link>
-        </div>
-        <nav className="task-view-tabs" aria-label="Task views">
-          {taskViews.map(([value, label]) => (
-            <Link
-              className={(query.view ?? "") === value ? "is-active" : ""}
-              href={value ? `/tasks?view=${value}` : "/tasks"}
-              key={value}
-            >
-              {label}
-            </Link>
-          ))}
-        </nav>
-        <form action="/tasks" className="task-filter-bar">
+      <div className="resource-toolbar">
+        <form action="/tasks" className="filter-bar commerce-filter-bar">
           {query.view ? (
             <input type="hidden" name="view" value={query.view} />
           ) : null}
@@ -127,10 +86,10 @@ export default async function TasksPage({
             <input
               name="search"
               defaultValue={query.search ?? ""}
-              placeholder="Search tasks or related names"
+              placeholder="Task or related name"
             />
           </label>
-          <label className="field">
+          <label>
             <span className="sr-only">Status</span>
             <Select name="status" defaultValue={query.status ?? ""}>
               <option value="">All statuses</option>
@@ -141,7 +100,7 @@ export default async function TasksPage({
               ))}
             </Select>
           </label>
-          <label className="field">
+          <label>
             <span className="sr-only">Priority</span>
             <Select name="priority" defaultValue={query.priority ?? ""}>
               <option value="">All priorities</option>
@@ -152,7 +111,7 @@ export default async function TasksPage({
               ))}
             </Select>
           </label>
-          <label className="field">
+          <label>
             <span className="sr-only">Assignee</span>
             <Select name="assignee" defaultValue={query.assignee ?? ""}>
               <option value="">All assignees</option>
@@ -163,10 +122,73 @@ export default async function TasksPage({
               ))}
             </Select>
           </label>
-          <button className="button button--secondary" type="submit">
+          <button
+            className="button button--secondary filter-submit"
+            type="submit"
+          >
             <SlidersHorizontal aria-hidden="true" /> Apply
           </button>
         </form>
+        {canWrite ? (
+          <Link className="button button--dark" href="/tasks/new">
+            <Plus aria-hidden="true" /> New task
+          </Link>
+        ) : null}
+      </div>
+
+      <section className="task-summary-strip" aria-label="Task summary">
+        <TaskSummary
+          href={viewHref("overdue")}
+          label="Overdue"
+          value={result.summary.overdue}
+          urgent={result.summary.overdue > 0}
+        />
+        <TaskSummary
+          href={viewHref("today")}
+          label="Due Today"
+          value={result.summary.today}
+        />
+        <TaskSummary
+          href={viewHref("upcoming")}
+          label="Upcoming"
+          value={result.summary.upcoming}
+        />
+        <TaskSummary
+          href={viewHref("waiting")}
+          label="Waiting"
+          value={result.summary.waiting}
+        />
+      </section>
+
+      <section
+        className="resource-panel queue-panel"
+        aria-labelledby="tasks-title"
+      >
+        <div className="resource-panel-head">
+          <div>
+            <p className="kicker">Planning queue</p>
+            <h2 id="tasks-title">
+              {viewTitle(query.view)} · {count}
+            </h2>
+          </div>
+          {filtered ? (
+            <Link className="text-link" href={clearHref}>
+              Clear filters
+            </Link>
+          ) : null}
+        </div>
+        <nav className="task-view-tabs" aria-label="Task views">
+          {taskViews.map(([value, label]) => (
+            <Link
+              className={(query.view ?? "") === value ? "is-active" : ""}
+              aria-current={(query.view ?? "") === value ? "page" : undefined}
+              href={viewHref(value)}
+              key={value}
+            >
+              {label} <span>{result.viewCounts[value]}</span>
+            </Link>
+          ))}
+        </nav>
 
         {result.tasks.length ? (
           <div className="task-queue">
@@ -188,7 +210,7 @@ export default async function TasksPage({
                   className={`task-row${overdue ? " is-overdue" : ""}`}
                   key={task.id}
                 >
-                  <span data-label="Priority">
+                  <span className="task-row-priority">
                     <span
                       className={`task-priority task-priority--${task.priority.toLowerCase()}`}
                     >
@@ -201,25 +223,30 @@ export default async function TasksPage({
                       <small>{task.description}</small>
                     ) : null}
                   </span>
-                  <span data-label="Related">
-                    {task.related ? (
-                      <Link className="text-link" href={task.related.href}>
-                        {task.related.label}
-                      </Link>
-                    ) : (
-                      "—"
-                    )}
+                  {/* One column each on wide screens; a single meta line
+                      (assignee · due · related) on compact rows. */}
+                  <span className="task-row-meta">
+                    <span
+                      className={
+                        task.related
+                          ? "task-row-related"
+                          : "task-row-related is-empty"
+                      }
+                    >
+                      {task.related ? (
+                        <Link className="text-link" href={task.related.href}>
+                          {task.related.label}
+                        </Link>
+                      ) : (
+                        "—"
+                      )}
+                    </span>
+                    <span>{task.assignedTo?.name ?? "Unassigned"}</span>
+                    <span className={overdue ? "task-due-overdue" : ""}>
+                      {due ? formatDate(due) : "No due date"}
+                    </span>
                   </span>
-                  <span data-label="Assignee">
-                    {task.assignedTo?.name ?? "Unassigned"}
-                  </span>
-                  <span
-                    data-label="Due"
-                    className={overdue ? "task-due-overdue" : ""}
-                  >
-                    {due ? formatDate(due) : "No due date"}
-                  </span>
-                  <span data-label="Status">
+                  <span className="task-row-status">
                     {canWrite || task.assignedTo?.id === staff.id ? (
                       <TaskStatusControl
                         action={updateTaskStatusAction.bind(null, task.id)}
@@ -233,7 +260,7 @@ export default async function TasksPage({
                       </span>
                     )}
                   </span>
-                  <span>
+                  <span className="task-row-edit">
                     {canWrite ? (
                       <Link
                         className="icon-button"
@@ -249,9 +276,17 @@ export default async function TasksPage({
             })}
           </div>
         ) : (
-          <div className="inline-empty inline-empty--panel">
-            <p>No tasks in this view.</p>
-            {canWrite ? (
+          <div className="inline-empty">
+            <p>
+              {filtered
+                ? "No tasks match these filters."
+                : "No tasks in this view."}
+            </p>
+            {filtered ? (
+              <Link href={clearHref}>
+                Clear filters <ArrowRight aria-hidden="true" />
+              </Link>
+            ) : canWrite ? (
               <Link href="/tasks/new">
                 Create the next task <ArrowRight aria-hidden="true" />
               </Link>

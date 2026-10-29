@@ -14,8 +14,6 @@ import { StockAdjustment } from "@/components/catalog/stock-adjustment";
 import { getStock } from "@/lib/catalog/data";
 import { requireStaff } from "@/lib/auth/session";
 
-export const instant = false;
-
 export const metadata = { title: "Stock" };
 
 export default function StockPage({
@@ -26,7 +24,7 @@ export default function StockPage({
   return (
     <main className="page-wrap">
       <PageHeader
-        eyebrow="Commerce / Stock"
+        eyebrow="Launch / Stock"
         title="Stock"
         description="Available inventory across every active SET25 product variant."
       />
@@ -46,11 +44,14 @@ async function StockList({
   const value = (key: string) =>
     typeof params[key] === "string" ? params[key] : "";
   const filters = { search: value("search"), status: value("status") };
-  const [variants, staff] = await Promise.all([
+  const filtered = Boolean(filters.search || filters.status);
+  // The adjust dialog offers every active variant, whatever the list shows.
+  const [variants, allVariants, staff] = await Promise.all([
     getStock(filters),
+    filtered ? getStock({ search: "", status: "" }) : null,
     requireStaff(),
   ]);
-  const adjustmentVariants = variants
+  const adjustmentVariants = (allVariants ?? variants)
     .filter((variant) => variant.active)
     .map((variant) => ({
       id: variant.id,
@@ -60,11 +61,6 @@ async function StockList({
     }));
   return (
     <>
-      {params.adjusted === "1" ? (
-        <div className="success-banner" role="status">
-          Stock updated and movement recorded.
-        </div>
-      ) : null}
       <div className="resource-toolbar">
         <form className="filter-bar">
           <label className="search-field">
@@ -100,6 +96,11 @@ async function StockList({
           />
         ) : null}
       </div>
+      {params.adjusted === "1" ? (
+        <div className="form-message form-message--success" role="status">
+          Stock updated and movement recorded.
+        </div>
+      ) : null}
       <section className="resource-panel" aria-labelledby="stock-list-title">
         <div className="resource-panel-head">
           <div>
@@ -115,14 +116,14 @@ async function StockList({
             <div className="stock-row stock-row--head">
               <span>Product / Variant</span>
               <span>SKU</span>
-              <span className="num">On Hand</span>
-              <span className="num">Reserved</span>
+              <span className="num">On hand</span>
+              <span className="num col-desktop">Reserved</span>
               <span className="num">Available</span>
-              <span className="num">Incoming</span>
-              <span className="num">Cost Each</span>
-              <span className="num">Sell Price</span>
-              <span className="num">Stock Value</span>
-              <span className="num">Reorder At</span>
+              <span className="num col-wide">Incoming</span>
+              <span className="num col-wide">Cost each</span>
+              <span className="num col-desktop">Sell price</span>
+              <span className="num col-wide">Stock value</span>
+              <span className="num">Reorder at</span>
               <span>Status</span>
               <span />
             </div>
@@ -135,7 +136,11 @@ async function StockList({
                 ? variant.cost.mul(variant.stockOnHand)
                 : null;
               return (
-                <div className="stock-row" key={variant.id}>
+                <Link
+                  className="stock-row"
+                  href={`/products/${variant.productId}`}
+                  key={variant.id}
+                >
                   <span className="catalog-product">
                     <strong>{variant.product.name}</strong>
                     <small>
@@ -147,22 +152,28 @@ async function StockList({
                   <span data-label="SKU">
                     <strong>{variant.sku}</strong>
                   </span>
-                  <span data-label="On Hand" className="stock-number num">
+                  <span data-label="On hand" className="stock-number num">
                     {variant.stockOnHand}
                   </span>
-                  <span data-label="Reserved" className="muted-value num">
+                  <span
+                    data-label="Reserved"
+                    className="muted-value num col-desktop"
+                  >
                     {variant.reserved}
                   </span>
                   <span data-label="Available" className="stock-number num">
                     {variant.available}
                   </span>
-                  <span data-label="Incoming" className="muted-value num">
+                  <span
+                    data-label="Incoming"
+                    className="muted-value num col-wide"
+                  >
                     {variant.incoming}
                   </span>
-                  <span data-label="Cost Each" className="num">
+                  <span data-label="Cost each" className="num col-wide">
                     {variant.cost ? formatMVR(variant.cost) : "—"}
                   </span>
-                  <span data-label="Sell Price" className="num">
+                  <span data-label="Sell price" className="num col-desktop">
                     {formatMVR(
                       getEffectivePrice(
                         variant.product.retailPrice,
@@ -170,36 +181,42 @@ async function StockList({
                       ),
                     )}
                   </span>
-                  <span data-label="Stock Value" className="num">
+                  <span data-label="Stock value" className="num col-wide">
                     {stockValue ? formatMVR(stockValue) : "—"}
                   </span>
-                  <span data-label="Reorder At" className="num">
+                  <span data-label="Reorder at" className="num">
                     {variant.reorderAt}
                   </span>
-                  <span data-label="Status">
+                  <span data-label="Status" className="row-status">
                     <span className={`status status--${status.toLowerCase()}`}>
                       {stockStatusLabels[status]}
                     </span>
                   </span>
-                  <span>
-                    <Link
-                      className="row-link"
-                      href={`/products/${variant.productId}`}
-                      aria-label={`Open ${variant.product.name}`}
-                    >
-                      <ArrowRight aria-hidden="true" />
-                    </Link>
+                  <span className="catalog-arrow">
+                    <ArrowRight aria-hidden="true" />
                   </span>
-                </div>
+                </Link>
               );
             })}
           </div>
         ) : (
           <div className="inline-empty">
-            <p>No stock records match these filters.</p>
-            <Link href="/products">
-              Review products <ArrowRight aria-hidden="true" />
-            </Link>
+            {filtered ? (
+              <>
+                <p>No stock records match these filters.</p>
+                <span>Try a different search or filter.</span>
+                <Link href="/stock">
+                  Clear filters <ArrowRight aria-hidden="true" />
+                </Link>
+              </>
+            ) : (
+              <>
+                <p>No active variants yet.</p>
+                <Link href="/products">
+                  Review products <ArrowRight aria-hidden="true" />
+                </Link>
+              </>
+            )}
           </div>
         )}
       </section>

@@ -3,8 +3,6 @@ import { PageHeader } from "@/components/page-header";
 import { createAmbassadorAction } from "@/lib/ambassadors/actions";
 import { requireOperationalPageAccess } from "@/lib/auth/session";
 
-export const instant = false;
-
 export const metadata = { title: "New ambassador" };
 
 export default async function NewAmbassadorPage() {
@@ -12,7 +10,7 @@ export default async function NewAmbassadorPage() {
   return (
     <main className="page-wrap">
       <PageHeader
-        eyebrow="Company / Ambassadors / New"
+        eyebrow="People / Ambassadors / New"
         title="New ambassador"
         description="Record the player, their terms, and how SET25 works with them."
       />

@@ -6,8 +6,6 @@ import { PageHeader } from "@/components/page-header";
 import { getAmbassadors } from "@/lib/ambassadors/data";
 import { requireStaff } from "@/lib/auth/session";
 
-export const instant = false;
-
 export const metadata = { title: "Ambassadors" };
 
 export default async function AmbassadorsPage({
@@ -24,7 +22,7 @@ export default async function AmbassadorsPage({
   return (
     <main className="page-wrap">
       <PageHeader
-        eyebrow="Company / Ambassadors"
+        eyebrow="People / Ambassadors"
         title="Ambassadors"
         description="Players who represent SET25, their terms, and what they have been given."
       />
@@ -34,7 +32,7 @@ export default async function AmbassadorsPage({
         </div>
       ) : null}
       <div className="resource-toolbar">
-        <form className="filter-bar" action="/ambassadors">
+        <form className="filter-bar filter-bar--single" action="/ambassadors">
           <label className="search-field">
             <Search aria-hidden="true" />
             <span className="sr-only">Search ambassadors</span>
@@ -84,7 +82,6 @@ export default async function AmbassadorsPage({
             <div className="supply-row supply-row--ambassador supply-row--head">
               <span>Ambassador</span>
               <span>Team</span>
-              <span>Position</span>
               <span>Instagram</span>
               <span>Discount Code</span>
               <span>Status</span>
@@ -99,22 +96,32 @@ export default async function AmbassadorsPage({
                 <span className="commerce-primary">
                   <strong>{ambassador.name}</strong>
                   <small>
-                    {[ambassador.team, ambassador.position]
-                      .filter(Boolean)
-                      .join(" · ") || "Team not recorded"}
+                    {ambassador.position ?? "Position not recorded"}
                   </small>
                 </span>
-                <span data-label="Team">{ambassador.team ?? "—"}</span>
-                <span data-label="Position">{ambassador.position ?? "—"}</span>
-                <span data-label="Instagram">
+                <span
+                  data-label="Team"
+                  className={ambassador.team ? undefined : "is-empty"}
+                >
+                  {ambassador.team ?? "—"}
+                </span>
+                <span
+                  data-label="Instagram"
+                  className={
+                    ambassador.instagramHandle ? undefined : "is-empty"
+                  }
+                >
                   {ambassador.instagramHandle
                     ? `@${ambassador.instagramHandle}`
                     : "—"}
                 </span>
-                <span data-label="Discount Code">
+                <span
+                  data-label="Discount Code"
+                  className={ambassador.discountCode ? undefined : "is-empty"}
+                >
                   {ambassador.discountCode ?? "—"}
                 </span>
-                <span data-label="Status">
+                <span data-label="Status" className="row-status">
                   <span
                     className={`status status--${ambassador.status.toLowerCase()}`}
                   >
@@ -129,12 +136,28 @@ export default async function AmbassadorsPage({
           </div>
         ) : (
           <div className="inline-empty">
-            <p>No ambassadors match these filters.</p>
-            {staff.role !== "STAFF" ? (
-              <Link href="/ambassadors/new">
-                Add the first ambassador <ArrowRight aria-hidden="true" />
-              </Link>
-            ) : null}
+            {query.search || query.status ? (
+              <>
+                <p>
+                  {query.search
+                    ? `No ambassadors match "${query.search}".`
+                    : "No ambassadors match these filters."}
+                </p>
+                <Link href="/ambassadors">
+                  {query.status ? "Clear filters" : "Clear search"}{" "}
+                  <ArrowRight aria-hidden="true" />
+                </Link>
+              </>
+            ) : (
+              <>
+                <p>No ambassadors yet.</p>
+                {staff.role !== "STAFF" ? (
+                  <Link href="/ambassadors/new">
+                    Add the first ambassador <ArrowRight aria-hidden="true" />
+                  </Link>
+                ) : null}
+              </>
+            )}
           </div>
         )}
       </section>

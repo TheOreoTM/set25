@@ -14,8 +14,6 @@ import { changeContentStatusAction } from "@/lib/content/actions";
 import { getContentItem } from "@/lib/content/data";
 import { formatPublishAt } from "@/lib/content/presentation";
 
-export const instant = false;
-
 export const metadata = { title: "Content" };
 
 export default async function ContentItemPage({
@@ -42,7 +40,7 @@ export default async function ContentItemPage({
   return (
     <main className="page-wrap supply-detail-page">
       <PageHeader
-        eyebrow="Company / Content"
+        eyebrow="Pre-launch / Content"
         title={item.title}
         titleMeta={
           <span className={`status status--${item.status.toLowerCase()}`}>
@@ -56,13 +54,18 @@ export default async function ContentItemPage({
           <ArrowLeft aria-hidden="true" /> All content
         </Link>
         {canWrite ? (
-          <div>
+          <div className="content-detail-actions">
             <Link
               className="button button--secondary"
               href={`/content/${id}/edit`}
             >
               <Pencil aria-hidden="true" /> Edit
             </Link>
+            <ContentStatusActions
+              action={changeContentStatusAction.bind(null, id)}
+              current={item.status}
+              hasPublishAt={item.publishAt !== null}
+            />
           </div>
         ) : null}
       </div>
@@ -76,13 +79,6 @@ export default async function ContentItemPage({
           This was planned for {formatPublishAt(item.publishAt!)} and has not
           been marked posted.
         </div>
-      ) : null}
-      {canWrite ? (
-        <ContentStatusActions
-          action={changeContentStatusAction.bind(null, id)}
-          current={item.status}
-          hasPublishAt={item.publishAt !== null}
-        />
       ) : null}
 
       <section
@@ -140,12 +136,12 @@ export default async function ContentItemPage({
       <div className="supply-detail-grid">
         <div className="ambassador-main">
           <CopyBlock
-            kicker="Hook"
+            title="Hook"
             text={item.hook}
             empty="No hook written yet."
           />
           <CopyBlock
-            kicker="Caption"
+            title="Caption"
             text={item.caption}
             empty="No caption written yet."
           />
@@ -198,11 +194,11 @@ function SummaryFact({
 }
 
 function CopyBlock({
-  kicker,
+  title,
   text,
   empty,
 }: {
-  kicker: string;
+  title: string;
   text: string | null;
   empty: string;
 }) {
@@ -210,7 +206,8 @@ function CopyBlock({
     <section className="detail-section compact-detail-section">
       <div className="detail-section-head">
         <div>
-          <p className="kicker">{kicker}</p>
+          <p className="kicker">Copy</p>
+          <h2>{title}</h2>
         </div>
       </div>
       {text ? (

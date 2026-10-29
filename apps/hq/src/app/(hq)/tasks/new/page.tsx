@@ -4,8 +4,6 @@ import { requireOperationalPageAccess } from "@/lib/auth/session";
 import { createTaskAction } from "@/lib/tasks/actions";
 import { getTaskFormOptions } from "@/lib/tasks/data";
 
-export const instant = false;
-
 export const metadata = { title: "New task" };
 
 export default async function NewTaskPage() {
@@ -14,7 +12,7 @@ export default async function NewTaskPage() {
   return (
     <main className="page-wrap">
       <PageHeader
-        eyebrow="Company / Tasks / New"
+        eyebrow="Pre-launch / Tasks / New"
         title="New task"
         description="Plan one clear piece of operational work and connect it to the relevant SET25 record."
       />

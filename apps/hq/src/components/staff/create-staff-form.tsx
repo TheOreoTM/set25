@@ -1,26 +1,32 @@
 "use client";
 
 import { Select } from "@/components/ui/select";
-import { useActionState } from "react";
 import { UserPlus } from "lucide-react";
 import { createStaffAction } from "@/lib/staff/actions";
 import { initialStaffFormState } from "@/lib/staff/validation";
+import { useFormAction } from "@/components/ui/use-form-action";
 
 export function CreateStaffForm() {
-  const [state, action, pending] = useActionState(
+  const { formRef, state, pending, onSubmit, error } = useFormAction(
     createStaffAction,
     initialStaffFormState,
   );
+  const fieldError = (key: string) =>
+    error(key) ? <small className="field-error">{error(key)}</small> : null;
 
   return (
-    <form className="staff-create-form" action={action}>
+    <form className="staff-create-form" ref={formRef} onSubmit={onSubmit}>
       <div className="form-grid">
         <label className="field">
           <span>Name</span>
-          <input name="name" minLength={2} maxLength={80} required />
-          {state.errors?.name ? (
-            <small className="field-error">{state.errors.name[0]}</small>
-          ) : null}
+          <input
+            name="name"
+            minLength={2}
+            maxLength={80}
+            required
+            aria-invalid={Boolean(error("name"))}
+          />
+          {fieldError("name")}
         </label>
         <label className="field">
           <span>Email</span>
@@ -31,10 +37,9 @@ export function CreateStaffForm() {
             autoComplete="off"
             maxLength={254}
             required
+            aria-invalid={Boolean(error("email"))}
           />
-          {state.errors?.email ? (
-            <small className="field-error">{state.errors.email[0]}</small>
-          ) : null}
+          {fieldError("email")}
         </label>
         <label className="field">
           <span>Initial password</span>
@@ -45,22 +50,26 @@ export function CreateStaffForm() {
             minLength={12}
             maxLength={128}
             required
+            aria-invalid={Boolean(error("password"))}
           />
-          {state.errors?.password ? (
-            <small className="field-error">{state.errors.password[0]}</small>
+          {error("password") ? (
+            fieldError("password")
           ) : (
             <small>Share it securely. Password changes are coming later.</small>
           )}
         </label>
         <label className="field">
           <span>Role</span>
-          <Select name="role" defaultValue="STAFF" required>
+          <Select
+            name="role"
+            defaultValue="STAFF"
+            required
+            aria-invalid={Boolean(error("role"))}
+          >
             <option value="MANAGER">Manager</option>
             <option value="STAFF">Staff</option>
           </Select>
-          {state.errors?.role ? (
-            <small className="field-error">{state.errors.role[0]}</small>
-          ) : null}
+          {fieldError("role")}
         </label>
       </div>
       {state.message ? (
@@ -69,7 +78,11 @@ export function CreateStaffForm() {
         </div>
       ) : null}
       <div className="form-actions">
-        <button className="button button--dark" disabled={pending}>
+        <button
+          className="button button--dark"
+          type="submit"
+          disabled={pending}
+        >
           <UserPlus aria-hidden="true" />
           {pending ? "Creating…" : "Create staff account"}
         </button>

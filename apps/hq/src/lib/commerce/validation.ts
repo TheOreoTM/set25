@@ -187,36 +187,31 @@ export function validateOrder(formData: FormData, preorder: boolean) {
     );
   if (!variantIds.length || variantIds.length > 50)
     addError(errors, "lines", "Add between 1 and 50 order lines.");
-  if (new Set(variantIds).size !== variantIds.length)
+  const chosen = variantIds.filter(Boolean);
+  if (new Set(chosen).size !== chosen.length)
     addError(
       errors,
       "lines",
       "Each variant can only appear once. Adjust its quantity instead.",
     );
 
+  // Line problems are keyed per line (`lines.<index>.<field>`) so the form
+  // can highlight the exact input; `lines` keeps the list-level errors.
   const lines = variantIds.map((variantId, index) => {
     const quantityRaw = quantities[index] ?? "";
     const quantity = Number(quantityRaw);
     const unitPrice = money(unitPrices[index] ?? "");
     if (!variantId)
-      addError(errors, "lines", `Choose a variant for line ${index + 1}.`);
+      addError(errors, `lines.${index}.variantId`, "Choose a variant.");
     if (
       !/^\d+$/.test(quantityRaw) ||
       !Number.isSafeInteger(quantity) ||
       quantity < 1 ||
       quantity > 10000
     )
-      addError(
-        errors,
-        "lines",
-        `Line ${index + 1} needs a whole quantity from 1 to 10,000.`,
-      );
+      addError(errors, `lines.${index}.quantity`, "Use 1 to 10,000.");
     if (unitPrice == null)
-      addError(
-        errors,
-        "lines",
-        `Line ${index + 1} needs a valid selling price.`,
-      );
+      addError(errors, `lines.${index}.unitPrice`, "Enter a valid price.");
     return { variantId, quantity, unitPrice: unitPrice ?? "0" };
   });
 

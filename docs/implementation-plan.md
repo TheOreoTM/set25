@@ -120,6 +120,22 @@ Requires the `store_checkout` migration. Public images also need `R2_PUBLIC_BUCK
 
 Deferred deliberately: payment-proof upload (customers send slips by WhatsApp or Instagram), confirmation email/SMS/WhatsApp, online card payments, customer accounts, commission payouts, courier integration, a sitemap, shared rate limiting, on-demand Store revalidation, and reservation-aware blocking of HQ manual sales.
 
+## Pre-launch HQ overhaul (implemented, awaiting manual verification)
+
+Implemented:
+
+- a static, prefetchable HQ shell: the `(hq)` layout no longer awaits the session at the top level, the staff-dependent navigation streams behind `<Suspense>`, and no route opts out with `instant = false`; every page and action still authorizes itself;
+- a `loading.tsx` skeleton for every HQ route, matching each page's header and layout;
+- the proxy's `authorized` callback checks only for a valid session cookie, with no database query; page, action, and route-handler checks reload the active `StaffUser`;
+- a mobile bottom tab bar (Today, Waitlist, Samples, Content, More) and a More sheet that closes on navigation, replacing the `<details>` menu and account popover; the non-functional Search button is removed; 44px minimum tap targets for buttons;
+- the Waitlist module (`WaitlistEntry`, migration `20261028120000_waitlist`) with one-thumb quick add, search, status tabs, one-tap status changes, and status-aware Instagram DM copy and links;
+- Today, a pre-launch dashboard: waitlist size and weekly growth, samples awaiting a decision, content this week, open tasks, and money spent so far;
+- launch-only areas (Orders, Preorders, Stock, Store) grouped under Launch.
+
+Requires the `waitlist` migration.
+
+Deferred deliberately: global HQ search, linking waitlist entries to Customers and Orders, sending DMs from HQ, Staff write access to the waitlist, and post-launch dashboard summaries.
+
 ## Rapid-development quality gates
 
 Every milestone must include:

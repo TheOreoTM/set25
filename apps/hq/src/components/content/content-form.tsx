@@ -3,8 +3,8 @@
 import { Select } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import Link from "next/link";
-import { useActionState, useState } from "react";
-import { ArrowLeft, CalendarClock, Check, Save } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, Ban, CalendarClock, Check, Save } from "lucide-react";
 import {
   CONTENT_PLATFORMS,
   CONTENT_STATUSES,
@@ -20,6 +20,7 @@ import {
   initialContentFormState,
   type ContentFormState,
 } from "@/lib/content/validation";
+import { useFormAction } from "@/components/ui/use-form-action";
 
 type Action = (
   state: ContentFormState,
@@ -60,19 +61,18 @@ export function ContentForm({
   cancelHref: string;
   submitLabel: string;
 }) {
-  const [state, formAction, pending] = useActionState(
+  const { formRef, state, pending, onSubmit, error } = useFormAction(
     action,
     initialContentFormState,
   );
   const [status, setStatus] = useState<ContentStatusValue>(
     defaults?.status ?? "IDEA",
   );
-  const error = (key: string) => state.errors?.[key]?.[0];
   const fieldError = (key: string) =>
     error(key) ? <small className="field-error">{error(key)}</small> : null;
 
   return (
-    <form action={formAction} className="editor-form">
+    <form ref={formRef} onSubmit={onSubmit} className="editor-form">
       <section className="form-section">
         <div className="form-section-title">
           <p className="kicker">Content</p>
@@ -97,6 +97,7 @@ export function ContentForm({
             <Select
               name="platform"
               defaultValue={defaults?.platform ?? "INSTAGRAM"}
+              aria-invalid={Boolean(error("platform"))}
             >
               {CONTENT_PLATFORMS.map((platform) => (
                 <option value={platform} key={platform}>
@@ -104,16 +105,22 @@ export function ContentForm({
                 </option>
               ))}
             </Select>
+            {fieldError("platform")}
           </label>
           <label className="field">
             <span>Type</span>
-            <Select name="type" defaultValue={defaults?.type ?? "REEL"}>
+            <Select
+              name="type"
+              defaultValue={defaults?.type ?? "REEL"}
+              aria-invalid={Boolean(error("type"))}
+            >
               {CONTENT_TYPES.map((type) => (
                 <option value={type} key={type}>
                   {contentTypeLabels[type]}
                 </option>
               ))}
             </Select>
+            {fieldError("type")}
           </label>
           <label className="field">
             <span>Status</span>
@@ -123,6 +130,7 @@ export function ContentForm({
               onChange={(event) =>
                 setStatus(event.target.value as ContentStatusValue)
               }
+              aria-invalid={Boolean(error("status"))}
             >
               {CONTENT_STATUSES.map((value) => (
                 <option value={value} key={value}>
@@ -130,6 +138,7 @@ export function ContentForm({
                 </option>
               ))}
             </Select>
+            {fieldError("status")}
           </label>
           <label className="field">
             <span>Publish date and time</span>
@@ -151,7 +160,11 @@ export function ContentForm({
           </label>
           <label className="field">
             <span>Owner</span>
-            <Select name="ownerId" defaultValue={defaults?.ownerId ?? ""}>
+            <Select
+              name="ownerId"
+              defaultValue={defaults?.ownerId ?? ""}
+              aria-invalid={Boolean(error("ownerId"))}
+            >
               <option value="">No owner yet</option>
               {staff.map((person) => (
                 <option value={person.id} key={person.id}>
@@ -163,7 +176,11 @@ export function ContentForm({
           </label>
           <label className="field">
             <span>Product</span>
-            <Select name="productId" defaultValue={defaults?.productId ?? ""}>
+            <Select
+              name="productId"
+              defaultValue={defaults?.productId ?? ""}
+              aria-invalid={Boolean(error("productId"))}
+            >
               <option value="">No product</option>
               {products.map((product) => (
                 <option value={product.id} key={product.id}>
@@ -173,11 +190,12 @@ export function ContentForm({
             </Select>
             {fieldError("productId")}
           </label>
-          <label className="field">
+          <label className="field field--wide">
             <span>Ambassador</span>
             <Select
               name="ambassadorId"
               defaultValue={defaults?.ambassadorId ?? ""}
+              aria-invalid={Boolean(error("ambassadorId"))}
             >
               <option value="">No ambassador</option>
               {ambassadors.map((ambassador) => (
@@ -195,27 +213,31 @@ export function ContentForm({
           <p className="kicker">Copy</p>
           <h2>Hook and caption</h2>
         </div>
-        <label className="field">
-          <span>Hook</span>
-          <textarea
-            name="hook"
-            rows={2}
-            maxLength={500}
-            defaultValue={defaults?.hook ?? ""}
-            placeholder="The first line or first seconds that stop the scroll"
-          />
-          {fieldError("hook")}
-        </label>
-        <label className="field">
-          <span>Caption</span>
-          <textarea
-            name="caption"
-            rows={5}
-            maxLength={2200}
-            defaultValue={defaults?.caption ?? ""}
-          />
-          {fieldError("caption")}
-        </label>
+        <div className="form-stack">
+          <label className="field">
+            <span>Hook</span>
+            <textarea
+              name="hook"
+              rows={2}
+              maxLength={500}
+              defaultValue={defaults?.hook ?? ""}
+              placeholder="The first line or first seconds that stop the scroll"
+              aria-invalid={Boolean(error("hook"))}
+            />
+            {fieldError("hook")}
+          </label>
+          <label className="field">
+            <span>Caption</span>
+            <textarea
+              name="caption"
+              rows={5}
+              maxLength={2200}
+              defaultValue={defaults?.caption ?? ""}
+              aria-invalid={Boolean(error("caption"))}
+            />
+            {fieldError("caption")}
+          </label>
+        </div>
       </section>
       <section className="form-section">
         <div className="form-section-title">
@@ -223,27 +245,30 @@ export function ContentForm({
           <h2>Notes and final link</h2>
           <p>Working assets go in Files. The link is the final public post.</p>
         </div>
-        <label className="field">
-          <span>Notes</span>
-          <textarea
-            name="notes"
-            rows={4}
-            maxLength={2000}
-            defaultValue={defaults?.notes ?? ""}
-          />
-          {fieldError("notes")}
-        </label>
-        <label className="field">
-          <span>Post link</span>
-          <input
-            type="url"
-            name="externalUrl"
-            defaultValue={defaults?.externalUrl ?? ""}
-            placeholder="https://www.instagram.com/p/…"
-            aria-invalid={Boolean(error("externalUrl"))}
-          />
-          {fieldError("externalUrl")}
-        </label>
+        <div className="form-stack">
+          <label className="field">
+            <span>Notes</span>
+            <textarea
+              name="notes"
+              rows={4}
+              maxLength={2000}
+              defaultValue={defaults?.notes ?? ""}
+              aria-invalid={Boolean(error("notes"))}
+            />
+            {fieldError("notes")}
+          </label>
+          <label className="field">
+            <span>Post link</span>
+            <input
+              type="url"
+              name="externalUrl"
+              defaultValue={defaults?.externalUrl ?? ""}
+              placeholder="https://www.instagram.com/p/…"
+              aria-invalid={Boolean(error("externalUrl"))}
+            />
+            {fieldError("externalUrl")}
+          </label>
+        </div>
       </section>
       {state.message ? (
         <div className="form-message form-message--error" role="alert">
@@ -279,7 +304,7 @@ export function ContentStatusActions({
   current: ContentStatusValue;
   hasPublishAt: boolean;
 }) {
-  const [state, formAction, pending] = useActionState(
+  const { state, pending, onSubmit } = useFormAction(
     action,
     initialContentFormState,
   );
@@ -297,7 +322,7 @@ export function ContentStatusActions({
 
   if (scheduling)
     return (
-      <form action={formAction} className="content-schedule-form">
+      <form onSubmit={onSubmit} className="content-schedule-form">
         <input type="hidden" name="status" value="SCHEDULED" />
         <label className="field">
           <span>Publish at (Maldives time)</span>
@@ -329,7 +354,7 @@ export function ContentStatusActions({
   return (
     <div className="content-status-actions">
       {moves.map((move) => (
-        <form action={formAction} key={move.status}>
+        <form onSubmit={onSubmit} key={move.status}>
           <input type="hidden" name="status" value={move.status} />
           <button
             className="button button--secondary"
@@ -342,7 +367,7 @@ export function ContentStatusActions({
       ))}
       {canSchedule ? (
         hasPublishAt ? (
-          <form action={formAction}>
+          <form onSubmit={onSubmit}>
             <input type="hidden" name="status" value="SCHEDULED" />
             <button
               className="button button--secondary"
@@ -363,7 +388,19 @@ export function ContentStatusActions({
         )
       ) : null}
       {canPost ? (
-        <form action={formAction}>
+        <form onSubmit={onSubmit}>
+          <input type="hidden" name="status" value="CANCELLED" />
+          <button
+            className="button button--danger"
+            type="submit"
+            disabled={pending}
+          >
+            <Ban aria-hidden="true" /> Cancel content
+          </button>
+        </form>
+      ) : null}
+      {canPost ? (
+        <form onSubmit={onSubmit}>
           <input type="hidden" name="status" value="POSTED" />
           <button
             className="button button--dark"
@@ -371,14 +408,6 @@ export function ContentStatusActions({
             disabled={pending}
           >
             <Check aria-hidden="true" /> Mark posted
-          </button>
-        </form>
-      ) : null}
-      {canPost ? (
-        <form action={formAction}>
-          <input type="hidden" name="status" value="CANCELLED" />
-          <button className="text-link" type="submit" disabled={pending}>
-            Cancel content
           </button>
         </form>
       ) : null}

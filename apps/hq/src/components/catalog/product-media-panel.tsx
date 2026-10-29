@@ -40,6 +40,8 @@ export function ProductMediaPanel({
   const form = useRef<HTMLFormElement>(null);
   const [message, setMessage] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [dragging, setDragging] = useState(false);
   const [pending, startTransition] = useTransition();
   const busy = uploading || pending;
 
@@ -77,6 +79,7 @@ export function ProductMediaPanel({
       const finalized = await finalizeProductMediaAction(prepared.mediaId);
       if (!finalized.ok) return setMessage(finalized.message);
       form.current?.reset();
+      setFile(null);
       router.refresh();
     } finally {
       setUploading(false);
@@ -177,27 +180,70 @@ export function ProductMediaPanel({
             </li>
           ))}
         </ul>
-      ) : (
-        <div className="inline-empty">
+      ) : canWrite && !configured ? null : (
+        <div className="inline-empty inline-empty--compact">
           <p>No Store images yet.</p>
           <span>The Store shows a branded placeholder until one is added.</span>
         </div>
       )}
+      {message ? (
+        <div
+          className="form-message form-message--error product-media-message"
+          role="alert"
+        >
+          {message}
+        </div>
+      ) : null}
       {canWrite ? (
         configured ? (
           <form className="embedded-editor" ref={form} onSubmit={upload}>
             <div className="form-grid">
-              <label className="field">
+              <div className="field">
                 <span>Image</span>
-                <input
-                  type="file"
-                  name="image"
-                  accept={PRODUCT_MEDIA_ACCEPT}
-                  required
-                  disabled={busy}
-                />
-                <small>JPG, PNG, or WEBP · up to 10 MB · publicly visible</small>
-              </label>
+                <div
+                  className={`file-drop${dragging ? " is-dragging" : ""}${file ? " has-file" : ""}`}
+                  onDragOver={(event) => {
+                    event.preventDefault();
+                    if (!busy) setDragging(true);
+                  }}
+                  onDragLeave={() => setDragging(false)}
+                  onDrop={(event) => {
+                    event.preventDefault();
+                    setDragging(false);
+                    const input = form.current?.elements.namedItem("image");
+                    if (busy || !(input instanceof HTMLInputElement)) return;
+                    if (!event.dataTransfer.files.length) return;
+                    input.files = event.dataTransfer.files;
+                    setFile(input.files[0] ?? null);
+                  }}
+                >
+                  <input
+                    id="product-media-file"
+                    className="file-drop-input"
+                    type="file"
+                    name="image"
+                    accept={PRODUCT_MEDIA_ACCEPT}
+                    disabled={busy}
+                    onChange={(event) =>
+                      setFile(event.currentTarget.files?.[0] ?? null)
+                    }
+                  />
+                  <label
+                    className="file-drop-zone"
+                    htmlFor="product-media-file"
+                  >
+                    <ImagePlus aria-hidden="true" />
+                    <span>
+                      <strong>
+                        {file ? file.name : "Choose an image or drag it here"}
+                      </strong>
+                      <small>
+                        JPG, PNG, or WEBP · up to 10 MB · publicly visible
+                      </small>
+                    </span>
+                  </label>
+                </div>
+              </div>
               <label className="field">
                 <span>Alt text</span>
                 <input
@@ -208,14 +254,11 @@ export function ProductMediaPanel({
                   placeholder="Black SET25 knee pads, side view"
                   disabled={busy}
                 />
-                <small>Describe the image for customers using screen readers.</small>
+                <small>
+                  Describe the image for customers using screen readers.
+                </small>
               </label>
             </div>
-            {message ? (
-              <div className="form-message form-message--error" role="alert">
-                {message}
-              </div>
-            ) : null}
             <div className="form-actions">
               <button
                 className="button button--dark"
@@ -228,18 +271,16 @@ export function ProductMediaPanel({
             </div>
           </form>
         ) : (
-          <div className="inline-empty">
-            <p>Public Store media storage is not configured.</p>
-            <span>
-              Add R2_PUBLIC_BUCKET_NAME and PUBLIC_MEDIA_BASE_URL to enable
-              uploads.
-            </span>
+          <div className="inline-empty inline-empty--compact">
+            <p>Image uploads aren&apos;t set up yet.</p>
+            {media.length ? null : (
+              <span>
+                No Store images yet · the Store shows a branded placeholder.
+              </span>
+            )}
+            <span>Ask the Owner to connect Store media storage.</span>
           </div>
         )
-      ) : message ? (
-        <div className="form-message form-message--error" role="alert">
-          {message}
-        </div>
       ) : null}
     </section>
   );

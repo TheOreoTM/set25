@@ -14,8 +14,6 @@ import { ProductListSkeleton } from "@/components/catalog/product-list-skeleton"
 import { getProducts } from "@/lib/catalog/data";
 import { requireStaff } from "@/lib/auth/session";
 
-export const instant = false;
-
 export const metadata = { title: "Products" };
 
 export default function ProductsPage({
@@ -26,7 +24,7 @@ export default function ProductsPage({
   return (
     <main className="page-wrap">
       <PageHeader
-        eyebrow="Commerce / Products"
+        eyebrow="Supply / Products"
         title="Products"
         description="The shared catalogue for SET25 HQ and the future Store."
       />
@@ -127,7 +125,7 @@ async function ProductList({
               <span>Code</span>
               <span>Category</span>
               <span className="num">Price</span>
-              <span className="num">Variants</span>
+              <span className="num col-desktop">Variants</span>
               <span className="num">Stock</span>
               <span>Status</span>
               <span />
@@ -158,13 +156,13 @@ async function ProductList({
                   <span data-label="Price" className="numeric num">
                     {formatMVR(product.retailPrice)}
                   </span>
-                  <span data-label="Variants" className="num">
+                  <span data-label="Variants" className="num col-desktop">
                     {product._count.variants}
                   </span>
-                  <span data-label="Stock" className="num">
-                    <strong>{stock}</strong>
+                  <span data-label="Stock" className="stock-number num">
+                    {stock}
                   </span>
-                  <span data-label="Status">
+                  <span data-label="Status" className="row-status">
                     <span
                       className={`status status--${product.status.toLowerCase()}`}
                     >
@@ -180,13 +178,25 @@ async function ProductList({
           </div>
         ) : (
           <div className="inline-empty">
-            <p>No products match these filters.</p>
-            {staff.role !== "STAFF" ? (
-              <Link href="/products/new">
-                Create the first product <ArrowRight aria-hidden="true" />
-              </Link>
+            {filters.search || filters.status || filters.category ? (
+              <>
+                <p>No products match these filters.</p>
+                <span>Try a different search or filter.</span>
+                <Link href="/products">
+                  Clear filters <ArrowRight aria-hidden="true" />
+                </Link>
+              </>
             ) : (
-              <span>Ask a Manager or Owner to create a product.</span>
+              <>
+                <p>No products yet.</p>
+                {staff.role !== "STAFF" ? (
+                  <Link href="/products/new">
+                    Create the first product <ArrowRight aria-hidden="true" />
+                  </Link>
+                ) : (
+                  <span>Ask a Manager or Owner to create a product.</span>
+                )}
+              </>
             )}
           </div>
         )}

@@ -15,8 +15,6 @@ import { accessibleLevels } from "@/lib/files/policy";
 import { maldivesDateKey } from "@/lib/planning/date-range";
 import { formatDateTime } from "@/lib/supply/presentation";
 
-export const instant = false;
-
 export const metadata = { title: "File" };
 
 const blockedMessages: Record<string, string> = {

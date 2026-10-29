@@ -19,6 +19,7 @@ import {
   initialFileFormState,
   type FileFormState,
 } from "@/lib/files/validation";
+import { useFormAction } from "@/components/ui/use-form-action";
 
 type Action = (
   state: FileFormState,
@@ -188,18 +189,21 @@ export function FileDetailsEditor({
     description: string;
   };
 }) {
-  const [state, formAction, pending] = useActionState(
+  const { formRef, state, pending, onSubmit, error } = useFormAction(
     action,
     initialFileFormState,
   );
   const [retention, setRetention] = useState(defaults.retentionPolicy);
-  const error = (key: string) => state.errors?.[key]?.[0];
   return (
-    <form action={formAction} className="file-details-form">
+    <form ref={formRef} onSubmit={onSubmit} className="file-details-form">
       <div className="form-grid form-grid--dialog">
         <label className="field">
           <span>Access</span>
-          <Select name="accessLevel" defaultValue={defaults.accessLevel}>
+          <Select
+            name="accessLevel"
+            defaultValue={defaults.accessLevel}
+            aria-invalid={Boolean(error("accessLevel"))}
+          >
             {accessLevels.map((level) => (
               <option value={level} key={level}>
                 {fileAccessLevelLabels[level]}
@@ -218,10 +222,14 @@ export function FileDetailsEditor({
             onChange={(event) =>
               setRetention(event.target.value as FileRetentionPolicyValue)
             }
+            aria-invalid={Boolean(error("retentionPolicy"))}
           >
             <option value="PERMANENT">Permanent</option>
             <option value="UNTIL_DATE">Until date</option>
           </Select>
+          {error("retentionPolicy") ? (
+            <small className="field-error">{error("retentionPolicy")}</small>
+          ) : null}
         </label>
         {retention === "UNTIL_DATE" ? (
           <label className="field">
@@ -230,6 +238,7 @@ export function FileDetailsEditor({
               name="retentionUntil"
               defaultValue={defaults.retentionUntil}
               required
+              invalid={Boolean(error("retentionUntil"))}
             />
             {error("retentionUntil") ? (
               <small className="field-error">{error("retentionUntil")}</small>
@@ -243,6 +252,7 @@ export function FileDetailsEditor({
           name="description"
           maxLength={500}
           defaultValue={defaults.description}
+          aria-invalid={Boolean(error("description"))}
         />
         {error("description") ? (
           <small className="field-error">{error("description")}</small>
@@ -256,9 +266,15 @@ export function FileDetailsEditor({
           {state.message}
         </div>
       ) : null}
-      <button className="button button--dark" type="submit" disabled={pending}>
-        <Save aria-hidden="true" /> {pending ? "Saving…" : "Save details"}
-      </button>
+      <div className="form-actions">
+        <button
+          className="button button--dark"
+          type="submit"
+          disabled={pending}
+        >
+          <Save aria-hidden="true" /> {pending ? "Saving…" : "Save details"}
+        </button>
+      </div>
     </form>
   );
 }

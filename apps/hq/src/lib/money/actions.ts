@@ -20,7 +20,7 @@ export async function createMoneyEntryAction(
   const staff = await requireOperationalAccess();
   const result = validateMoneyEntry(formData);
   if (!result.success)
-    return failure("Check the highlighted fields.", result.errors);
+    return failure("Check the highlighted details.", result.errors);
   const input = result.data;
 
   const duplicate = await db.moneyEntry.findUnique({
@@ -45,7 +45,7 @@ export async function createMoneyEntryAction(
         .toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP)
     : new Prisma.Decimal(input.amount);
   if (amount.lte(0))
-    return failure("Check the highlighted fields.", {
+    return failure("Check the highlighted details.", {
       amount: ["The MVR equivalent must be greater than zero."],
     });
 

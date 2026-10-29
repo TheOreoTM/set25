@@ -1,0 +1,10 @@
+import { PageSkeleton } from "@/components/page-skeleton";
+
+export default function Loading() {
+  return (
+    <PageSkeleton
+      kind="detail"
+      eyebrow="Pre-launch / Samples"
+    />
+  );
+}

@@ -3,7 +3,7 @@
 import { Select } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { ArrowLeft, Save } from "lucide-react";
 import {
   DEFAULT_USD_TO_MVR_RATE,
@@ -19,6 +19,7 @@ import {
   initialMoneyFormState,
   type MoneyFormState,
 } from "@/lib/money/validation";
+import { useFormAction } from "@/components/ui/use-form-action";
 
 type Action = (
   state: MoneyFormState,
@@ -38,11 +39,10 @@ export function MoneyEntryForm({
   occurredAt: string;
   relatedOptions: { value: string; group: string; label: string }[];
 }) {
-  const [state, formAction, pending] = useActionState(
+  const { formRef, state, pending, onSubmit, error } = useFormAction(
     action,
     initialMoneyFormState,
   );
-  const error = (field: string) => state.errors?.[field]?.[0];
   const [currency, setCurrency] = useState<MoneyEntryCurrencyValue>("MVR");
   const [amount, setAmount] = useState("");
   const [rate, setRate] = useState(DEFAULT_USD_TO_MVR_RATE);
@@ -58,7 +58,11 @@ export function MoneyEntryForm({
   );
 
   return (
-    <form action={formAction} className="editor-form money-entry-form">
+    <form
+      ref={formRef}
+      onSubmit={onSubmit}
+      className="editor-form money-entry-form"
+    >
       <input type="hidden" name="direction" value={direction} />
       <input type="hidden" name="idempotencyKey" value={idempotencyKey} />
       <section className="form-section">
@@ -96,7 +100,7 @@ export function MoneyEntryForm({
           </label>
           <label className="field">
             <span>Amount</span>
-            <div className="money-input">
+            <div className="input-with-prefix">
               <span>{currency}</span>
               <input
                 name="amount"
@@ -169,7 +173,11 @@ export function MoneyEntryForm({
           </label>
           <label className="field">
             <span>Related to</span>
-            <Select name="related" defaultValue="">
+            <Select
+              name="related"
+              defaultValue=""
+              aria-invalid={Boolean(error("related"))}
+            >
               <option value="">No related record</option>
               {[...groups.entries()].map(([group, options]) => (
                 <optgroup label={group} key={group}>
@@ -183,6 +191,18 @@ export function MoneyEntryForm({
             </Select>
             {error("related") ? (
               <small className="field-error">{error("related")}</small>
+            ) : null}
+          </label>
+          <label className="field">
+            <span>Reference</span>
+            <input
+              name="reference"
+              maxLength={100}
+              placeholder="Receipt or transfer ref."
+              aria-invalid={Boolean(error("reference"))}
+            />
+            {error("reference") ? (
+              <small className="field-error">{error("reference")}</small>
             ) : null}
           </label>
           <label className="field field--wide">
@@ -202,14 +222,6 @@ export function MoneyEntryForm({
               <small className="field-error">{error("description")}</small>
             ) : null}
           </label>
-          <label className="field">
-            <span>Reference</span>
-            <input
-              name="reference"
-              maxLength={100}
-              placeholder="Optional receipt or transfer reference"
-            />
-          </label>
         </div>
       </section>
       <section className="form-section">
@@ -219,12 +231,21 @@ export function MoneyEntryForm({
         </div>
         <label className="field">
           <span>Internal notes</span>
-          <textarea name="notes" rows={4} maxLength={2000} />
+          <textarea
+            name="notes"
+            rows={4}
+            maxLength={2000}
+            aria-invalid={Boolean(error("notes"))}
+          />
+          {error("notes") ? (
+            <small className="field-error">{error("notes")}</small>
+          ) : null}
         </label>
       </section>
       {state.message ? (
         <div className="form-message form-message--error" role="alert">
           {state.message}
+          {error("idempotencyKey") ? ` ${error("idempotencyKey")}` : null}
         </div>
       ) : null}
       <div className="form-actions">

@@ -3,7 +3,7 @@
 import { Select } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import Link from "next/link";
-import { useActionState, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ArrowLeft, Plus, Save, Trash2 } from "lucide-react";
 import {
   ORDER_SOURCES,
@@ -13,6 +13,7 @@ import {
 } from "@set25/shared";
 import { createOrderAction } from "@/lib/commerce/actions";
 import { initialCommerceFormState } from "@/lib/commerce/validation";
+import { useFormAction } from "@/components/ui/use-form-action";
 
 type Option = { id: string; name: string };
 type VariantOption = {
@@ -44,7 +45,7 @@ export function OrderForm({
   preorder?: boolean;
 }) {
   const action = createOrderAction.bind(null, preorder);
-  const [state, formAction, pending] = useActionState(
+  const { formRef, state, pending, onSubmit, error } = useFormAction(
     action,
     initialCommerceFormState,
   );
@@ -72,7 +73,8 @@ export function OrderForm({
     0,
     subtotal - (Number(discount) || 0) + (Number(delivery) || 0),
   );
-  const lineError = state.errors?.lines?.[0];
+  const fieldError = (key: string) =>
+    error(key) ? <small className="field-error">{error(key)}</small> : null;
 
   function updateLine(key: string, patch: Partial<Line>) {
     setLines((current) =>
@@ -81,7 +83,11 @@ export function OrderForm({
   }
 
   return (
-    <form action={formAction} className="editor-form order-editor">
+    <form
+      ref={formRef}
+      onSubmit={onSubmit}
+      className="editor-form order-editor"
+    >
       <input type="hidden" name="idempotencyKey" value={submissionKey} />
       <div className="form-section">
         <div className="form-section-title">
@@ -96,7 +102,12 @@ export function OrderForm({
         <div className="form-grid">
           <label className="field">
             <span>Customer {preorder ? "" : "(optional)"}</span>
-            <Select name="customerId" defaultValue="" required={preorder}>
+            <Select
+              name="customerId"
+              defaultValue=""
+              required={preorder}
+              aria-invalid={Boolean(error("customerId"))}
+            >
               <option value="">
                 {customers.length ? "Select customer" : "No customers yet"}
               </option>
@@ -106,15 +117,15 @@ export function OrderForm({
                 </option>
               ))}
             </Select>
-            {state.errors?.customerId ? (
-              <small className="field-error">
-                {state.errors.customerId[0]}
-              </small>
-            ) : null}
+            {fieldError("customerId")}
           </label>
           <label className="field">
             <span>Team (optional)</span>
-            <Select name="teamId" defaultValue="">
+            <Select
+              name="teamId"
+              defaultValue=""
+              aria-invalid={Boolean(error("teamId"))}
+            >
               <option value="">No team</option>
               {teams.map((team) => (
                 <option value={team.id} key={team.id}>
@@ -122,15 +133,14 @@ export function OrderForm({
                 </option>
               ))}
             </Select>
-            {state.errors?.teamId ? (
-              <small className="field-error">{state.errors.teamId[0]}</small>
-            ) : null}
+            {fieldError("teamId")}
           </label>
           <label className="field">
             <span>Order source</span>
             <Select
               name="source"
               defaultValue={preorder ? "INSTAGRAM" : "MANUAL"}
+              aria-invalid={Boolean(error("source"))}
             >
               {ORDER_SOURCES.map((source: OrderSourceValue) => (
                 <option value={source} key={source}>
@@ -138,9 +148,7 @@ export function OrderForm({
                 </option>
               ))}
             </Select>
-            {state.errors?.source ? (
-              <small className="field-error">{state.errors.source[0]}</small>
-            ) : null}
+            {fieldError("source")}
           </label>
         </div>
       </div>
@@ -168,6 +176,7 @@ export function OrderForm({
                     name="variantId"
                     value={line.variantId}
                     required
+                    aria-invalid={Boolean(error(`lines.${index}.variantId`))}
                     onChange={(event) => {
                       const selected = variants.find(
                         (item) => item.id === event.target.value,
@@ -186,6 +195,7 @@ export function OrderForm({
                       </option>
                     ))}
                   </Select>
+                  {fieldError(`lines.${index}.variantId`)}
                   {variant ? (
                     <small>
                       {variant.stockOnHand} currently available · catalogue{" "}
@@ -208,7 +218,9 @@ export function OrderForm({
                       })
                     }
                     required
+                    aria-invalid={Boolean(error(`lines.${index}.quantity`))}
                   />
+                  {fieldError(`lines.${index}.quantity`)}
                 </label>
                 <label className="field">
                   <span>Sell price</span>
@@ -222,8 +234,10 @@ export function OrderForm({
                         updateLine(line.key, { unitPrice: event.target.value })
                       }
                       required
+                      aria-invalid={Boolean(error(`lines.${index}.unitPrice`))}
                     />
                   </div>
+                  {fieldError(`lines.${index}.unitPrice`)}
                 </label>
                 <div className="order-line-total">
                   <span>Line total</span>
@@ -250,7 +264,7 @@ export function OrderForm({
               </div>
             );
           })}
-          {lineError ? <p className="field-error">{lineError}</p> : null}
+          {fieldError("lines")}
           <button
             className="button button--secondary order-add-line"
             type="button"
@@ -293,13 +307,10 @@ export function OrderForm({
                   value={discount}
                   onChange={(event) => setDiscount(event.target.value)}
                   required
+                  aria-invalid={Boolean(error("discountAmount"))}
                 />
               </div>
-              {state.errors?.discountAmount ? (
-                <small className="field-error">
-                  {state.errors.discountAmount[0]}
-                </small>
-              ) : null}
+              {fieldError("discountAmount")}
             </label>
             <label className="field">
               <span>Delivery fee</span>
@@ -311,13 +322,10 @@ export function OrderForm({
                   value={delivery}
                   onChange={(event) => setDelivery(event.target.value)}
                   required
+                  aria-invalid={Boolean(error("deliveryFee"))}
                 />
               </div>
-              {state.errors?.deliveryFee ? (
-                <small className="field-error">
-                  {state.errors.deliveryFee[0]}
-                </small>
-              ) : null}
+              {fieldError("deliveryFee")}
             </label>
           </div>
           <dl className="order-total-preview">
@@ -346,7 +354,10 @@ export function OrderForm({
           <div className="form-section-title">
             <p className="kicker">Preorder</p>
             <h2>Deposit and arrival</h2>
-            <p>Incoming supply linking will be added in Milestone 5.</p>
+            <p>
+              Set the deposit you need before ordering. Link a purchase order
+              from the preorder once it is placed.
+            </p>
           </div>
           <div className="form-grid">
             <label className="field">
@@ -358,28 +369,30 @@ export function OrderForm({
                   defaultValue="0.00"
                   inputMode="decimal"
                   required
+                  aria-invalid={Boolean(error("depositRequired"))}
                 />
               </div>
-              {state.errors?.depositRequired ? (
-                <small className="field-error">
-                  {state.errors.depositRequired[0]}
-                </small>
-              ) : null}
+              {fieldError("depositRequired")}
             </label>
             <label className="field">
               <span>Estimated arrival (optional)</span>
-              <DatePicker name="estimatedArrival" />
-              {state.errors?.estimatedArrival ? (
-                <small className="field-error">
-                  {state.errors.estimatedArrival[0]}
-                </small>
-              ) : null}
+              <DatePicker
+                name="estimatedArrival"
+                invalid={Boolean(error("estimatedArrival"))}
+              />
+              {fieldError("estimatedArrival")}
+            </label>
+            <label className="field field--wide">
+              <span>Preorder notes</span>
+              <textarea
+                name="preorderNotes"
+                rows={3}
+                maxLength={2000}
+                aria-invalid={Boolean(error("preorderNotes"))}
+              />
+              {fieldError("preorderNotes")}
             </label>
           </div>
-          <label className="field">
-            <span>Preorder notes</span>
-            <textarea name="preorderNotes" rows={3} maxLength={2000} />
-          </label>
         </div>
       ) : null}
 
@@ -391,12 +404,19 @@ export function OrderForm({
         </div>
         <label className="field">
           <span>Notes</span>
-          <textarea name="notes" rows={4} maxLength={2000} />
+          <textarea
+            name="notes"
+            rows={4}
+            maxLength={2000}
+            aria-invalid={Boolean(error("notes"))}
+          />
+          {fieldError("notes")}
         </label>
       </div>
       {state.message ? (
         <div className="form-message form-message--error" role="alert">
           {state.message}
+          {error("idempotencyKey") ? ` ${error("idempotencyKey")}` : null}
         </div>
       ) : null}
       <div className="form-actions">

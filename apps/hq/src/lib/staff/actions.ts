@@ -23,7 +23,7 @@ export async function createStaffAction(
   if (!result.success)
     return {
       status: "error",
-      message: "Check the highlighted fields.",
+      message: "Check the highlighted details.",
       errors: result.errors,
     };
 

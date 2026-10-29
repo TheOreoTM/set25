@@ -5,8 +5,6 @@ import { createSampleAction } from "@/lib/supply/actions";
 import { getActiveSuppliers, getSupplyProducts } from "@/lib/supply/data";
 import { toSampleProductDto, toSupplierOptionDto } from "@/lib/supply/dto";
 
-export const instant = false;
-
 export const metadata = { title: "New sample" };
 export default async function NewSamplePage() {
   await requireOperationalPageAccess("/samples?forbidden=write");
@@ -17,7 +15,7 @@ export default async function NewSamplePage() {
   return (
     <main className="page-wrap">
       <PageHeader
-        eyebrow="Supply / Samples / New"
+        eyebrow="Pre-launch / Samples / New"
         title="New sample"
         description="Record the sample source and context before gathering evaluations."
       />

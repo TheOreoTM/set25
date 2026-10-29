@@ -6,8 +6,6 @@ import { createPurchaseOrderAction } from "@/lib/supply/actions";
 import { getActiveSuppliers, getSupplyProducts } from "@/lib/supply/data";
 import { toSupplierOptionDto } from "@/lib/supply/dto";
 
-export const instant = false;
-
 export const metadata = { title: "New purchase order" };
 export default async function NewPurchaseOrderPage({
   searchParams,
@@ -35,6 +33,7 @@ export default async function NewPurchaseOrderPage({
         description="Create a draft first. Placing it makes remaining quantities count as Incoming."
       />
       <PurchaseOrderForm
+        mode="create"
         action={createPurchaseOrderAction}
         suppliers={suppliers.map(toSupplierOptionDto)}
         variants={variants}

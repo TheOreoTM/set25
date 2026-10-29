@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { ArrowRight, Edit3, Mail, Phone, User } from "lucide-react";
+import { ArrowLeft, ArrowRight, Pencil } from "lucide-react";
 import { notFound } from "next/navigation";
 import {
   formatMVR,
   formatOrderNumber,
   fulfilmentStatusLabels,
+  paymentStatusLabels,
   teamTypeLabels,
 } from "@set25/shared";
 import { PageHeader } from "@/components/page-header";
@@ -13,69 +14,85 @@ import { requireStaff } from "@/lib/auth/session";
 import { paymentSummary } from "@/lib/commerce/money";
 import { FileAttachmentsPanel } from "@/components/files/file-attachments-panel";
 
-export const instant = false;
-
 export default async function TeamDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ created?: string; saved?: string }>;
 }) {
-  const { id } = await params;
+  const [{ id }, query] = await Promise.all([params, searchParams]);
   const [team, staff] = await Promise.all([getTeam(id), requireStaff()]);
   if (!team) notFound();
   const total = team.orders
     .filter((order) => order.fulfilmentStatus !== "CANCELLED")
     .reduce((sum, order) => sum + Number(order.total.toString()), 0);
   return (
-    <main className="page-wrap">
+    <main className="page-wrap supply-detail-page">
       <PageHeader
-        eyebrow="Commerce / Teams"
+        eyebrow="People / Teams"
         title={team.name}
-        description={`${teamTypeLabels[team.type]} account and connected orders.`}
+        description={[teamTypeLabels[team.type], team.contactName]
+          .filter(Boolean)
+          .join(" · ")}
       />
       <div className="detail-actions">
+        <Link className="text-link back-link" href="/teams">
+          <ArrowLeft aria-hidden="true" /> All teams
+        </Link>
         {staff.role !== "STAFF" ? (
-          <Link className="button button--dark" href={`/teams/${id}/edit`}>
-            <Edit3 aria-hidden="true" /> Edit team
-          </Link>
+          <div>
+            <Link
+              className="button button--secondary"
+              href={`/teams/${id}/edit`}
+            >
+              <Pencil aria-hidden="true" /> Edit team
+            </Link>
+          </div>
         ) : null}
       </div>
-      <section className="identity-grid">
-        <div className="identity-lead">
-          <p className="kicker">{teamTypeLabels[team.type]}</p>
-          <h2>{team.name}</h2>
-          <div className="contact-links">
-            {team.contactName ? (
-              <span>
-                <User aria-hidden="true" /> {team.contactName}
-              </span>
-            ) : null}
-            {team.phone ? (
-              <a href={`tel:${team.phone}`}>
-                <Phone aria-hidden="true" /> {team.phone}
-              </a>
-            ) : null}
-            {team.email ? (
-              <a href={`mailto:${team.email}`}>
-                <Mail aria-hidden="true" /> {team.email}
-              </a>
-            ) : null}
-          </div>
+      {query.created || query.saved ? (
+        <div className="form-message form-message--success" role="status">
+          Team {query.created ? "created" : "saved"}.
         </div>
-        <dl className="identity-stats">
-          <div>
-            <dt>Total orders</dt>
-            <dd>{team.orders.length}</dd>
-          </div>
-          <div>
-            <dt>Value ordered</dt>
-            <dd>{formatMVR(total)}</dd>
-          </div>
-        </dl>
+      ) : null}
+      <section className="supply-summary-strip" aria-label="Team summary">
+        <div>
+          <span>Orders</span>
+          <strong>{team.orders.length}</strong>
+        </div>
+        <div>
+          <span>Value Ordered</span>
+          <strong>{formatMVR(total)}</strong>
+        </div>
+        <div>
+          <span>Contact</span>
+          <strong>{team.contactName ?? "—"}</strong>
+        </div>
+        <div>
+          <span>Phone</span>
+          <strong>
+            {team.phone ? (
+              <a href={`tel:${team.phone.replace(/\s/g, "")}`}>{team.phone}</a>
+            ) : (
+              "—"
+            )}
+          </strong>
+        </div>
+        <div>
+          <span>Email</span>
+          <strong>
+            {team.email ? (
+              <a href={`mailto:${team.email}`}>{team.email}</a>
+            ) : (
+              "—"
+            )}
+          </strong>
+        </div>
       </section>
       {team.notes ? (
-        <section className="detail-section compact-section">
-          <div className="section-heading">
+        <section className="detail-section">
+          <div className="detail-section-head">
             <div>
               <p className="kicker">Context</p>
               <h2>Notes</h2>
@@ -94,6 +111,13 @@ export default async function TeamDetailPage({
         </div>
         {team.orders.length ? (
           <div className="commerce-list commerce-list--orders-mini">
+            <div className="commerce-row commerce-row--head">
+              <span>Order</span>
+              <span>Total</span>
+              <span>Payment</span>
+              <span>Fulfilment</span>
+              <span />
+            </div>
             {team.orders.map((order) => {
               const payment = paymentSummary(order.total, order.payments);
               return (
@@ -109,23 +133,19 @@ export default async function TeamDetailPage({
                     </small>
                   </span>
                   <span data-label="Total">{formatMVR(order.total)}</span>
-                  <span
-                    data-label="Payment"
-                    className={`status status--${payment.status.toLowerCase()}`}
-                  >
-                    {payment.status === "PART_PAID"
-                      ? "Part Paid"
-                      : payment.status === "UNPAID"
-                        ? "Unpaid"
-                        : payment.status === "REFUNDED"
-                          ? "Refunded"
-                          : "Paid"}
+                  <span data-label="Payment">
+                    <span
+                      className={`status status--${payment.status.toLowerCase()}`}
+                    >
+                      {paymentStatusLabels[payment.status]}
+                    </span>
                   </span>
-                  <span
-                    data-label="Fulfilment"
-                    className={`status status--${order.fulfilmentStatus.toLowerCase()}`}
-                  >
-                    {fulfilmentStatusLabels[order.fulfilmentStatus]}
+                  <span data-label="Fulfilment" className="row-status">
+                    <span
+                      className={`status status--${order.fulfilmentStatus.toLowerCase()}`}
+                    >
+                      {fulfilmentStatusLabels[order.fulfilmentStatus]}
+                    </span>
                   </span>
                   <span className="catalog-arrow">
                     <ArrowRight aria-hidden="true" />
@@ -135,7 +155,7 @@ export default async function TeamDetailPage({
             })}
           </div>
         ) : (
-          <div className="inline-empty">
+          <div className="inline-empty inline-empty--compact">
             <p>No orders recorded for this team.</p>
           </div>
         )}

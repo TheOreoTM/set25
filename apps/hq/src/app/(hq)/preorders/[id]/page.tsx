@@ -8,8 +8,6 @@ import { formatPurchaseOrderNumber } from "@set25/shared";
 import { FileAttachmentsPanel } from "@/components/files/file-attachments-panel";
 import { formatOrderNumber } from "@set25/shared";
 
-export const instant = false;
-
 export default async function PreorderPage({
   params,
   searchParams,

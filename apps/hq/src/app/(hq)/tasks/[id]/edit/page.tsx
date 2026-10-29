@@ -6,8 +6,6 @@ import { maldivesDateKey } from "@/lib/planning/date-range";
 import { updateTaskAction } from "@/lib/tasks/actions";
 import { getTask, getTaskFormOptions } from "@/lib/tasks/data";
 
-export const instant = false;
-
 export const metadata = { title: "Edit task" };
 
 export default async function EditTaskPage({
@@ -40,9 +38,9 @@ export default async function EditTaskPage({
   return (
     <main className="page-wrap">
       <PageHeader
-        eyebrow="Company / Tasks / Edit"
-        title="Edit task"
-        description={task.title}
+        eyebrow="Pre-launch / Tasks / Edit"
+        title={`Edit ${task.title}`}
+        description="Update the owner, priority, due date, or related record."
       />
       <TaskForm
         action={updateTaskAction.bind(null, id)}

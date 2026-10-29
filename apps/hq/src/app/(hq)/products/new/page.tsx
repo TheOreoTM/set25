@@ -3,8 +3,6 @@ import { ProductForm } from "@/components/catalog/product-form";
 import { createProductAction } from "@/lib/catalog/actions";
 import { requireOperationalPageAccess } from "@/lib/auth/session";
 
-export const instant = false;
-
 export const metadata = { title: "New product" };
 
 export default async function NewProductPage() {
@@ -12,7 +10,7 @@ export default async function NewProductPage() {
   return (
     <main className="page-wrap">
       <PageHeader
-        eyebrow="Commerce / Products / New"
+        eyebrow="Supply / Products / New"
         title="New product"
         description="Start with the shared product identity. Add variants and opening stock next."
       />

@@ -128,18 +128,53 @@ export function DatePicker({
     [onChange],
   );
 
-  const place = useCallback(() => {
+  // `scrollToFit` is set only when the picker opens: on touch layouts the
+  // page then scrolls so the calendar fits below its trigger. Later scroll
+  // and resize events only reposition it, so they never fight the user.
+  const place = useCallback((scrollToFit = false) => {
     const trigger = triggerRef.current;
     const popover = popoverRef.current;
     if (!trigger || !popover) return;
-    const rect = trigger.getBoundingClientRect();
+    const shown = (selector: string) => {
+      const bar = document.querySelector<HTMLElement>(selector);
+      return bar && getComputedStyle(bar).display !== "none"
+        ? bar.offsetHeight
+        : 0;
+    };
+    // Keep the popover clear of the fixed mobile top bar and tab bar.
+    const topBarHeight = shown(".mobile-bar");
+    const tabBarHeight = shown(".tab-bar");
+    const touch = topBarHeight > 0 || tabBarHeight > 0;
+    const topLimit = topBarHeight + 8;
+    const bottomLimit = window.innerHeight - 8 - tabBarHeight;
     const height = popover.offsetHeight;
     const width = popover.offsetWidth;
-    const below = rect.bottom + 6;
-    const top =
-      below + height > window.innerHeight && rect.top - height - 6 > 0
-        ? rect.top - height - 6
-        : below;
+    let rect = trigger.getBoundingClientRect();
+    const fitsBelow = () => rect.bottom + 6 + height <= bottomLimit;
+    const fitsAbove = rect.top - height - 6 >= (touch ? topLimit : 0);
+    if (touch && scrollToFit && !fitsBelow() && !fitsAbove) {
+      const overflow = rect.bottom + 6 + height - bottomLimit;
+      if (rect.top - overflow >= topLimit) {
+        window.scrollBy({ top: overflow, behavior: "instant" });
+        rect = trigger.getBoundingClientRect();
+      }
+    }
+    popover.style.right = "";
+    popover.style.bottom = "";
+    popover.style.width = "";
+    let top: number;
+    if (fitsBelow()) top = rect.bottom + 6;
+    else if (rect.top - height - 6 >= (touch ? topLimit : 0))
+      top = rect.top - height - 6;
+    else if (touch) {
+      // Last resort on phones: a sheet pinned above the tab bar.
+      popover.style.top = "auto";
+      popover.style.left = "16px";
+      popover.style.right = "16px";
+      popover.style.bottom = `${tabBarHeight + 8}px`;
+      popover.style.width = "auto";
+      return;
+    } else top = Math.max(8, Math.min(rect.bottom + 6, bottomLimit - height));
     const left = Math.max(
       8,
       Math.min(rect.left, window.innerWidth - width - 8),
@@ -163,12 +198,13 @@ export function DatePicker({
 
   useEffect(() => {
     if (!open) return;
-    place();
-    window.addEventListener("resize", place);
-    window.addEventListener("scroll", place, true);
+    place(true);
+    const reposition = () => place();
+    window.addEventListener("resize", reposition);
+    window.addEventListener("scroll", reposition, true);
     return () => {
-      window.removeEventListener("resize", place);
-      window.removeEventListener("scroll", place, true);
+      window.removeEventListener("resize", reposition);
+      window.removeEventListener("scroll", reposition, true);
     };
   }, [open, place]);
 
