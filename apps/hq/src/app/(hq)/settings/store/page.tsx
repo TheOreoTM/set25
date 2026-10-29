@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { ChevronDown } from "lucide-react";
 import { formatMVR } from "@set25/shared";
 import { PageHeader } from "@/components/page-header";
 import {
@@ -23,7 +24,7 @@ export default function StoreSettingsPage({
   return (
     <main className="page-wrap">
       <PageHeader
-        eyebrow="System / Store"
+        eyebrow="Launch / Store"
         title="Store settings"
         description="Online ordering, customer contact, and delivery pricing for the public SET25 Store."
       />
@@ -48,33 +49,34 @@ async function StoreSettingsContent({
   return (
     <>
       {query.saved ? (
-        <div className="success-banner" role="status">
+        <div className="form-message form-message--success" role="status">
           {query.saved === "delivery"
             ? "Delivery option saved."
             : "Store settings saved."}
         </div>
       ) : null}
-      <section className="order-command-bar">
-        <div className="order-command-statuses">
-          <span>
-            <small>Online ordering</small>
-            <strong
-              className={`status status--${settings?.storeOpen ? "completed" : "cancelled"}`}
-            >
-              {settings?.storeOpen ? "Open" : "Closed"}
-            </strong>
-          </span>
-          <span>
-            <small>Delivery options offered</small>
-            <strong>{activeOptions.length}</strong>
-          </span>
+      <section
+        className="supply-summary-strip supply-summary-strip--two"
+        aria-label="Store status"
+      >
+        <div>
+          <span>Online ordering</span>
+          <strong
+            className={`status status--${settings?.storeOpen ? "completed" : "cancelled"}`}
+          >
+            {settings?.storeOpen ? "Open" : "Closed"}
+          </strong>
         </div>
-        {settings?.storeOpen && !activeOptions.length ? (
-          <p className="field-error">
-            Checkout needs at least one active delivery option.
-          </p>
-        ) : null}
+        <div>
+          <span>Delivery options offered</span>
+          <strong>{activeOptions.length}</strong>
+        </div>
       </section>
+      {settings?.storeOpen && !activeOptions.length ? (
+        <div className="form-message form-message--error" role="alert">
+          Checkout needs at least one active delivery option.
+        </div>
+      ) : null}
       <StoreSettingsForm
         action={updateStoreSettingsAction}
         defaults={{
@@ -89,7 +91,7 @@ async function StoreSettingsContent({
         }}
       />
       <section
-        className="resource-panel detail-section"
+        className="resource-panel detail-section delivery-panel"
         aria-labelledby="delivery-title"
       >
         <div className="resource-panel-head">
@@ -113,6 +115,9 @@ async function StoreSettingsContent({
                     </small>
                   </span>
                   <strong>{formatMVR(option.price)}</strong>
+                  <span className="delivery-option-toggle" aria-hidden="true">
+                    Edit <ChevronDown />
+                  </span>
                 </summary>
                 <DeliveryOptionForm
                   action={updateDeliveryOptionAction.bind(null, option.id)}
@@ -129,8 +134,9 @@ async function StoreSettingsContent({
             ))}
           </div>
         ) : (
-          <div className="inline-empty">
+          <div className="inline-empty inline-empty--compact">
             <p>No delivery options yet.</p>
+            <span>Add the first option below so checkout can open.</span>
           </div>
         )}
         <div className="delivery-option-create">

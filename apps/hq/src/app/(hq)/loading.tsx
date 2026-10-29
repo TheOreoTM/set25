@@ -1,9 +1,16 @@
-import { PageHeader } from "@/components/page-header";
-
 export default function Loading() {
   return (
     <main className="page-wrap today-page" aria-busy="true" aria-label="Loading">
-      <PageHeader eyebrow="Pre-launch / Today" title="Today" />
+      {/* PageHeader's markup, with a placeholder where the date streams in. */}
+      <header className="page-header">
+        <div>
+          <p className="breadcrumb">Pre-launch / Today</p>
+          <div className="page-title-row">
+            <h1>Today</h1>
+          </div>
+          <div className="skeleton skeleton--copy" aria-hidden="true" />
+        </div>
+      </header>
       <div aria-hidden="true">
         <div className="skeleton sk-waitlist-hero" />
         <div className="skeleton-metrics">
@@ -12,8 +19,9 @@ export default function Loading() {
           ))}
         </div>
         <div className="skeleton-panels">
-          <div className="skeleton skeleton--panel" />
-          <div className="skeleton skeleton--panel" />
+          {Array.from({ length: 4 }, (_, index) => (
+            <div className="skeleton skeleton--panel" key={index} />
+          ))}
         </div>
       </div>
     </main>

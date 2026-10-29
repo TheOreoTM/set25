@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
 import { Plus, Save } from "lucide-react";
+import { useFormAction } from "@/components/ui/use-form-action";
 import {
   initialStoreFormState,
   type StoreFormState,
@@ -39,13 +39,12 @@ export function StoreSettingsForm({
   action: Action;
   defaults: StoreSettingsDefaults;
 }) {
-  const [state, formAction, pending] = useActionState(
+  const { formRef, state, pending, onSubmit, error } = useFormAction(
     action,
     initialStoreFormState,
   );
-  const error = (name: string) => state.errors?.[name]?.[0];
   return (
-    <form action={formAction} className="editor-form">
+    <form ref={formRef} onSubmit={onSubmit} className="editor-form">
       <div className="form-section">
         <div className="form-section-title">
           <p className="kicker">Availability</p>
@@ -159,13 +158,12 @@ export function DeliveryOptionForm({
   defaults?: DeliveryOptionDefaults;
   submitLabel: string;
 }) {
-  const [state, formAction, pending] = useActionState(
+  const { formRef, state, pending, onSubmit, error } = useFormAction(
     action,
     initialStoreFormState,
   );
-  const error = (name: string) => state.errors?.[name]?.[0];
   return (
-    <form action={formAction} className="embedded-editor">
+    <form ref={formRef} onSubmit={onSubmit} className="embedded-editor">
       <div className="form-grid">
         <Field
           label="Name"
@@ -177,8 +175,9 @@ export function DeliveryOptionForm({
           placeholder="Malé"
         />
         <Field
-          label="Price (MVR)"
+          label="Price"
           name="price"
+          prefix="MVR"
           inputMode="decimal"
           required
           defaultValue={defaults?.price}
@@ -226,17 +225,27 @@ function Field({
   name,
   error,
   hint,
+  prefix,
   ...props
 }: {
   label: string;
   name: string;
   error?: string;
   hint?: string;
+  prefix?: string;
 } & React.InputHTMLAttributes<HTMLInputElement>) {
+  const input = <input name={name} aria-invalid={Boolean(error)} {...props} />;
   return (
     <label className="field">
       <span>{label}</span>
-      <input name={name} aria-invalid={Boolean(error)} {...props} />
+      {prefix ? (
+        <div className="input-with-prefix">
+          <span>{prefix}</span>
+          {input}
+        </div>
+      ) : (
+        input
+      )}
       {error ? (
         <small className="field-error">{error}</small>
       ) : hint ? (

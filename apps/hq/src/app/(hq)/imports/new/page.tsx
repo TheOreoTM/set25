@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { PackageOpen } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { ImportForm } from "@/components/supply/import-form";
 import { requireOperationalPageAccess } from "@/lib/auth/session";
@@ -33,17 +33,13 @@ export default async function NewImportPage() {
           idempotencyKey={randomUUID()}
         />
       ) : (
-        <section className="empty-state">
-          <p className="kicker">Nothing ready</p>
-          <h2>No placed PO quantities are available.</h2>
-          <p>
-            Place a purchase order, or finish/cancel an existing import
-            allocation first.
-          </p>
-          <Link className="button button--dark" href="/purchase-orders">
-            View purchase orders <ArrowRight aria-hidden="true" />
-          </Link>
-        </section>
+        <EmptyState
+          kicker="Nothing ready"
+          title="No placed PO quantities are available."
+          description="Place a purchase order, or finish or cancel an existing import allocation first."
+          icon={PackageOpen}
+          action={{ href: "/purchase-orders", label: "View purchase orders" }}
+        />
       )}
     </main>
   );

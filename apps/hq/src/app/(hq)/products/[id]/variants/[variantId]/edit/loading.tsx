@@ -4,7 +4,7 @@ export default function Loading() {
   return (
     <PageSkeleton
       kind="form"
-      eyebrow="Commerce / Products"
+      eyebrow="Supply / Products"
       title="Edit variant"
       description="Update variant details. Stock remains protected by movement records."
     />

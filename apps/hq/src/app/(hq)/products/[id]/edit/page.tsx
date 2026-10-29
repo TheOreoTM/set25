@@ -29,7 +29,7 @@ async function EditProduct({ params }: { params: Promise<{ id: string }> }) {
   return (
     <>
       <PageHeader
-        eyebrow={`Commerce / Products / ${product.code} / Edit`}
+        eyebrow={`Supply / Products / ${product.code} / Edit`}
         title={`Edit ${product.name}`}
         description="Update shared catalogue details without changing stock."
       />
@@ -44,7 +44,7 @@ async function EditProduct({ params }: { params: Promise<{ id: string }> }) {
           category: product.category,
           shortDescription: product.shortDescription,
           description: product.description,
-          retailPrice: product.retailPrice.toString(),
+          retailPrice: product.retailPrice.toFixed(2),
           status: product.status,
           isPublished: product.isPublished,
           brandLine: product.brandLine,

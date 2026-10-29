@@ -56,7 +56,7 @@ export default async function SamplePage({
   return (
     <main className="page-wrap supply-detail-page sample-detail-page">
       <PageHeader
-        eyebrow="Supply / Samples"
+        eyebrow="Pre-launch / Samples"
         title={`${formatSampleNumber(sample.sampleNumber)} · ${sample.name}`}
         titleMeta={
           <span className={`status status--${sample.status.toLowerCase()}`}>
@@ -71,11 +71,11 @@ export default async function SamplePage({
         </Link>
         {canWrite ? (
           <div>
-            <EvaluationEditor action={evaluationAction} />
             <SampleDecisionActions
               action={changeSampleStatusAction.bind(null, id)}
               current={sample.status}
             />
+            <EvaluationEditor action={evaluationAction} />
           </div>
         ) : null}
       </div>
@@ -140,7 +140,7 @@ export default async function SamplePage({
         )}
       </section>
 
-      <div className="supply-detail-grid sample-content-grid">
+      <div className="supply-detail-grid">
         <section className="detail-section supply-main-panel compact-detail-section">
           <div className="detail-section-head">
             <div>

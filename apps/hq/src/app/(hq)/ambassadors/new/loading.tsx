@@ -4,7 +4,7 @@ export default function Loading() {
   return (
     <PageSkeleton
       kind="form"
-      eyebrow="Company / Ambassadors / New"
+      eyebrow="People / Ambassadors / New"
       title="New ambassador"
       description="Record the player, their terms, and how SET25 works with them."
     />

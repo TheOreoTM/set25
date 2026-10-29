@@ -33,6 +33,7 @@ export default async function NewPurchaseOrderPage({
         description="Create a draft first. Placing it makes remaining quantities count as Incoming."
       />
       <PurchaseOrderForm
+        mode="create"
         action={createPurchaseOrderAction}
         suppliers={suppliers.map(toSupplierOptionDto)}
         variants={variants}

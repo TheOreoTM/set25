@@ -36,10 +36,13 @@ export default async function OrdersPage({
     getOrders(filters),
     requireStaff(),
   ]);
+  const filtered = Boolean(
+    filters.search || filters.fulfilment || filters.payment || filters.source,
+  );
   return (
     <main className="page-wrap">
       <PageHeader
-        eyebrow="Commerce / Orders"
+        eyebrow="Launch / Orders"
         title="Orders"
         description="Sales, payment position, and fulfilment in one operational queue."
       />
@@ -51,7 +54,7 @@ export default async function OrdersPage({
             <input
               name="search"
               defaultValue={filters.search}
-              placeholder="Order, customer, phone, team, or SKU"
+              placeholder="Order, customer or SKU"
             />
           </label>
           <label>
@@ -115,8 +118,8 @@ export default async function OrdersPage({
             <div className="commerce-row commerce-row--head">
               <span>Order</span>
               <span>Customer</span>
-              <span>Source</span>
-              <span>Total</span>
+              <span className="col-wide">Source</span>
+              <span className="num">Total</span>
               <span>Payment</span>
               <span>Fulfilment</span>
               <span>Date</span>
@@ -140,10 +143,10 @@ export default async function OrdersPage({
                   <span data-label="Customer">
                     {order.customer?.name ?? order.team?.name ?? "Not recorded"}
                   </span>
-                  <span data-label="Source">
+                  <span data-label="Source" className="col-wide">
                     {orderSourceLabels[order.source]}
                   </span>
-                  <span data-label="Total" className="numeric">
+                  <span data-label="Total" className="numeric num">
                     <strong>{formatMVR(order.total)}</strong>
                   </span>
                   <span data-label="Payment">
@@ -153,7 +156,7 @@ export default async function OrdersPage({
                       {paymentStatusLabels[payment.status]}
                     </span>
                   </span>
-                  <span data-label="Fulfilment">
+                  <span data-label="Fulfilment" className="row-status">
                     <span
                       className={`status status--${order.fulfilmentStatus.toLowerCase()}`}
                     >
@@ -170,12 +173,24 @@ export default async function OrdersPage({
           </div>
         ) : (
           <div className="inline-empty">
-            <p>No orders match these filters.</p>
-            {staff.role !== "STAFF" ? (
-              <Link href="/orders/new">
-                Create the first order <ArrowRight aria-hidden="true" />
-              </Link>
-            ) : null}
+            {filtered ? (
+              <>
+                <p>No orders match these filters.</p>
+                <span>Try a different search or filter.</span>
+                <Link href="/orders">
+                  Clear filters <ArrowRight aria-hidden="true" />
+                </Link>
+              </>
+            ) : (
+              <>
+                <p>No orders yet.</p>
+                {staff.role !== "STAFF" ? (
+                  <Link href="/orders/new">
+                    Create the first order <ArrowRight aria-hidden="true" />
+                  </Link>
+                ) : null}
+              </>
+            )}
           </div>
         )}
       </section>

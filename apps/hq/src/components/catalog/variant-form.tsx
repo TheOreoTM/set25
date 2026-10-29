@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Save } from "lucide-react";
 import { initialFormState, type FormState } from "@/lib/catalog/validation";
+import { useFormAction } from "@/components/ui/use-form-action";
 
 type VariantDefaults = {
   sku?: string;
@@ -20,16 +20,22 @@ export function VariantForm({
   defaults = {},
   cancelHref,
   basePrice,
+  submitLabel = "Save variant",
+  pendingLabel = "Saving…",
 }: {
   action: (state: FormState, formData: FormData) => Promise<FormState>;
   defaults?: VariantDefaults;
   cancelHref: string;
   basePrice: string;
+  submitLabel?: string;
+  pendingLabel?: string;
 }) {
-  const [state, formAction, pending] = useActionState(action, initialFormState);
-  const error = (field: string) => state.errors?.[field]?.[0];
+  const { formRef, state, pending, onSubmit, error } = useFormAction(
+    action,
+    initialFormState,
+  );
   return (
-    <form action={formAction} className="editor-form editor-form--compact">
+    <form ref={formRef} onSubmit={onSubmit} className="editor-form">
       <div className="form-section">
         <div className="form-section-title">
           <p className="kicker">Identity</p>
@@ -62,7 +68,7 @@ export function VariantForm({
             error={error("color")}
           />
           <Field
-            label="Cost Each"
+            label="Cost each"
             name="cost"
             inputMode="decimal"
             defaultValue={defaults.cost ?? ""}
@@ -71,7 +77,7 @@ export function VariantForm({
             error={error("cost")}
           />
           <Field
-            label="Sell Price Override"
+            label="Sell price override"
             name="sellPriceOverride"
             inputMode="decimal"
             defaultValue={defaults.sellPriceOverride ?? ""}
@@ -81,7 +87,7 @@ export function VariantForm({
             error={error("sellPriceOverride")}
           />
           <Field
-            label="Reorder At"
+            label="Reorder at"
             name="reorderAt"
             inputMode="numeric"
             required
@@ -128,7 +134,7 @@ export function VariantForm({
           type="submit"
           disabled={pending}
         >
-          <Save aria-hidden="true" /> {pending ? "Saving…" : "Save variant"}
+          <Save aria-hidden="true" /> {pending ? pendingLabel : submitLabel}
         </button>
       </div>
     </form>

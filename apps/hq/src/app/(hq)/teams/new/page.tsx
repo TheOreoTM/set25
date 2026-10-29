@@ -10,7 +10,7 @@ export default async function NewTeamPage() {
   return (
     <main className="page-wrap page-wrap--editor">
       <PageHeader
-        eyebrow="Commerce / Teams / New"
+        eyebrow="People / Teams / New"
         title="New team"
         description="Create an organisation record without replacing the individual customer contact."
       />

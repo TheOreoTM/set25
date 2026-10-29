@@ -15,7 +15,7 @@ export default async function NewSamplePage() {
   return (
     <main className="page-wrap">
       <PageHeader
-        eyebrow="Supply / Samples / New"
+        eyebrow="Pre-launch / Samples / New"
         title="New sample"
         description="Record the sample source and context before gathering evaluations."
       />

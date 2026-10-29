@@ -1,7 +1,7 @@
 "use client";
 
 import { Select } from "@/components/ui/select";
-import { useActionState, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Minus, PackagePlus, Plus, X } from "lucide-react";
 import {
   inventoryMovementLabels,
@@ -13,6 +13,7 @@ import {
   validateStockAdjustment,
   type FormErrors,
 } from "@/lib/catalog/validation";
+import { useFormAction } from "@/components/ui/use-form-action";
 
 export type AdjustmentVariant = {
   id: string;
@@ -23,9 +24,11 @@ export type AdjustmentVariant = {
 
 type ReviewData = {
   direction: "Add" | "Remove";
-  quantity: string;
+  quantity: number;
   type: keyof typeof inventoryMovementLabels;
   notes: string;
+  reference: string | null;
+  variant: AdjustmentVariant | null;
 };
 
 export function StockAdjustment({
@@ -41,14 +44,15 @@ export function StockAdjustment({
   submissionKey: string;
   compact?: boolean;
 }) {
-  const [state, action, pending] = useActionState(
-    adjustStockAction,
-    initialFormState,
-  );
+  const {
+    formRef: form,
+    state,
+    pending,
+    onSubmit,
+  } = useFormAction(adjustStockAction, initialFormState);
   const [reviewing, setReviewing] = useState<ReviewData | null>(null);
   const [clientErrors, setClientErrors] = useState<FormErrors>({});
   const dialog = useRef<HTMLDialogElement>(null);
-  const form = useRef<HTMLFormElement>(null);
   const errors = { ...state.errors, ...clientErrors };
 
   function review() {
@@ -72,9 +76,13 @@ export function StockAdjustment({
     setClientErrors({});
     setReviewing({
       direction: result.data.direction === "REMOVE" ? "Remove" : "Add",
-      quantity: String(result.data.quantity),
+      quantity: result.data.quantity,
       type: result.data.type,
       notes: result.data.notes,
+      reference: result.data.reference,
+      variant:
+        variants.find((variant) => variant.id === result.data.variantId) ??
+        null,
     });
   }
 
@@ -98,8 +106,13 @@ export function StockAdjustment({
         onClose={() => setReviewing(null)}
       >
         <form
-          action={action}
           ref={form}
+          // Only the confirm step submits; anything else goes to review.
+          onSubmit={(event) => {
+            if (reviewing) return onSubmit(event);
+            event.preventDefault();
+            review();
+          }}
           onChange={() => {
             setReviewing(null);
             setClientErrors({});
@@ -128,11 +141,12 @@ export function StockAdjustment({
                 name="variantId"
                 defaultValue={defaultVariantId ?? variants[0]?.id}
                 required
+                aria-invalid={Boolean(errors.variantId)}
               >
                 {variants.map((variant) => (
                   <option key={variant.id} value={variant.id}>
-                    {variant.label} · {variant.sku} · {variant.stockOnHand}{" "}
-                    available
+                    {variant.sku} · {variant.stockOnHand} on hand ·{" "}
+                    {variant.label}
                   </option>
                 ))}
               </Select>
@@ -172,7 +186,12 @@ export function StockAdjustment({
             <div className="form-grid form-grid--dialog">
               <label className="field">
                 <span>Adjustment type</span>
-                <Select name="type" defaultValue="OPENING_STOCK" required>
+                <Select
+                  name="type"
+                  defaultValue="OPENING_STOCK"
+                  required
+                  aria-invalid={Boolean(errors.type)}
+                >
                   {INVENTORY_MOVEMENT_TYPES.map((type) => (
                     <option value={type} key={type}>
                       {inventoryMovementLabels[type]}
@@ -192,6 +211,7 @@ export function StockAdjustment({
                   step={1}
                   required
                   placeholder="20"
+                  aria-invalid={Boolean(errors.quantity)}
                 />
                 {errors.quantity ? (
                   <small className="field-error">{errors.quantity[0]}</small>
@@ -207,6 +227,7 @@ export function StockAdjustment({
                 minLength={3}
                 maxLength={500}
                 placeholder="Explain why the stock changed."
+                aria-invalid={Boolean(errors.notes)}
               />
               {errors.notes ? (
                 <small className="field-error">{errors.notes[0]}</small>
@@ -220,6 +241,7 @@ export function StockAdjustment({
                 name="reference"
                 maxLength={80}
                 placeholder="Optional document or note reference"
+                aria-invalid={Boolean(errors.reference)}
               />
               {errors.reference ? (
                 <small className="field-error">{errors.reference[0]}</small>
@@ -242,8 +264,11 @@ export function StockAdjustment({
             >
               {reviewing ? "Back" : "Cancel"}
             </button>
+            {/* Distinct keys: reusing one DOM button would turn it into the
+                submit button mid-click and apply the change unreviewed. */}
             {reviewing ? (
               <button
+                key="confirm"
                 className="button button--dark"
                 type="submit"
                 disabled={pending}
@@ -252,9 +277,13 @@ export function StockAdjustment({
               </button>
             ) : (
               <button
+                key="review"
                 className="button button--dark"
                 type="button"
-                onClick={review}
+                onClick={(event) => {
+                  event.preventDefault();
+                  review();
+                }}
               >
                 Review adjustment
               </button>
@@ -284,9 +313,28 @@ function AdjustmentReview({ data }: { data: ReviewData }) {
       </div>
       <p>You are about to</p>
       <strong>
-        {data.direction} {data.quantity} units
+        {data.direction} {data.quantity}{" "}
+        {data.quantity === 1 ? "unit" : "units"}
       </strong>
       <dl>
+        {data.variant ? (
+          <>
+            <div>
+              <dt>Variant</dt>
+              <dd>
+                {data.variant.label} · {data.variant.sku}
+              </dd>
+            </div>
+            <div>
+              <dt>On hand</dt>
+              <dd>
+                {data.variant.stockOnHand} →{" "}
+                {data.variant.stockOnHand +
+                  (data.direction === "Add" ? data.quantity : -data.quantity)}
+              </dd>
+            </div>
+          </>
+        ) : null}
         <div>
           <dt>Type</dt>
           <dd>{inventoryMovementLabels[data.type]}</dd>
@@ -295,6 +343,12 @@ function AdjustmentReview({ data }: { data: ReviewData }) {
           <dt>Reason</dt>
           <dd>{data.notes}</dd>
         </div>
+        {data.reference ? (
+          <div>
+            <dt>Reference</dt>
+            <dd>{data.reference}</dd>
+          </div>
+        ) : null}
       </dl>
       <small>
         This creates a permanent movement record and updates available stock

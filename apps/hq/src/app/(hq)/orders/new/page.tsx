@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import { getEffectivePrice } from "@set25/shared";
 import { PageHeader } from "@/components/page-header";
 import { OrderForm } from "@/components/commerce/order-form";
 import { getOrderFormOptions } from "@/lib/commerce/data";
@@ -13,7 +12,7 @@ export default async function NewOrderPage() {
   return (
     <main className="page-wrap page-wrap--editor">
       <PageHeader
-        eyebrow="Commerce / Orders / New"
+        eyebrow="Launch / Orders / New"
         title="New order"
         description="Record a sale with server-calculated totals and immutable item snapshots."
       />
@@ -28,10 +27,10 @@ export default async function NewOrderPage() {
             "Standard",
           sku: variant.sku,
           stockOnHand: variant.stockOnHand,
-          sellPrice: getEffectivePrice(
-            variant.product.retailPrice,
-            variant.sellPriceOverride,
-          ),
+          // The effective price, with cents, as the editable line default.
+          sellPrice: (
+            variant.sellPriceOverride ?? variant.product.retailPrice
+          ).toFixed(2),
         }))}
         submissionKey={randomUUID()}
       />

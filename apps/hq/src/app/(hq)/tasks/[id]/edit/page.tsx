@@ -38,9 +38,9 @@ export default async function EditTaskPage({
   return (
     <main className="page-wrap">
       <PageHeader
-        eyebrow="Company / Tasks / Edit"
-        title="Edit task"
-        description={task.title}
+        eyebrow="Pre-launch / Tasks / Edit"
+        title={`Edit ${task.title}`}
+        description="Update the owner, priority, due date, or related record."
       />
       <TaskForm
         action={updateTaskAction.bind(null, id)}

@@ -3,8 +3,8 @@
 import { Select } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import Link from "next/link";
-import { useActionState, useState } from "react";
-import { ArrowLeft, Pencil, Plus, Save, Trash2, X } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, Pencil, Plus, Save, Trash2 } from "lucide-react";
 import {
   COST_ALLOCATION_METHODS,
   costAllocationMethodLabels,
@@ -15,7 +15,9 @@ import {
   initialSupplyFormState,
   type SupplyFormState,
 } from "@/lib/supply/validation";
-import { FormResult } from "./supplier-forms";
+import { ModalDialog } from "@/components/ui/modal-dialog";
+import { useFormAction } from "@/components/ui/use-form-action";
+import { FieldError, FormResult } from "./supplier-forms";
 
 type PoLineOption = {
   id: string;
@@ -43,7 +45,7 @@ export function ImportForm({
   poLines: PoLineOption[];
   idempotencyKey: string;
 }) {
-  const [state, formAction, pending] = useActionState(
+  const { formRef, state, pending, onSubmit, error } = useFormAction(
     action,
     initialSupplyFormState,
   );
@@ -55,7 +57,11 @@ export function ImportForm({
       current.map((line) => (line.key === key ? { ...line, ...values } : line)),
     );
   return (
-    <form action={formAction} className="editor-form supply-editor">
+    <form
+      ref={formRef}
+      onSubmit={onSubmit}
+      className="editor-form supply-editor"
+    >
       <input type="hidden" name="idempotencyKey" value={idempotencyKey} />
       <section className="form-section">
         <div className="form-section-title">
@@ -69,7 +75,13 @@ export function ImportForm({
         <div className="form-grid">
           <label className="field">
             <span>Freight forwarder</span>
-            <input name="freightForwarder" required defaultValue="ICL" />
+            <input
+              name="freightForwarder"
+              required
+              defaultValue="ICL"
+              aria-invalid={Boolean(error("freightForwarder"))}
+            />
+            <FieldError message={error("freightForwarder")} />
           </label>
           <label className="field">
             <span>Tracking reference</span>
@@ -77,21 +89,33 @@ export function ImportForm({
           </label>
           <label className="field">
             <span>Estimated departure</span>
-            <DatePicker name="estimatedDeparture" />
+            <DatePicker
+              name="estimatedDeparture"
+              invalid={Boolean(error("dates"))}
+            />
           </label>
           <label className="field">
             <span>Estimated arrival</span>
-            <DatePicker name="estimatedArrival" />
+            <DatePicker
+              name="estimatedArrival"
+              invalid={Boolean(error("dates"))}
+            />
+            <FieldError message={error("dates")} />
           </label>
           <label className="field">
             <span>Cost allocation</span>
-            <Select name="costAllocationMethod" defaultValue="BY_QUANTITY">
+            <Select
+              name="costAllocationMethod"
+              defaultValue="BY_QUANTITY"
+              aria-invalid={Boolean(error("costAllocationMethod"))}
+            >
               {COST_ALLOCATION_METHODS.map((method) => (
                 <option key={method} value={method}>
                   {costAllocationMethodLabels[method]}
                 </option>
               ))}
             </Select>
+            <FieldError message={error("costAllocationMethod")} />
           </label>
         </div>
       </section>
@@ -114,7 +138,7 @@ export function ImportForm({
                 <span className="order-line-index">
                   {String(index + 1).padStart(2, "0")}
                 </span>
-                <label className="field">
+                <label className="field order-line-variant">
                   <span>Purchase order item</span>
                   <Select
                     name="purchaseOrderLineId"
@@ -130,15 +154,16 @@ export function ImportForm({
                     <option value="">Choose an item</option>
                     {poLines.map((item) => (
                       <option key={item.id} value={item.id}>
+                        {item.label} · {item.remaining} left ·{" "}
                         {formatPurchaseOrderNumber(item.purchaseOrderNumber)} ·{" "}
-                        {item.supplierName} · {item.label} · {item.remaining}{" "}
-                        left
+                        {item.supplierName}
                       </option>
                     ))}
                   </Select>
                   {selected ? (
                     <small>
-                      {selected.sku} · maximum {selected.remaining}{" "}
+                      {formatPurchaseOrderNumber(selected.purchaseOrderNumber)}{" "}
+                      · {selected.sku} · maximum {selected.remaining}{" "}
                       {selected.remaining === 1 ? "unit" : "units"}
                     </small>
                   ) : null}
@@ -176,23 +201,24 @@ export function ImportForm({
               </div>
             );
           })}
+          <FieldError message={error("lines")} />
+          <button
+            className="button button--secondary order-add-line"
+            type="button"
+            onClick={() =>
+              setLines((current) => [
+                ...current,
+                {
+                  key: crypto.randomUUID(),
+                  purchaseOrderLineId: "",
+                  quantityShipped: 1,
+                },
+              ])
+            }
+          >
+            <Plus aria-hidden="true" /> Add PO item
+          </button>
         </div>
-        <button
-          className="button button--secondary order-add-line"
-          type="button"
-          onClick={() =>
-            setLines((current) => [
-              ...current,
-              {
-                key: crypto.randomUUID(),
-                purchaseOrderLineId: "",
-                quantityShipped: 1,
-              },
-            ])
-          }
-        >
-          <Plus aria-hidden="true" /> Add PO item
-        </button>
       </section>
       <section className="form-section">
         <div className="form-section-title">
@@ -243,39 +269,18 @@ export function ShipmentCostEditor({
   return (
     <>
       <button
-        className="button button--secondary"
+        className="button button--secondary cost-edit-action"
         type="button"
         onClick={() => setOpen(true)}
       >
         <Pencil aria-hidden="true" /> Edit costs
       </button>
       {open ? (
-        <div className="dialog-backdrop" role="presentation">
-          <section
-            className="dialog-panel supply-editor-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="shipment-cost-title"
-          >
-            <div className="dialog-head">
-              <div>
-                <p className="kicker">Actual Cost to SET25</p>
-                <h2 id="shipment-cost-title">Edit shipment costs</h2>
-              </div>
-              <button
-                className="icon-button"
-                type="button"
-                aria-label="Close"
-                onClick={() => setOpen(false)}
-              >
-                <X aria-hidden="true" />
-              </button>
-            </div>
-            <div className="dialog-body">
-              <ShipmentCostForm action={action} defaults={defaults} />
-            </div>
-          </section>
-        </div>
+        <ShipmentCostForm
+          action={action}
+          defaults={defaults}
+          onClose={() => setOpen(false)}
+        />
       ) : null}
     </>
   );
@@ -284,59 +289,92 @@ export function ShipmentCostEditor({
 function ShipmentCostForm({
   action,
   defaults,
+  onClose,
 }: {
   action: (
     state: SupplyFormState,
     formData: FormData,
   ) => Promise<SupplyFormState>;
   defaults: ShipmentCostDefaults;
+  onClose: () => void;
 }) {
-  const [state, formAction, pending] = useActionState(
+  const { formRef, state, pending, onSubmit, error } = useFormAction(
     action,
     initialSupplyFormState,
   );
   return (
-    <form action={formAction} className="supply-inline-form">
-      <div className="form-grid">
-        <MoneyField
-          name="chinaShippingMvr"
-          label="China Shipping"
-          value={defaults.chinaShippingMvr}
-        />
-        <MoneyField
-          name="internationalShippingMvr"
-          label="International Shipping / ICL"
-          value={defaults.internationalShippingMvr}
-        />
-        <MoneyField
-          name="taxFeesMvr"
-          label="Tax / Fees"
-          value={defaults.taxFeesMvr}
-        />
-        <MoneyField
-          name="otherFeesMvr"
-          label="Other Fees"
-          value={defaults.otherFeesMvr}
-        />
-        <label className="field">
-          <span>Allocation method</span>
-          <Select
-            name="costAllocationMethod"
-            defaultValue={defaults.costAllocationMethod}
+    <ModalDialog
+      titleId="shipment-cost-title"
+      kicker="Actual Cost to SET25"
+      title="Edit shipment costs"
+      onClose={onClose}
+      busy={pending}
+      className="supply-editor-dialog"
+    >
+      <form ref={formRef} onSubmit={onSubmit}>
+        <div className="dialog-body">
+          <div className="form-grid">
+            <MoneyField
+              name="chinaShippingMvr"
+              label="China Shipping"
+              value={defaults.chinaShippingMvr}
+              error={error("chinaShippingMvr")}
+            />
+            <MoneyField
+              name="internationalShippingMvr"
+              label="International Shipping / ICL"
+              value={defaults.internationalShippingMvr}
+              error={error("internationalShippingMvr")}
+            />
+            <MoneyField
+              name="taxFeesMvr"
+              label="Tax / Fees"
+              value={defaults.taxFeesMvr}
+              error={error("taxFeesMvr")}
+            />
+            <MoneyField
+              name="otherFeesMvr"
+              label="Other Fees"
+              value={defaults.otherFeesMvr}
+              error={error("otherFeesMvr")}
+            />
+            <label className="field">
+              <span>Allocation method</span>
+              <Select
+                name="costAllocationMethod"
+                defaultValue={defaults.costAllocationMethod}
+                aria-invalid={Boolean(error("costAllocationMethod"))}
+              >
+                {COST_ALLOCATION_METHODS.map((method) => (
+                  <option value={method} key={method}>
+                    {costAllocationMethodLabels[method]}
+                  </option>
+                ))}
+              </Select>
+              <FieldError message={error("costAllocationMethod")} />
+            </label>
+          </div>
+          <FormResult state={state} />
+        </div>
+        <div className="dialog-actions">
+          <button
+            className="button button--secondary"
+            type="button"
+            onClick={onClose}
+            disabled={pending}
           >
-            {COST_ALLOCATION_METHODS.map((method) => (
-              <option value={method} key={method}>
-                {costAllocationMethodLabels[method]}
-              </option>
-            ))}
-          </Select>
-        </label>
-      </div>
-      <FormResult state={state} />
-      <button className="button button--dark" type="submit" disabled={pending}>
-        <Save aria-hidden="true" /> {pending ? "Saving…" : "Save costs"}
-      </button>
-    </form>
+            Cancel
+          </button>
+          <button
+            className="button button--dark"
+            type="submit"
+            disabled={pending}
+          >
+            <Save aria-hidden="true" /> {pending ? "Saving…" : "Save costs"}
+          </button>
+        </div>
+      </form>
+    </ModalDialog>
   );
 }
 
@@ -344,18 +382,27 @@ function MoneyField({
   name,
   label,
   value,
+  error,
 }: {
   name: string;
   label: string;
   value: string;
+  error?: string;
 }) {
   return (
     <label className="field">
       <span>{label}</span>
       <div className="input-with-prefix">
         <span>MVR</span>
-        <input name={name} inputMode="decimal" required defaultValue={value} />
+        <input
+          name={name}
+          inputMode="decimal"
+          required
+          defaultValue={value}
+          aria-invalid={Boolean(error)}
+        />
       </div>
+      <FieldError message={error} />
     </label>
   );
 }

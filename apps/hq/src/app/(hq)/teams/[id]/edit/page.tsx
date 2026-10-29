@@ -19,7 +19,7 @@ export default async function EditTeamPage({
   return (
     <main className="page-wrap page-wrap--editor">
       <PageHeader
-        eyebrow="Commerce / Teams / Edit"
+        eyebrow="People / Teams / Edit"
         title={`Edit ${team.name}`}
         description="Update organisation details without changing order history."
       />

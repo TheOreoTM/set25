@@ -23,7 +23,7 @@ export default async function EditContentPage({
   return (
     <main className="page-wrap">
       <PageHeader
-        eyebrow="Company / Content / Edit"
+        eyebrow="Pre-launch / Content / Edit"
         title={`Edit ${item.title}`}
         description="Update the plan, copy, owner, or final post link."
       />

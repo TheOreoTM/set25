@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { startTransition, useActionState, useRef, useState } from "react";
+import { useState } from "react";
 import { ArrowLeft, ChevronDown, Plus, Save } from "lucide-react";
 import {
   PRODUCT_CATEGORIES,
@@ -19,6 +19,7 @@ import {
   initialWaitlistFormState,
   type WaitlistFormState,
 } from "@/lib/waitlist/validation";
+import { useFormAction } from "@/components/ui/use-form-action";
 import { CopyDmButton, OpenDmLink } from "./waitlist-controls";
 
 type Action = (
@@ -38,33 +39,6 @@ type Defaults = {
   earlyBirdCode: string;
   notes: string;
 };
-
-/**
- * Submits through a transition instead of the form `action` prop, so a
- * validation error (a duplicate handle, say) keeps what was typed rather than
- * React's automatic form reset clearing it.
- */
-function useWaitlistAction(action: Action, resetOnSuccess = false) {
-  const form = useRef<HTMLFormElement>(null);
-  const [state, dispatch, pending] = useActionState(
-    async (previous: WaitlistFormState, formData: FormData) => {
-      const next = await action(previous, formData);
-      if (resetOnSuccess && next.status === "success") {
-        form.current?.reset();
-        form.current?.querySelector<HTMLInputElement>("input")?.focus();
-      }
-      return next;
-    },
-    initialWaitlistFormState,
-  );
-  const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    startTransition(() => dispatch(formData));
-  };
-  const error = (key: string) => state.errors?.[key]?.[0];
-  return { form, state, pending, onSubmit, error };
-}
 
 function ChipGroup({
   legend,
@@ -159,9 +133,10 @@ const handleInputProps = {
 
 /** Fast, one-thumb capture: handle, a few taps, add. Everything else optional. */
 export function WaitlistQuickAdd({ action }: { action: Action }) {
-  const { form, state, pending, onSubmit, error } = useWaitlistAction(
+  const { formRef, state, pending, onSubmit, error } = useFormAction(
     action,
-    true,
+    initialWaitlistFormState,
+    { resetOnSuccess: true },
   );
   const [moreOpen, setMoreOpen] = useState(false);
   return (
@@ -170,7 +145,7 @@ export function WaitlistQuickAdd({ action }: { action: Action }) {
         <p className="kicker">Quick add</p>
         <h2 id="quick-add-title">Add to waitlist</h2>
       </div>
-      <form ref={form} onSubmit={onSubmit} noValidate>
+      <form ref={formRef} onSubmit={onSubmit} noValidate>
         <TextField
           name="instagramHandle"
           label="Instagram handle"
@@ -186,36 +161,56 @@ export function WaitlistQuickAdd({ action }: { action: Action }) {
           checked={(value) => value === "INSTAGRAM_DM"}
           error={error("source")}
         />
-        <ChipGroup
-          legend="Interested in"
-          name="interestedCategories"
-          type="checkbox"
-          options={productOptions}
-          checked={() => false}
-          error={error("interestedCategories")}
-        />
-        <ChipGroup
-          legend="Sizes"
-          name="sizes"
-          type="checkbox"
-          options={sizeOptions}
-          checked={() => false}
-          error={error("sizes")}
-        />
-        <label className="chip chip--toggle">
-          <input type="checkbox" name="earlyBird" />
-          <span>Early Bird</span>
-        </label>
         <button
           className="waitlist-more-toggle"
           type="button"
           aria-expanded={moreOpen}
-          aria-controls="quick-add-more"
+          aria-controls="quick-add-interest quick-add-more"
           onClick={() => setMoreOpen(!moreOpen)}
         >
           <ChevronDown aria-hidden="true" />
-          {moreOpen ? "Fewer details" : "Name, phone, code, notes"}
+          {moreOpen ? (
+            "Fewer details"
+          ) : (
+            <>
+              <span className="waitlist-more-label--wide">
+                Name, phone, code, notes
+              </span>
+              <span className="waitlist-more-label--phone">More details</span>
+            </>
+          )}
         </button>
+        {/* Interest stays visible on wider screens; phones keep it behind
+            the details toggle so the list starts within the first screen. */}
+        <div
+          className="waitlist-interest"
+          id="quick-add-interest"
+          data-open={moreOpen || undefined}
+        >
+          <ChipGroup
+            legend="Interested in"
+            name="interestedCategories"
+            type="checkbox"
+            options={productOptions}
+            checked={() => false}
+            error={error("interestedCategories")}
+          />
+          <ChipGroup
+            legend="Sizes"
+            name="sizes"
+            type="checkbox"
+            options={sizeOptions}
+            checked={() => false}
+            error={error("sizes")}
+          />
+          <fieldset className="chip-group">
+            <legend>Early Bird</legend>
+            <label className="chip chip--toggle">
+              <input type="checkbox" name="earlyBird" />
+              <span>Early Bird</span>
+            </label>
+          </fieldset>
+        </div>
         <div className="waitlist-more" id="quick-add-more" hidden={!moreOpen}>
           <TextField
             name="name"
@@ -242,7 +237,7 @@ export function WaitlistQuickAdd({ action }: { action: Action }) {
             error={error("earlyBirdCode")}
             hint="Saved in capitals. A code marks them as Early Bird."
           />
-          <label className="field">
+          <label className="field waitlist-more-notes">
             <span>Notes</span>
             <textarea name="notes" rows={3} maxLength={2000} />
             {error("notes") ? (
@@ -302,118 +297,130 @@ export function WaitlistForm({
   defaults: Defaults;
   cancelHref: string;
 }) {
-  const { form, state, pending, onSubmit, error } = useWaitlistAction(action);
+  const { formRef, state, pending, onSubmit, error } = useFormAction(
+    action,
+    initialWaitlistFormState,
+  );
   return (
-    <form ref={form} onSubmit={onSubmit} className="editor-form" noValidate>
+    <form ref={formRef} onSubmit={onSubmit} className="editor-form" noValidate>
       <section className="form-section">
         <div className="form-section-title">
           <p className="kicker">Person</p>
           <h2>Who and where from</h2>
           <p>Contact stays on Instagram. A phone number is optional.</p>
         </div>
-        <div className="form-grid">
-          <TextField
-            name="instagramHandle"
-            label="Instagram handle"
-            defaultValue={defaults.instagramHandle}
-            error={error("instagramHandle")}
-            {...handleInputProps}
-          />
-          <TextField
-            name="name"
-            label="Name"
-            defaultValue={defaults.name}
-            maxLength={120}
-            error={error("name")}
-          />
-          <TextField
-            name="phone"
-            label="Phone (optional)"
-            type="tel"
-            inputMode="tel"
-            defaultValue={defaults.phone}
-            error={error("phone")}
+        <div className="form-stack">
+          <div className="form-grid">
+            <TextField
+              name="instagramHandle"
+              label="Instagram handle"
+              defaultValue={defaults.instagramHandle}
+              error={error("instagramHandle")}
+              {...handleInputProps}
+            />
+            <TextField
+              name="name"
+              label="Name"
+              defaultValue={defaults.name}
+              maxLength={120}
+              error={error("name")}
+            />
+            <TextField
+              name="phone"
+              label="Phone (optional)"
+              type="tel"
+              inputMode="tel"
+              defaultValue={defaults.phone}
+              error={error("phone")}
+            />
+          </div>
+          <ChipGroup
+            legend="Source"
+            name="source"
+            type="radio"
+            options={sourceOptions}
+            checked={(value) => value === defaults.source}
+            error={error("source")}
           />
         </div>
-        <ChipGroup
-          legend="Source"
-          name="source"
-          type="radio"
-          options={sourceOptions}
-          checked={(value) => value === defaults.source}
-          error={error("source")}
-        />
       </section>
       <section className="form-section">
         <div className="form-section-title">
           <p className="kicker">Interest</p>
           <h2>Products and sizes</h2>
         </div>
-        <ChipGroup
-          legend="Interested in"
-          name="interestedCategories"
-          type="checkbox"
-          options={productOptions}
-          checked={(value) =>
-            defaults.interestedCategories.includes(
-              value as ProductCategoryValue,
-            )
-          }
-          error={error("interestedCategories")}
-        />
-        <ChipGroup
-          legend="Sizes"
-          name="sizes"
-          type="checkbox"
-          options={sizeOptions}
-          checked={(value) => defaults.sizes.includes(value)}
-          error={error("sizes")}
-        />
+        <div className="form-stack">
+          <ChipGroup
+            legend="Interested in"
+            name="interestedCategories"
+            type="checkbox"
+            options={productOptions}
+            checked={(value) =>
+              defaults.interestedCategories.includes(
+                value as ProductCategoryValue,
+              )
+            }
+            error={error("interestedCategories")}
+          />
+          <ChipGroup
+            legend="Sizes"
+            name="sizes"
+            type="checkbox"
+            options={sizeOptions}
+            checked={(value) => defaults.sizes.includes(value)}
+            error={error("sizes")}
+          />
+        </div>
       </section>
       <section className="form-section">
         <div className="form-section-title">
           <p className="kicker">Pipeline</p>
           <h2>Status and Early Bird</h2>
         </div>
-        <ChipGroup
-          legend="Status"
-          name="status"
-          type="radio"
-          options={statusOptions}
-          checked={(value) => value === defaults.status}
-          error={error("status")}
-        />
-        <div className="form-grid">
-          <label className="chip chip--toggle">
-            <input
-              type="checkbox"
-              name="earlyBird"
-              defaultChecked={defaults.earlyBird}
+        <div className="form-stack">
+          <ChipGroup
+            legend="Status"
+            name="status"
+            type="radio"
+            options={statusOptions}
+            checked={(value) => value === defaults.status}
+            error={error("status")}
+          />
+          <div className="form-grid">
+            <fieldset className="chip-group">
+              <legend>Early Bird</legend>
+              <label className="chip chip--toggle">
+                <input
+                  type="checkbox"
+                  name="earlyBird"
+                  defaultChecked={defaults.earlyBird}
+                />
+                <span>Early Bird</span>
+              </label>
+            </fieldset>
+            <TextField
+              name="earlyBirdCode"
+              label="Early Bird code"
+              defaultValue={defaults.earlyBirdCode}
+              maxLength={30}
+              autoCapitalize="characters"
+              error={error("earlyBirdCode")}
+              hint="Saved in capitals and must be unique."
             />
-            <span>Early Bird</span>
+          </div>
+          <label className="field">
+            <span>Notes</span>
+            <textarea
+              name="notes"
+              rows={4}
+              maxLength={2000}
+              defaultValue={defaults.notes}
+            />
+            {error("notes") ? (
+              <small className="field-error">{error("notes")}</small>
+            ) : null}
           </label>
-          <TextField
-            name="earlyBirdCode"
-            label="Early Bird code"
-            defaultValue={defaults.earlyBirdCode}
-            maxLength={30}
-            autoCapitalize="characters"
-            error={error("earlyBirdCode")}
-            hint="Saved in capitals and must be unique."
-          />
         </div>
-        <label className="field">
-          <span>Notes</span>
-          <textarea
-            name="notes"
-            rows={4}
-            maxLength={2000}
-            defaultValue={defaults.notes}
-          />
-          {error("notes") ? (
-            <small className="field-error">{error("notes")}</small>
-          ) : null}
-        </label>
       </section>
       {state.status === "error" ? (
         <div className="form-message form-message--error" role="alert">

@@ -24,7 +24,7 @@ export async function createTaskAction(
   const staff = await requireOperationalAccess();
   const result = validateTask(formData);
   if (!result.success)
-    return failure("Check the highlighted fields.", result.errors);
+    return failure("Check the highlighted details.", result.errors);
   const relation = await validatedTaskRelation(
     result.data.relatedType,
     result.data.relatedId,
@@ -72,7 +72,7 @@ export async function updateTaskAction(
   await requireOperationalAccess();
   const result = validateTask(formData);
   if (!result.success)
-    return failure("Check the highlighted fields.", result.errors);
+    return failure("Check the highlighted details.", result.errors);
   const [existing, relation] = await Promise.all([
     db.task.findUnique({ where: { id }, select: { completedAt: true } }),
     validatedTaskRelation(result.data.relatedType, result.data.relatedId),

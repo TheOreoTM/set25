@@ -21,7 +21,7 @@ export default async function EditAmbassadorPage({
   return (
     <main className="page-wrap">
       <PageHeader
-        eyebrow="Company / Ambassadors / Edit"
+        eyebrow="People / Ambassadors / Edit"
         title={`Edit ${ambassador.name}`}
         description="Update contact details, status, and reference terms."
       />

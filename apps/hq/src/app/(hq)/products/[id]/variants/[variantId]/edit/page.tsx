@@ -31,20 +31,20 @@ async function EditVariant({
   return (
     <>
       <PageHeader
-        eyebrow={`Commerce / Products / ${variant.product.code} / ${variant.sku}`}
-        title="Edit variant"
+        eyebrow={`Supply / Products / ${variant.product.code} / Edit`}
+        title={`Edit ${variant.sku}`}
         description="Update variant details. Stock remains protected by movement records."
       />
       <VariantForm
         action={updateVariantAction.bind(null, id, variantId)}
         cancelHref={`/products/${id}`}
-        basePrice={variant.product.retailPrice.toString()}
+        basePrice={variant.product.retailPrice.toFixed(2)}
         defaults={{
           sku: variant.sku,
           size: variant.size,
           color: variant.color,
-          cost: variant.cost?.toString(),
-          sellPriceOverride: variant.sellPriceOverride?.toString(),
+          cost: variant.cost?.toFixed(2),
+          sellPriceOverride: variant.sellPriceOverride?.toFixed(2),
           reorderAt: variant.reorderAt,
           active: variant.active,
         }}

@@ -12,8 +12,11 @@
   --steel: var(--color-steel);
   --paper: var(--color-paper);
   --line: var(--color-line);
+  /* Stronger neutral rule for dividers and markers that sit on --line. */
+  --line-dark: #bdbdb6;
   --muted: var(--color-muted);
   --danger: var(--color-danger);
+  --danger-strong: #8b2222;
   --sidebar: 238px;
 }
 * {
@@ -59,6 +62,13 @@ a:focus-visible {
   outline: 2px solid var(--onyx);
   outline-offset: 3px;
 }
+/* On the Onyx sidebar and top bar an Onyx ring would be invisible. */
+.sidebar a:focus-visible,
+.sidebar button:focus-visible,
+.mobile-bar a:focus-visible {
+  outline: 2px solid var(--volt);
+  outline-offset: -2px;
+}
 svg {
   flex: 0 0 auto;
 }
@@ -72,6 +82,9 @@ svg {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+.nowrap {
+  white-space: nowrap;
 }
 .app-shell {
   min-height: 100vh;
@@ -88,7 +101,7 @@ svg {
   display: flex;
   width: var(--sidebar);
   flex-direction: column;
-  overflow-y: auto;
+  overflow: hidden;
   background: var(--onyx);
   color: var(--white);
   border-right: 1px solid #252525;
@@ -115,12 +128,21 @@ svg {
 .nav-groups {
   padding: 14px 12px 24px;
 }
+/* Only the links scroll, so the account footer stays on screen at any
+   viewport height. */
+.sidebar .nav-groups {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-color: #5a5a5a transparent;
+  scrollbar-width: thin;
+}
 .nav-group {
-  padding-top: 15px;
+  padding-top: 10px;
 }
 .nav-group > p {
   margin: 0 12px 7px;
-  color: #686c70;
+  color: var(--steel);
   font-family: Rajdhani, sans-serif;
   font-size: var(--text-label);
   font-weight: 700;
@@ -130,12 +152,12 @@ svg {
 .nav-link {
   position: relative;
   display: flex;
-  min-height: 36px;
+  min-height: 32px;
   align-items: center;
   gap: 11px;
   padding: 7px 12px;
   color: #aeb0b1;
-  font-size: 12.5px;
+  font-size: var(--text-body-lg);
   font-weight: 500;
   transition:
     color 150ms ease,
@@ -161,11 +183,84 @@ svg {
   background: var(--volt);
   content: "";
 }
+/* Short desktop viewports (1024x768 and similar): every link from Today
+   to Staff access fits between the brand and the account footer. */
+@media (min-width: 821px) and (max-height: 860px) {
+  .sidebar-brand {
+    padding-block: 14px 12px;
+  }
+  .sidebar-brand img {
+    width: 112px;
+  }
+  .sidebar-brand > span {
+    margin-top: 6px;
+  }
+  .sidebar .nav-groups {
+    padding-block: 2px 6px;
+  }
+  .sidebar .nav-group {
+    padding-top: 6px;
+  }
+  .sidebar .nav-group > p {
+    margin-bottom: 2px;
+    line-height: 1.2;
+  }
+  .sidebar .nav-link {
+    min-height: 25px;
+    padding-block: 2px;
+  }
+  .sidebar .nav-link.is-active::before {
+    inset-block: 5px;
+  }
+  .sidebar .sidebar-footer {
+    padding-block: 9px;
+  }
+  .sidebar .sidebar-account.is-active::before {
+    inset-block: 17px;
+  }
+}
+/* Common laptop heights (864-1100px, e.g. 1536x864, 1440x900, 1920x1080):
+   a lighter trim so all 20 links still fit without scrolling the nav. */
+@media (min-width: 821px) and (min-height: 861px) and (max-height: 1100px) {
+  .sidebar-brand {
+    padding-block: 18px 15px;
+  }
+  .sidebar-brand img {
+    width: 118px;
+  }
+  .sidebar-brand > span {
+    margin-top: 7px;
+  }
+  .sidebar .nav-groups {
+    padding-block: 2px 6px;
+  }
+  .sidebar .nav-group {
+    padding-top: 6px;
+  }
+  .sidebar .nav-group > p {
+    margin-bottom: 3px;
+    line-height: 1.3;
+  }
+  .sidebar .nav-link {
+    min-height: 28px;
+    padding-block: 4px;
+  }
+  .sidebar .nav-link.is-active::before {
+    inset-block: 7px;
+  }
+  .sidebar .sidebar-footer {
+    padding-block: 12px;
+  }
+  .sidebar .sidebar-account.is-active::before {
+    inset-block: 20px;
+  }
+}
 .sidebar-footer {
+  position: relative;
   display: flex;
+  flex: none;
   align-items: center;
   gap: 10px;
-  margin-top: auto;
   padding: 16px 20px;
   border-top: 1px solid #252525;
 }
@@ -192,6 +287,18 @@ svg {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+.sidebar-account.is-active strong {
+  color: #fff;
+}
+/* Sits on the same x as the nav links' Volt rule (the footer is its
+   containing block). */
+.sidebar-account.is-active::before {
+  position: absolute;
+  inset: 24px auto 24px 12px;
+  width: 2px;
+  background: var(--volt);
+  content: "";
+}
 .sidebar-footer strong {
   font-family: Rajdhani, sans-serif;
   font-size: var(--text-body);
@@ -209,7 +316,6 @@ svg {
 .page-wrap {
   width: 100%;
   max-width: 1500px;
-  min-height: 100vh;
   margin: 0 auto;
   padding: 34px 38px 64px;
 }
@@ -365,12 +471,20 @@ svg {
   gap: 4px;
   margin-top: 10px;
   color: var(--steel);
-  font-size: 9.5px;
+  font-size: var(--text-label);
 }
 .metric span svg {
   width: 12px;
   height: 12px;
   color: var(--onyx);
+}
+/* A subline of segments that only breaks at its separators. */
+.metric .metric-breakdown {
+  display: block;
+}
+.metric .metric-breakdown .nowrap {
+  display: inline;
+  margin: 0;
 }
 
 .dashboard-grid {
@@ -387,13 +501,24 @@ svg {
 .panel {
   background: var(--paper);
   border: 1px solid var(--line);
-  padding: 21px 22px;
+  padding: 0 20px 20px;
+}
+/* Same head as .resource-panel-head: its rule runs edge to edge, like the
+   rows below it. */
+.panel > .section-heading {
+  min-height: 72px;
+  align-items: center;
+  margin-inline: -20px;
+  padding: 17px 20px;
+}
+.panel > .section-heading + .inline-empty--panel {
+  border-top: 0;
 }
 .panel--attention {
   border-top: 2px solid var(--onyx);
 }
 .attention-list {
-  margin: 0 -22px -21px;
+  margin: 0 -20px -20px;
 }
 .attention-item {
   position: relative;
@@ -455,7 +580,7 @@ svg {
 .attention-copy small {
   margin-top: 3px;
   color: var(--steel);
-  font-size: 9.5px;
+  font-size: var(--text-label);
 }
 .row-arrow {
   width: 15px;
@@ -656,7 +781,7 @@ td strong {
   width: 14px;
 }
 .task-list {
-  margin: 0 -22px -21px;
+  margin: 0 -20px -20px;
 }
 .task-item {
   display: grid;
@@ -664,7 +789,7 @@ td strong {
   grid-template-columns: 42px 1fr 18px;
   align-items: center;
   gap: 13px;
-  padding: 10px 18px 10px 22px;
+  padding: 10px 18px 10px 20px;
   border-bottom: 1px solid var(--line);
 }
 .task-item:last-child {
@@ -754,6 +879,7 @@ td strong {
 
 .page-wrap--placeholder {
   display: flex;
+  min-height: 100vh;
   max-width: none;
   flex-direction: column;
 }
@@ -786,6 +912,7 @@ td strong {
   font-family: Rajdhani, sans-serif;
   font-size: 30px;
   font-weight: 600;
+  line-height: 1.1;
 }
 .empty-state > p:not(.kicker) {
   max-width: 520px;
@@ -794,13 +921,21 @@ td strong {
   font-size: var(--text-body);
   line-height: 1.7;
 }
+/* The call to action sits a fixed step below the description. */
+.empty-state > p:not(.kicker):not(:last-child) {
+  margin-bottom: 26px;
+}
+@media (max-width: 820px) {
+  .empty-state h2 {
+    font-size: 24px;
+  }
+}
 .button {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
   justify-content: center;
   gap: 9px;
-  margin-top: 26px;
   padding: 0 16px;
   font-size: var(--text-small);
   font-weight: 650;
@@ -835,7 +970,7 @@ td strong {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 1px;
-  margin-top: 57px;
+  margin-top: 16px;
   background: var(--line);
   border: 1px solid var(--line);
 }
@@ -844,7 +979,7 @@ td strong {
 }
 .skeleton-panels {
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   margin-top: 16px;
 }
@@ -869,9 +1004,6 @@ td strong {
   }
   .incoming {
     min-height: 400px;
-  }
-  .metric {
-    padding-inline: 17px;
   }
 }
 @media (max-width: 820px) {
@@ -915,12 +1047,23 @@ td strong {
   .metric:nth-child(-n + 2) {
     border-bottom: 1px solid var(--line);
   }
-  .dashboard-grid--footer,
-  .skeleton-panels {
+  .dashboard-grid--footer {
     grid-template-columns: 1fr;
   }
-  .skeleton-metrics {
-    grid-template-columns: 1fr 1fr;
+  .panel {
+    padding: 0 16px 16px;
+  }
+  .panel > .section-heading {
+    margin-inline: -16px;
+    padding-inline: 16px;
+  }
+  .attention-list,
+  .task-list {
+    margin-inline: -16px;
+    margin-bottom: -16px;
+  }
+  .task-item {
+    padding-inline: 16px 14px;
   }
 }
 @media (max-width: 600px) {
@@ -967,14 +1110,6 @@ td strong {
   .dashboard-grid {
     gap: 12px;
     margin-top: 12px;
-  }
-  .panel {
-    padding: 18px 16px;
-  }
-  .attention-list,
-  .task-list {
-    margin-inline: -16px;
-    margin-bottom: -18px;
   }
   .attention-item {
     grid-template-columns: 32px 1fr 16px;
@@ -1080,11 +1215,15 @@ td strong {
   gap: 16px;
   margin-bottom: 16px;
 }
-.resource-toolbar .button,
-.detail-actions .button,
-.form-actions .button,
-.dialog-actions .button {
-  margin-top: 0;
+/* The primary action keeps its label on one line; the filters give way. */
+.resource-toolbar > .button,
+.resource-toolbar > a.button,
+.resource-toolbar > button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.resource-toolbar > .filter-bar {
+  min-width: 0;
 }
 .filter-bar {
   display: flex;
@@ -1134,7 +1273,8 @@ td strong {
   border-color: var(--onyx);
   box-shadow: 0 0 0 2px var(--volt);
 }
-.field [aria-invalid="true"] {
+.field [aria-invalid="true"],
+.field [aria-invalid="true"]:focus {
   border-color: var(--danger);
 }
 .filter-bar > label:not(.search-field) {
@@ -1183,39 +1323,55 @@ td strong {
 .resource-panel-head h2 {
   margin: 0;
   font-family: Rajdhani, sans-serif;
-  font-size: 22px;
+  font-size: var(--text-section);
   font-weight: 600;
+  line-height: 1.1;
 }
 .resource-panel-head > p {
   margin: 0;
   color: var(--steel);
   font-size: var(--text-label);
 }
+/* A head holding one compact action (Upload file, Plan content). */
+.resource-panel-head--action .button {
+  flex: 0 0 auto;
+}
+@media (max-width: 820px) {
+  .resource-panel-head {
+    padding-inline: 16px;
+  }
+}
 .catalog-row {
   display: grid;
   min-height: 68px;
   grid-template-columns:
-    minmax(210px, 1.6fr)
-    0.55fr 0.9fr 0.8fr 0.5fr 0.5fr 0.65fr 30px;
+    minmax(0, 1.6fr) minmax(0, 0.55fr) minmax(0, 0.9fr) minmax(0, 0.8fr)
+    minmax(0, 0.5fr) minmax(0, 0.5fr) minmax(72px, 0.65fr) 24px;
   align-items: center;
   gap: 12px;
   padding: 10px 16px 10px 20px;
   border-bottom: 1px solid var(--line);
   color: var(--muted);
-  font-size: 10.5px;
+  font-size: var(--text-label);
 }
 .catalog-row:last-child {
   border-bottom: 0;
 }
-.catalog-row:not(.catalog-row--head):hover,
-.stock-row:not(.stock-row--head):hover,
-.variant-row:not(.variant-row--head):hover {
-  background: #f1f1ed;
+/* Row hover only tints the background, and only where a pointer can hover,
+   so a tap on a phone doesn't leave the row shaded. */
+@media (hover: hover) {
+  .catalog-row:not(.catalog-row--head):hover,
+  .stock-row:not(.stock-row--head):hover,
+  .variant-row:not(.variant-row--head):hover {
+    background: #f7f7f5;
+  }
 }
-.catalog-row--head,
-.stock-row--head,
-.variant-row--head {
-  min-height: 36px;
+/* Compound selectors so the head keeps its size and type after the later
+   .stock-row and .variant-row rules, matching the supply and commerce heads. */
+.catalog-row.catalog-row--head,
+.stock-row.stock-row--head,
+.variant-row.variant-row--head {
+  min-height: 38px;
   color: var(--steel);
   font-family: Rajdhani, sans-serif;
   font-size: var(--text-meta);
@@ -1231,7 +1387,7 @@ td strong {
 .catalog-product strong {
   overflow: hidden;
   color: var(--onyx);
-  font-size: 11.5px;
+  font-size: var(--text-small);
   font-weight: 650;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1285,6 +1441,51 @@ td strong {
 }
 .inline-empty svg {
   width: 13px;
+}
+/* Compact empty line inside a record section (and the Files panel): a ruled
+   left-aligned note instead of the full list-page empty state. */
+.inline-empty--compact,
+.file-panel-empty {
+  display: grid;
+  min-height: 0;
+  justify-content: start;
+  justify-items: start;
+  gap: 4px;
+  margin: 0;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--line);
+  text-align: left;
+}
+.inline-empty--compact p,
+.file-panel-empty {
+  margin: 0;
+  color: var(--onyx);
+  font-family: var(--font-interface);
+  font-size: var(--text-body);
+  font-weight: 600;
+}
+.inline-empty--compact a,
+.inline-empty--compact > span {
+  margin-top: 0;
+  color: var(--steel);
+  font-size: var(--text-label);
+}
+.resource-panel > .inline-empty--compact {
+  padding: 16px 20px 18px;
+}
+.resource-panel > .embedded-editor {
+  margin-top: 0;
+  padding: 20px;
+}
+.resource-panel-head + .inline-empty--compact,
+.resource-panel-head + .embedded-editor {
+  border-top: 0;
+}
+@media (max-width: 820px) {
+  .resource-panel > .inline-empty--compact,
+  .resource-panel > .embedded-editor {
+    padding-inline: 16px;
+  }
 }
 .skeleton--catalog {
   height: 360px;
@@ -1352,9 +1553,6 @@ td strong {
   display: grid;
   gap: 16px;
 }
-.editor-form--compact {
-  max-width: 900px;
-}
 .form-section {
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
@@ -1366,8 +1564,9 @@ td strong {
 .form-section-title h2 {
   margin: 0;
   font-family: Rajdhani, sans-serif;
-  font-size: 22px;
+  font-size: var(--text-section);
   font-weight: 600;
+  line-height: 1.1;
 }
 .form-section-title > p:last-child {
   margin: 8px 0 0;
@@ -1383,6 +1582,16 @@ td strong {
 .form-stack {
   display: grid;
   gap: 18px;
+}
+.form-grid > .field--wide {
+  grid-column: 1 / -1;
+}
+/* A section is a title column plus one fields container; anything extra
+   still lands in the fields column instead of under the title. */
+@media (min-width: 821px) {
+  .form-section > :not(.form-section-title) {
+    grid-column: 2;
+  }
 }
 .field {
   display: flex;
@@ -1429,9 +1638,13 @@ td strong {
   border: 1px solid var(--line);
   border-right: 0;
   color: var(--muted);
-  font-family: Rajdhani, sans-serif;
-  font-size: var(--text-label);
+  font-family: var(--font-interface);
+  font-size: inherit;
   font-weight: 700;
+}
+/* An invalid amount outlines the prefix with its input. */
+.input-with-prefix:has([aria-invalid="true"]) > span {
+  border-color: var(--danger);
 }
 .check-field {
   display: flex;
@@ -1471,21 +1684,15 @@ td strong {
 .form-message--error {
   border-color: var(--danger);
   background: #f8ece9;
-  color: #7f2419;
+  color: var(--danger-strong);
 }
 
-.success-banner {
-  margin: -10px 0 18px;
-  padding: 11px 14px;
-  border-left: 2px solid var(--volt);
-  background: #e9efcf;
-  font-size: var(--text-label);
-}
 .detail-actions {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
+  min-height: 44px;
   margin-bottom: 16px;
 }
 .detail-actions > div {
@@ -1505,7 +1712,7 @@ td strong {
   background: var(--paper);
 }
 .identity-lead {
-  padding: 28px;
+  padding: 20px;
   border-right: 1px solid var(--line);
 }
 .product-code-mark {
@@ -1540,14 +1747,17 @@ td strong {
   margin: 0;
 }
 .identity-facts div {
-  padding: 21px;
+  padding: 20px;
   border-right: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
 }
 .identity-facts div:nth-child(2n) {
   border-right: 0;
 }
-.identity-facts div:nth-last-child(-n + 2) {
+/* Only the cells of the last row drop their bottom rule, for odd or even
+   counts. */
+.identity-facts div:last-child,
+.identity-facts div:nth-child(odd):nth-last-child(2) {
   border-bottom: 0;
 }
 .identity-facts dt {
@@ -1594,7 +1804,7 @@ td strong {
 .movement-row {
   display: grid;
   min-height: 62px;
-  grid-template-columns: 48px minmax(220px, 1fr) 0.7fr 0.8fr;
+  grid-template-columns: 48px minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 14px;
   padding: 10px 20px;
@@ -1628,6 +1838,10 @@ td strong {
 .movement-row small {
   margin-top: 4px;
 }
+.movement-row time {
+  justify-self: end;
+  text-align: right;
+}
 .skeleton--detail {
   height: 520px;
   margin-top: 32px;
@@ -1637,14 +1851,14 @@ td strong {
   display: grid;
   min-height: 66px;
   grid-template-columns:
-    minmax(170px, 1.35fr)
-    0.75fr 0.5fr 0.5fr 0.55fr 0.5fr 0.8fr 0.8fr 0.85fr 0.55fr 0.8fr 28px;
+    minmax(0, 1.35fr) minmax(0, 0.75fr) repeat(4, minmax(0, 0.5fr))
+    repeat(3, minmax(0, 0.8fr)) minmax(0, 0.55fr) minmax(80px, 0.8fr) 24px;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px 10px 18px;
+  padding: 10px 16px 10px 20px;
   border-bottom: 1px solid var(--line);
   color: var(--muted);
-  font-size: 9.5px;
+  font-size: var(--text-label);
 }
 .stock-row:last-child {
   border-bottom: 0;
@@ -1657,7 +1871,7 @@ td strong {
   position: fixed;
   inset: 50% auto auto 50%;
   width: min(620px, calc(100vw - 32px));
-  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
   margin: 0;
   overflow: auto;
   padding: 0;
@@ -1691,6 +1905,13 @@ td strong {
   place-items: center;
   border: 1px solid var(--line);
   background: transparent;
+}
+.icon-button:where(:not(:disabled)):hover {
+  border-color: var(--onyx);
+}
+.icon-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
 }
 .icon-button svg {
   width: 17px;
@@ -1769,6 +1990,37 @@ td strong {
   padding: 16px 22px;
   border-top: 1px solid var(--line);
 }
+.dialog-panel:focus {
+  outline: none;
+}
+/* Every dialog scrolls inside its own box; the head and the actions stay in
+   view so a long form never hides its title or its buttons. */
+.dialog-panel > .dialog-head,
+.adjustment-dialog .dialog-head,
+.commerce-dialog .dialog-head {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  background: var(--paper);
+}
+.dialog-panel .dialog-actions,
+.adjustment-dialog .dialog-actions,
+.commerce-dialog .dialog-actions {
+  position: sticky;
+  z-index: 2;
+  bottom: 0;
+  background: var(--paper);
+}
+@media (max-width: 820px) {
+  .form-actions,
+  .dialog-actions {
+    flex-direction: column-reverse;
+  }
+  .form-actions .button,
+  .dialog-actions .button {
+    width: 100%;
+  }
+}
 .confirmation {
   min-height: 320px;
   place-items: center;
@@ -1813,6 +2065,7 @@ td strong {
 .confirmation dd {
   margin: 0;
   font-size: var(--text-label);
+  overflow-wrap: anywhere;
 }
 .confirmation > small {
   color: var(--steel);
@@ -1822,22 +2075,31 @@ td strong {
 @media (max-width: 1180px) {
   .catalog-row {
     grid-template-columns:
-      minmax(190px, 1.4fr)
-      0.55fr 0.8fr 0.8fr 0.5fr 0.5fr 0.65fr 28px;
+      minmax(0, 1.4fr) minmax(0, 0.55fr) minmax(0, 0.8fr) minmax(0, 0.8fr)
+      minmax(0, 0.5fr) minmax(0, 0.5fr) minmax(72px, 0.65fr) 24px;
   }
+  /* Incoming, Cost each and Stock value (.col-wide) are hidden here. */
+  /* The SKU track keeps a floor so identifiers never break mid-code. */
   .stock-row {
     grid-template-columns:
-      minmax(170px, 1.3fr)
-      0.7fr 0.5fr 0.5fr 0.55fr 0.7fr 0.6fr 0.75fr 28px;
+      minmax(0, 1.2fr) minmax(104px, 0.8fr) repeat(3, minmax(0, 0.5fr))
+      minmax(0, 0.7fr) minmax(0, 0.6fr) minmax(80px, 0.75fr) 24px;
   }
-  .stock-row > span:nth-child(6),
-  .stock-row > span:nth-child(7),
-  .stock-row > span:nth-child(9) {
-    display: none;
+}
+/* Desktop rows: a SKU too long for its column truncates rather than wraps. */
+@media (min-width: 821px) {
+  .stock-row > [data-label="SKU"] strong {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
-@media (max-width: 820px) {
+/* Tablet widths beside the sidebar are too narrow for filters and the primary
+   action on one line, so the action sits above full-width filters as on
+   phones. */
+@media (max-width: 1000px) {
   .resource-toolbar {
     align-items: stretch;
     flex-direction: column-reverse;
@@ -1846,6 +2108,9 @@ td strong {
   .resource-toolbar > button {
     align-self: flex-end;
   }
+}
+
+@media (max-width: 820px) {
   .filter-bar {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1878,6 +2143,7 @@ td strong {
     grid-template-columns: 1fr;
   }
   .identity-lead {
+    padding: 16px;
     border-right: 0;
     border-bottom: 1px solid var(--line);
   }
@@ -1898,77 +2164,6 @@ td strong {
 }
 
 @media (max-width: 700px) {
-  .filter-bar select,
-  .filter-bar input,
-  .filter-bar .select-trigger {
-    font-size: 16px;
-  }
-  .catalog-row--head,
-  .stock-row--head,
-  .variant-row--head {
-    display: none;
-  }
-  .catalog-row,
-  .stock-row,
-  .variant-row {
-    position: relative;
-    display: grid;
-    min-height: 0;
-    grid-template-columns: 1fr 1fr;
-    gap: 13px 18px;
-    padding: 17px 42px 17px 16px;
-  }
-  .catalog-row.catalog-row--head,
-  .stock-row.stock-row--head,
-  .variant-row.variant-row--head {
-    display: none;
-  }
-  .catalog-loading__row {
-    grid-template-columns: 1fr 1fr;
-    gap: 15px 24px;
-    padding: 17px 16px;
-  }
-  .catalog-loading__row > div:first-child {
-    grid-column: 1 / -1;
-  }
-  .catalog-row > span,
-  .stock-row > span,
-  .variant-row > span {
-    min-width: 0;
-  }
-  .catalog-row > span::before,
-  .stock-row > span::before,
-  .variant-row > span::before {
-    display: block;
-    margin-bottom: 4px;
-    color: var(--steel);
-    content: attr(data-label);
-    font-family: Rajdhani, sans-serif;
-    font-size: var(--text-meta);
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-  .catalog-product {
-    grid-column: 1 / -1;
-  }
-  .catalog-product::before {
-    display: none !important;
-  }
-  .catalog-arrow,
-  .catalog-row > span:last-child,
-  .stock-row > span:last-child,
-  .variant-row > span:last-child {
-    position: absolute;
-    top: 50%;
-    right: 8px;
-    transform: translateY(-50%);
-  }
-  .stock-row > span:nth-child(6),
-  .stock-row > span:nth-child(7),
-  .stock-row > span:nth-child(9) {
-    display: block;
-  }
   .form-grid {
     grid-template-columns: 1fr;
   }
@@ -1984,6 +2179,8 @@ td strong {
   }
   .movement-row time {
     grid-column: 2;
+    justify-self: start;
+    text-align: left;
   }
 }
 
@@ -1997,32 +2194,24 @@ td strong {
   .filter-submit {
     width: 100%;
   }
+  /* The note reads as a subtitle under the heading; a single action
+     button stays beside it. */
   .resource-panel-head {
+    min-height: 0;
     align-items: flex-start;
     flex-direction: column;
+    gap: 4px;
+  }
+  .resource-panel-head--action {
+    align-items: center;
+    flex-direction: row;
+    gap: 16px;
   }
   .detail-actions > div .button {
-    flex: 1 1 auto;
+    flex: 1 1 0;
   }
-  .identity-facts {
-    grid-template-columns: 1fr;
-  }
-  .identity-facts div,
-  .identity-facts div:nth-child(2n),
-  .identity-facts div:nth-last-child(-n + 2) {
-    border-right: 0;
-    border-bottom: 1px solid var(--line);
-  }
-  .identity-facts div:last-child {
-    border-bottom: 0;
-  }
-  .form-actions,
-  .dialog-actions {
-    flex-direction: column-reverse;
-  }
-  .form-actions .button,
-  .dialog-actions .button {
-    width: 100%;
+  .identity-facts div {
+    padding: 14px 16px;
   }
   .direction-field > div {
     grid-template-columns: 1fr;
@@ -2035,7 +2224,6 @@ td strong {
 /* Milestone 5 — supply operations */
 .supply-list,
 .supply-table,
-.supply-line-list,
 .evaluation-list,
 .dashboard-incoming-list {
   display: grid;
@@ -2045,41 +2233,70 @@ td strong {
   display: grid;
   min-height: 70px;
   align-items: center;
-  gap: 14px;
-  padding: 12px 18px;
+  gap: 12px;
+  padding: 12px 16px 12px 20px;
   border-bottom: 1px solid var(--line);
   color: var(--muted);
-  font-size: 10.5px;
+  font-size: var(--text-label);
 }
 .supply-row:last-child {
   border-bottom: 0;
 }
-.supply-row:not(.supply-row--head):hover {
-  background: #fafaf8;
-  color: var(--onyx);
+@media (hover: hover) {
+  .supply-row:not(.supply-row--head):hover {
+    background: #f7f7f5;
+  }
 }
 .supply-row--supplier {
   grid-template-columns:
-    minmax(190px, 1.5fr) 0.8fr 0.65fr repeat(3, 0.42fr)
-    0.58fr 28px;
+    minmax(0, 1.5fr) minmax(0, 0.8fr) minmax(0, 0.65fr)
+    repeat(3, minmax(52px, 0.42fr)) 92px 24px;
 }
 .supply-row--po {
   grid-template-columns:
-    minmax(145px, 1.1fr) 1.2fr 0.65fr repeat(3, 0.48fr)
-    0.78fr 28px;
+    minmax(0, 1.1fr) minmax(0, 1.2fr) 80px repeat(3, minmax(52px, 0.48fr))
+    minmax(76px, 0.78fr) 24px;
 }
 .supply-row--import {
   grid-template-columns:
-    minmax(145px, 0.9fr) 0.78fr minmax(190px, 1.4fr)
-    0.42fr 0.72fr 0.9fr 28px;
+    minmax(0, 0.9fr) 124px minmax(0, 1.4fr) minmax(44px, 0.42fr)
+    minmax(76px, 0.72fr) minmax(0, 0.9fr) 24px;
 }
 .supply-row--sample {
-  grid-template-columns: minmax(170px, 1.2fr) 1fr 1fr 0.65fr 0.55fr 0.78fr 28px;
+  grid-template-columns:
+    minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr) 76px
+    minmax(64px, 0.55fr) minmax(76px, 0.78fr) 24px;
+}
+/* Import supply cell: PO numbers over their suppliers, like .commerce-primary. */
+.supply-lines {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.supply-lines strong,
+.supply-lines small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.supply-lines strong {
+  color: var(--onyx);
+}
+.supply-lines small {
+  color: var(--steel);
+}
+/* List and detail-table heads share the commerce head height. The detail
+   head also carries .supply-table-row, so it needs the extra class to beat
+   the data row's height and padding. */
+.supply-row.supply-row--head {
+  min-height: 38px;
+}
+.supply-table-row.supply-table-head {
+  min-height: 38px;
+  padding-block: 8px;
 }
 .supply-row--head,
 .supply-table-head {
-  min-height: 42px;
-  background: #f4f4f1;
   color: var(--steel);
   font-family: var(--font-display);
   font-size: var(--text-meta);
@@ -2142,6 +2359,11 @@ td strong {
 .supply-table-row:last-child {
   border-bottom: 0;
 }
+/* Inside a bordered record section the table sits flush with the section
+   heading; the section supplies the inset. */
+.detail-section .supply-table-row {
+  padding-inline: 0;
+}
 .supply-table-row > span:first-child {
   display: grid;
   gap: 3px;
@@ -2149,10 +2371,19 @@ td strong {
 .supply-table-row strong {
   color: var(--onyx);
 }
+.supply-row small,
+.supply-table-row small {
+  font-size: var(--text-meta);
+}
 .supply-table-row small {
   color: var(--steel);
 }
-.supply-table:not(.supply-table--po, .supply-table--import) .supply-table-row {
+.supply-table:not(
+    .supply-table--po,
+    .supply-table--import,
+    .supply-table--import-detail
+  )
+  .supply-table-row {
   grid-template-columns: minmax(180px, 1.4fr) repeat(4, 0.7fr);
 }
 .supply-table--po .supply-table-row,
@@ -2186,6 +2417,55 @@ td strong {
   align-items: center;
   gap: 8px;
 }
+@media (max-width: 820px) {
+  /* Record actions on touch layouts: the one primary leads at full width,
+     the secondary and danger actions share the next row. The selectors look
+     through the display: contents wrappers (PO status, content status) so
+     their buttons and forms join the same rows. */
+  .supply-action-group {
+    display: contents;
+  }
+  .detail-actions:not(.detail-actions--end) > div {
+    gap: 8px;
+  }
+  .detail-actions:not(.detail-actions--end) > div > .button,
+  .detail-actions:not(.detail-actions--end) > div > form,
+  .detail-actions:not(.detail-actions--end)
+    > div
+    > :is(.supply-action-group, .content-status-actions)
+    > :is(.button, form) {
+    /* Even shares: the basis matches a button's own padding and border
+       (2 × 16px + 2 × 1px), which a bare button can't shrink below, so bare
+       and form-wrapped buttons split a row alike. A row that can't fit every
+       label wraps instead of squeezing (content can show five moves). */
+    min-width: max-content;
+    flex: 1 1 34px;
+  }
+  .detail-actions:not(.detail-actions--end) > div > form,
+  .detail-actions:not(.detail-actions--end)
+    > div
+    > :is(.supply-action-group, .content-status-actions)
+    > form {
+    display: flex;
+  }
+  .detail-actions:not(.detail-actions--end) > div > form > .button,
+  .detail-actions:not(.detail-actions--end)
+    > div
+    > :is(.supply-action-group, .content-status-actions)
+    > form
+    > .button {
+    flex: 1;
+  }
+  .detail-actions:not(.detail-actions--end) > div > .button--dark,
+  .detail-actions:not(.detail-actions--end) > div > form:has(> .button--dark),
+  .detail-actions:not(.detail-actions--end)
+    > div
+    > :is(.supply-action-group, .content-status-actions)
+    > :is(.button--dark, form:has(> .button--dark)) {
+    order: -1;
+    flex-basis: 100%;
+  }
+}
 .activity-list > a,
 .activity-list > div {
   display: flex;
@@ -2207,55 +2487,14 @@ td strong {
 .activity-list > div strong {
   color: var(--onyx);
 }
-.supply-line-list {
-  gap: 10px;
-}
-.supply-line-editor,
-.import-line-editor {
-  display: grid;
-  align-items: start;
-  gap: 10px;
-  padding: 14px;
-  border: 1px solid var(--line);
-  background: #fafaf8;
-}
-.supply-line-editor {
-  grid-template-columns: 34px minmax(260px, 1.6fr) 110px 170px 145px 44px;
-}
-.import-line-editor {
-  grid-template-columns: 34px minmax(320px, 1fr) 150px 44px;
-}
-.supply-line-editor > *,
-.import-line-editor > * {
-  align-self: start;
-}
-.supply-line-editor > .icon-button,
-.import-line-editor > .icon-button {
-  margin-top: 19px;
-}
-.supply-total-strip {
-  display: flex;
-  justify-content: flex-end;
-  gap: 48px;
-}
-.supply-total-strip > div {
-  display: grid;
-  gap: 6px;
-  min-width: 180px;
-  text-align: right;
-}
-.supply-total-strip span {
+.activity-list > a small,
+.activity-list > div small {
   color: var(--steel);
-  font-family: var(--font-display);
   font-size: var(--text-meta);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
-.supply-total-strip strong {
-  font-family: var(--font-display);
-  font-size: 23px;
-  font-variant-numeric: tabular-nums;
+.activity-list > a:last-child,
+.activity-list > div:last-child {
+  border-bottom: 0;
 }
 .shipment-timeline {
   display: grid;
@@ -2384,7 +2623,7 @@ td strong {
   gap: 4px;
 }
 .receive-line strong {
-  font-size: 10.5px;
+  font-size: var(--text-small);
 }
 .receive-line small {
   color: var(--steel);
@@ -2483,33 +2722,34 @@ td strong {
 }
 .variant-row {
   grid-template-columns:
-    minmax(180px, 1.5fr)
-    0.55fr 0.55fr 0.7fr 0.7fr 0.55fr 0.8fr 28px;
+    minmax(0, 1.5fr) repeat(2, minmax(0, 0.55fr)) repeat(2, minmax(0, 0.7fr))
+    minmax(0, 0.55fr) minmax(80px, 0.8fr) 28px;
 }
 
 @media (max-width: 1100px) {
-  .supply-row--head,
   .supply-table-head {
     display: none;
   }
-  .supply-row,
-  .supply-row--supplier,
-  .supply-row--po,
-  .supply-row--import,
-  .supply-row--sample,
+  .supply-table {
+    border-top: 1px solid var(--line);
+  }
   .supply-table-row,
-  .supply-table:not(.supply-table--po, .supply-table--import) .supply-table-row,
+  .supply-table:not(
+      .supply-table--po,
+      .supply-table--import,
+      .supply-table--import-detail
+    )
+    .supply-table-row,
   .supply-table--po .supply-table-row,
-  .supply-table--import .supply-table-row {
+  .supply-table--import .supply-table-row,
+  .supply-table--import-detail .supply-table-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px 20px;
-    padding: 18px 44px 18px 18px;
+    padding: 16px 0;
   }
-  .supply-row .commerce-primary,
   .supply-table-row > span:first-child {
     grid-column: 1 / -1;
   }
-  .supply-row > span:not(.commerce-primary, .catalog-arrow)::before,
   .supply-table-row > span:not(:first-child)::before {
     display: block;
     margin-bottom: 4px;
@@ -2521,23 +2761,16 @@ td strong {
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
-  .supply-row .catalog-arrow {
-    position: absolute;
-    top: 18px;
-    right: 14px;
-  }
-  .supply-line-editor {
-    grid-template-columns: 28px minmax(220px, 1fr) 100px 150px 44px;
-  }
-  .supply-line-editor .order-line-total {
-    grid-column: 2 / 5;
-    display: flex;
-    justify-content: flex-end;
-  }
   .sample-score-grid,
   .sample-average-grid,
   .evaluation-list dl {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  /* Seven criteria: the last cell closes the short row instead of leaving
+     a hole. */
+  .sample-score-grid > :last-child:nth-child(4n + 3),
+  .sample-average-grid > :last-child:nth-child(4n + 3) {
+    grid-column: span 2;
   }
 }
 
@@ -2550,67 +2783,61 @@ td strong {
   .detail-definition-grid > div {
     min-height: 68px;
   }
-  .supply-line-editor,
-  .import-line-editor {
-    grid-template-columns: 28px 1fr 44px;
-  }
-  .supply-line-editor > .field,
-  .import-line-editor > .field {
-    grid-column: 2;
-  }
-  .supply-line-editor > .icon-button,
-  .import-line-editor > .icon-button {
-    grid-column: 3;
-    grid-row: 1;
-    margin-top: 0;
-  }
-  .supply-line-editor .order-line-total {
-    grid-column: 2;
-    justify-content: flex-start;
-  }
-  .supply-total-strip {
-    display: grid;
-    gap: 18px;
-  }
-  .supply-total-strip > div {
-    min-width: 0;
-    text-align: left;
-  }
   .sample-score-grid,
   .sample-average-grid,
   .evaluation-list dl {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sample-score-grid > :last-child:nth-child(odd),
+  .sample-average-grid > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
   }
   .compact-action-form {
     align-items: stretch;
     flex-direction: column;
   }
-  .variant-row {
-    position: relative;
-    min-height: 0;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 13px 18px;
-    padding: 17px 42px 17px 16px;
-  }
-  .variant-row--head {
-    display: none;
-  }
 }
 
 @media (max-width: 520px) {
-  .supply-row,
-  .supply-row--supplier,
-  .supply-row--po,
-  .supply-row--import,
-  .supply-row--sample,
-  .supply-table-row,
-  .supply-table:not(.supply-table--po, .supply-table--import) .supply-table-row,
-  .supply-table--po .supply-table-row,
-  .supply-table--import .supply-table-row,
-  .sample-score-grid,
-  .sample-average-grid,
   .evaluation-list dl {
     grid-template-columns: 1fr;
+  }
+  /* Line records on phones: product and SKU (or source) first, then the
+     quantities with Remaining or Actual cost, then the money values. Six
+     tracks let each line split into halves or thirds. */
+  .supply-table--po .supply-table-row,
+  .supply-table--import-detail .supply-table-row {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 12px 10px;
+    padding: 14px 0;
+  }
+  .supply-table--po .supply-table-row > span,
+  .supply-table--import-detail .supply-table-row > span {
+    min-width: 0;
+    grid-column: span 2;
+    overflow-wrap: anywhere;
+  }
+  .supply-table--po .supply-table-row > span:first-child,
+  .supply-table--import-detail .supply-table-row > span:first-child {
+    grid-column: span 4;
+  }
+  .supply-table--po .supply-table-row > span:nth-child(2),
+  .supply-table--import-detail .supply-table-row > span:nth-child(2) {
+    justify-self: end;
+    text-align: right;
+  }
+  .supply-table--po .supply-table-row > span:nth-child(2)::before,
+  .supply-table--import-detail .supply-table-row > span:nth-child(2)::before {
+    display: none;
+  }
+  .supply-table--po .supply-table-row > span:nth-child(n + 6),
+  .supply-table--import-detail .supply-table-row > span:nth-child(5),
+  .supply-table--import-detail .supply-table-row > span:nth-child(6) {
+    grid-column: span 3;
+  }
+  .supply-table--import-detail .supply-table-row > span:nth-child(7) {
+    grid-row: 2;
+    grid-column: 5 / span 2;
   }
   .receive-line {
     grid-template-columns: 1fr 84px;
@@ -2619,14 +2846,17 @@ td strong {
 
 /* Commerce operations */
 .filter-bar--search-only,
+.filter-bar--single,
 .commerce-filter-bar,
 .preorder-filter-bar {
   display: grid;
 }
 .filter-bar.filter-bar--search-only > label,
+.filter-bar.filter-bar--single > label,
 .filter-bar.commerce-filter-bar > label,
 .filter-bar.preorder-filter-bar > label,
 .filter-bar--search-only .search-field,
+.filter-bar--single .search-field,
 .commerce-filter-bar .search-field,
 .preorder-filter-bar .search-field {
   width: 100%;
@@ -2635,9 +2865,14 @@ td strong {
   grid-template-columns: minmax(260px, 1fr) auto;
   max-width: 650px;
 }
+/* Search plus one status filter (supply lists and Ambassadors). */
+.filter-bar--single {
+  grid-template-columns: minmax(260px, 1fr) 160px auto;
+  max-width: 820px;
+}
 .commerce-filter-bar {
   grid-template-columns:
-    minmax(250px, 1.45fr) repeat(3, minmax(130px, 0.7fr))
+    minmax(200px, 1.2fr) repeat(3, minmax(110px, 0.8fr))
     auto;
 }
 .preorder-filter-bar {
@@ -2654,8 +2889,8 @@ td strong {
   display: grid;
   min-height: 70px;
   align-items: center;
-  gap: 14px;
-  padding: 12px 18px 12px 24px;
+  gap: 12px;
+  padding: 12px 16px 12px 20px;
   border-bottom: 1px solid var(--line);
   color: var(--muted);
   font-size: var(--text-label);
@@ -2665,8 +2900,10 @@ td strong {
 .commerce-row:last-child {
   border-bottom: 0;
 }
-.commerce-row:not(.commerce-row--head):hover {
-  background: #f7f7f5;
+@media (hover: hover) {
+  .commerce-row:not(.commerce-row--head):hover {
+    background: #f7f7f5;
+  }
 }
 .commerce-row--head {
   min-height: 38px;
@@ -2686,25 +2923,23 @@ td strong {
   background: var(--volt);
   content: "";
 }
+/* Fluid tracks: text columns shrink first and pill columns keep their width,
+   so every list fits the 1024px layout without clipping or scrolling. */
 .commerce-list--customers .commerce-row,
 .commerce-list--teams .commerce-row {
   grid-template-columns:
-    minmax(190px, 1.4fr) minmax(130px, 0.8fr) minmax(180px, 1fr)
+    minmax(0, 1.4fr) minmax(0, 0.8fr) minmax(0, 1fr)
     70px 24px;
 }
 .commerce-list--orders .commerce-row {
   grid-template-columns:
-    100px minmax(145px, 1.2fr)
-    90px 110px 105px 125px 90px 24px;
-}
-.commerce-list--preorders {
-  overflow-x: auto;
+    minmax(72px, 0.6fr) minmax(0, 1.4fr) minmax(0, 0.7fr)
+    minmax(84px, 0.7fr) 80px 108px minmax(76px, 0.6fr) 24px;
 }
 .commerce-list--preorders .commerce-row {
-  min-width: 1060px;
   grid-template-columns:
-    105px minmax(140px, 1fr)
-    48px 100px 105px 115px 90px 110px 24px;
+    minmax(72px, 0.6fr) minmax(0, 1.3fr) repeat(3, minmax(84px, 0.7fr))
+    80px minmax(76px, 0.6fr) 92px 24px;
 }
 .commerce-list--orders-mini .commerce-row {
   grid-template-columns: minmax(180px, 1.4fr) 110px 110px 130px 24px;
@@ -2751,7 +2986,19 @@ td strong {
   background: var(--onyx);
   color: var(--white);
 }
+.status--approved,
+.status--closed {
+  border-color: var(--onyx);
+  background: var(--onyx);
+  color: var(--white);
+}
+.status--retest,
+.status--placed {
+  border-color: var(--onyx);
+  color: var(--onyx);
+}
 .status--cancelled,
+.status--rejected,
 .status--refunded {
   border-color: #c8c8c4;
   background: #ececea;
@@ -2760,33 +3007,12 @@ td strong {
 .status--out_of_stock {
   border-color: var(--danger);
   background: #f8ece9;
-  color: #7f2419;
+  color: var(--danger-strong);
 }
 .status--preparing,
 .status--ordered {
   border-color: #aeb1b2;
   background: #f5f5f3;
-}
-.identity-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(360px, 0.65fr);
-  margin-bottom: 16px;
-  border: 1px solid var(--line);
-  background: var(--paper);
-}
-.identity-lead {
-  min-height: 210px;
-  padding: 32px;
-  border-right: 1px solid var(--line);
-}
-.identity-lead h2 {
-  max-width: 720px;
-  margin: 10px 0 24px;
-  font-family: Rajdhani, sans-serif;
-  font-size: clamp(32px, 4vw, 50px);
-  font-weight: 600;
-  letter-spacing: -0.035em;
-  line-height: 0.95;
 }
 .contact-links {
   display: flex;
@@ -2807,24 +3033,6 @@ td strong {
   height: 14px;
   color: var(--onyx);
 }
-.identity-stats {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  margin: 0;
-}
-.identity-stats > div {
-  display: grid;
-  align-content: center;
-  gap: 8px;
-  min-height: 104px;
-  padding: 20px 24px;
-  border-right: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-}
-.identity-stats > div:nth-child(even) {
-  border-right: 0;
-}
-.identity-stats dt,
 .order-context dt,
 .order-total-preview dt,
 .order-totals dt {
@@ -2834,12 +3042,6 @@ td strong {
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-}
-.identity-stats dd {
-  margin: 0;
-  font-family: Rajdhani, sans-serif;
-  font-size: 22px;
-  font-weight: 600;
 }
 .compact-section {
   margin-bottom: 16px;
@@ -2852,55 +3054,155 @@ td strong {
   line-height: 1.7;
   white-space: pre-wrap;
 }
-.order-line-list {
+/* Line editors (orders, preorders, purchase orders, imports). The list is a
+   size container, so lines lay out from the width of the form's fields
+   column rather than the viewport and never spill past their section. */
+.order-line-list,
+.supply-line-list {
   display: grid;
   gap: 10px;
+  container-type: inline-size;
 }
-.order-line-editor {
+.order-line-editor,
+.supply-line-editor,
+.import-line-editor {
   display: grid;
-  grid-template-columns: 34px minmax(260px, 1.6fr) 100px 160px 130px 44px;
+  grid-template-columns:
+    28px minmax(0, 1fr) minmax(72px, 96px) minmax(110px, 150px)
+    44px;
   align-items: start;
   gap: 10px;
   padding: 14px;
   border: 1px solid var(--line);
   background: #fafaf8;
 }
-.order-line-editor > * {
-  align-self: start;
+.import-line-editor {
+  grid-template-columns: 28px minmax(0, 1fr) minmax(110px, 150px) 44px;
 }
-.order-line-editor > .field {
+.order-line-editor > .field,
+.supply-line-editor > .field,
+.import-line-editor > .field {
   margin: 0;
 }
 .order-line-index {
-  margin-top: 29px;
+  margin-top: 32px;
   color: var(--steel);
-  font-family: Rajdhani, sans-serif;
+  font-family: var(--font-display);
   font-size: 16px;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+/* The remove button is pinned to the top row; the line total gets its own. */
+.order-line-editor > .icon-button,
+.supply-line-editor > .icon-button,
+.import-line-editor > .icon-button {
+  grid-column: -2;
+  grid-row: 1;
+  width: 44px;
+  height: 44px;
+  margin-top: 22px;
 }
 .order-line-total {
-  display: grid;
-  gap: 9px;
-  align-content: start;
-  padding-top: 0;
-  text-align: right;
+  display: flex;
+  grid-column: 2 / -2;
+  grid-row: 2;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 10px;
 }
 .order-line-total span {
   color: var(--steel);
   font-size: var(--text-meta);
   font-weight: 650;
-  line-height: 12px;
   letter-spacing: 0.07em;
   text-transform: uppercase;
 }
 .order-line-total strong {
   font-family: var(--font-display);
   font-size: 18px;
-  line-height: 44px;
+  line-height: 1.2;
   font-variant-numeric: tabular-nums;
 }
-.order-line-editor > .icon-button {
-  margin-top: 19px;
+/* Stacked line card for phones and narrow fields columns. */
+@container (max-width: 640px) {
+  .order-line-editor,
+  .supply-line-editor,
+  .import-line-editor {
+    /* Quantity takes the narrower column so a prefixed price keeps room. */
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    gap: 12px;
+  }
+  .order-line-index {
+    align-self: center;
+    margin-top: 0;
+    font-size: var(--text-small);
+    font-weight: 700;
+    letter-spacing: 0.15em;
+  }
+  .order-line-editor > .icon-button,
+  .supply-line-editor > .icon-button,
+  .import-line-editor > .icon-button {
+    justify-self: end;
+    margin-top: 0;
+  }
+  .order-line-editor > .order-line-variant,
+  .supply-line-editor > .order-line-variant,
+  .import-line-editor > .field {
+    grid-column: 1 / -1;
+  }
+  .order-line-total {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    justify-content: space-between;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+  }
+}
+/* Purchase order running totals, under the item lines. */
+.supply-line-summary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px 40px;
+  margin: 6px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.supply-line-summary > div {
+  display: grid;
+  gap: 4px;
+  text-align: right;
+}
+.supply-line-summary dt {
+  color: var(--steel);
+  font-family: var(--font-display);
+  font-size: var(--text-meta);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.supply-line-summary dd {
+  margin: 0;
+  color: var(--onyx);
+  font-family: var(--font-display);
+  font-size: var(--text-body-lg);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+@container (max-width: 640px) {
+  .supply-line-summary {
+    display: grid;
+    justify-content: stretch;
+    gap: 0;
+  }
+  .supply-line-summary > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 6px 0;
+    text-align: left;
+  }
 }
 .order-add-line {
   justify-self: start;
@@ -2908,8 +3210,8 @@ td strong {
 }
 .order-totals-editor {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 36px;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+  gap: 20px 36px;
 }
 .order-total-preview,
 .order-totals {
@@ -2947,55 +3249,26 @@ td strong {
 .order-total-preview > div:last-child dd {
   font-size: 22px;
 }
-.order-command-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  min-height: 82px;
-  margin-bottom: 16px;
-  padding: 14px 18px;
-  border: 1px solid var(--line);
-  background: var(--paper);
-}
-.order-command-statuses,
-.order-command-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-}
-.order-command-statuses > span {
-  display: grid;
-  gap: 6px;
-}
-.order-command-statuses small {
-  color: var(--steel);
-  font-size: var(--text-meta);
-  font-weight: 650;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
 .order-detail-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(320px, 0.65fr);
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
   align-items: start;
-  gap: 16px;
+  gap: 14px;
 }
+/* min-width 0 keeps long lines inside their track instead of pushing the
+   side column over the main one. */
 .order-main-column,
 .order-side-column {
   display: grid;
-  gap: 16px;
-}
-.order-items-panel {
-  padding-bottom: 0;
+  min-width: 0;
+  gap: 14px;
 }
 .order-items {
   border-top: 1px solid var(--line);
 }
 .order-item {
   display: grid;
-  grid-template-columns: minmax(180px, 1fr) 180px 120px;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 16px;
   min-height: 74px;
@@ -3009,6 +3282,7 @@ td strong {
 }
 .order-item small {
   color: var(--steel);
+  font-size: var(--text-meta);
 }
 .order-item > span,
 .order-item > strong:last-child {
@@ -3021,7 +3295,7 @@ td strong {
 }
 .order-totals {
   width: min(100%, 390px);
-  margin: 18px 0 24px auto;
+  margin: 18px 0 0 auto;
 }
 .order-totals__grand {
   border-bottom-color: var(--onyx) !important;
@@ -3126,7 +3400,11 @@ td strong {
 }
 .workflow-panel {
   display: grid;
-  gap: 20px;
+  gap: 16px;
+}
+/* The grid gap already separates the heading from the first control. */
+.workflow-panel.detail-section > .detail-section-head {
+  margin-bottom: 0;
 }
 .workflow-inline {
   display: grid;
@@ -3137,6 +3415,54 @@ td strong {
 .workflow-inline .field-error {
   grid-column: 1 / -1;
   margin: 0;
+}
+/* Fulfilment and Preorder status selects end at the same x. */
+.workflow-inline > .button {
+  min-width: 112px;
+}
+/* Files sit in the main column under Payments; the column gap spaces them. */
+.order-main-column > .file-panel {
+  margin-top: 0;
+}
+/* Beside the rail the main column is narrower than the 1100px breakpoint
+   that stacks file rows assumes, so stack them here as well. */
+@media (min-width: 1181px) {
+  .order-main-column .file-row--head {
+    display: none;
+  }
+  .order-main-column .file-row {
+    position: relative;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+    gap: 10px 16px;
+    padding: 14px 20px;
+  }
+  .order-main-column .file-row .commerce-primary,
+  .order-main-column .file-row .file-row-actions {
+    grid-column: 1 / -1;
+  }
+  .order-main-column .file-row .file-row-actions {
+    justify-content: flex-start;
+  }
+  .order-main-column
+    .file-row
+    > span:not(.commerce-primary, .file-row-actions)::before {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--steel);
+    content: attr(data-label);
+    font-family: var(--font-display);
+    font-size: var(--text-meta);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+}
+/* The context list already ends on a rule; no second divider above the
+   supply-link editor. */
+.preorder-panel > .order-context + .embedded-editor {
+  padding-top: 0;
+  border-top: 0;
 }
 .commerce-dialog {
   position: fixed;
@@ -3166,7 +3492,6 @@ td strong {
 .payment-capacity {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  margin-bottom: 22px;
   border: 1px solid var(--line);
 }
 .payment-capacity > div {
@@ -3188,12 +3513,13 @@ td strong {
   font-size: 20px;
 }
 .button--danger {
-  border-color: #a82d2d;
-  color: #8b2222;
+  border: 1px solid var(--danger);
+  background: var(--paper);
+  color: var(--danger-strong);
 }
 .button--danger-solid {
-  border-color: #8b2222;
-  background: #8b2222;
+  border: 1px solid var(--danger-strong);
+  background: var(--danger-strong);
   color: white;
 }
 .form-message--success {
@@ -3206,156 +3532,90 @@ td strong {
 }
 
 @media (max-width: 1180px) {
+  /* One column below 1180 so totals never sit under the side panels. */
+  .order-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* In one column the two columns dissolve into the grid (same 14px gap),
+     so Files closes the page after the context and workflow panels. */
+  .order-main-column,
+  .order-side-column {
+    display: contents;
+  }
+  .order-main-column > *,
+  .order-side-column > * {
+    min-width: 0;
+  }
+  .order-main-column > .file-panel {
+    order: 1;
+  }
+  /* Full-width side panels lay their facts out in two columns. */
+  .order-side-column .order-context {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 24px;
+  }
+  /* Search, three selects and Apply stay on one row; the primary action
+     moves above them, as the 1000px toolbar rule does for every list. The
+     selects keep enough width for labels like "All fulfilment". */
   .commerce-filter-bar {
     grid-template-columns:
-      minmax(230px, 1.4fr) repeat(2, minmax(130px, 0.7fr))
+      minmax(200px, 1.2fr) repeat(3, minmax(130px, 0.8fr))
       auto;
   }
-  .commerce-filter-bar > label:nth-of-type(4) {
-    grid-column: 1 / 2;
+  .preorder-filter-bar {
+    grid-template-columns:
+      minmax(200px, 1.4fr) repeat(2, minmax(120px, 0.7fr))
+      auto;
   }
-  .order-line-editor {
-    grid-template-columns: 28px minmax(240px, 1.5fr) 90px 150px 44px;
+  .resource-toolbar:has(> .commerce-filter-bar) {
+    align-items: stretch;
+    flex-direction: column-reverse;
   }
-  .order-line-total {
-    grid-column: 2 / 5;
-    grid-row: 2;
-    display: flex;
-    min-height: 0;
-    justify-content: flex-end;
-    gap: 10px;
-    padding-top: 0;
+  .resource-toolbar:has(> .commerce-filter-bar) > .button,
+  .resource-toolbar:has(> .commerce-filter-bar) > button {
+    align-self: flex-end;
   }
-}
-
-@media (max-width: 980px) {
-  .identity-grid,
-  .order-detail-grid {
+  /* Source, Total and Amount Paid (.col-wide) drop out so the rest fits. */
+  .commerce-list--orders .commerce-row {
+    grid-template-columns:
+      minmax(72px, 0.6fr) minmax(0, 1.4fr) minmax(84px, 0.7fr)
+      80px 108px minmax(76px, 0.6fr) 24px;
+  }
+  .commerce-list--preorders .commerce-row {
+    grid-template-columns:
+      minmax(72px, 0.6fr) minmax(0, 1.3fr) minmax(84px, 0.7fr)
+      80px minmax(76px, 0.6fr) 92px 24px;
+  }
+  /* The fields column is too narrow for inputs and preview side by side. */
+  .order-totals-editor {
     grid-template-columns: 1fr;
-  }
-  .identity-lead {
-    border-right: 0;
-    border-bottom: 1px solid var(--line);
-  }
-  .order-side-column {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .workflow-panel {
-    grid-column: 1 / -1;
-  }
-  .order-line-editor {
-    grid-template-columns: 28px minmax(220px, 1fr) 90px 140px 44px;
+    gap: 20px;
   }
 }
 
 @media (max-width: 820px) {
   .commerce-filter-bar,
   .preorder-filter-bar,
-  .filter-bar--search-only {
+  .filter-bar--search-only,
+  .filter-bar--single {
     grid-template-columns: 1fr;
     max-width: none;
   }
-  .commerce-filter-bar > label:nth-of-type(4) {
-    grid-column: auto;
-  }
-  .commerce-row--head {
-    display: none;
-  }
-  .commerce-list--preorders {
-    overflow: visible;
-  }
-  .commerce-list--customers .commerce-row,
-  .commerce-list--teams .commerce-row,
-  .commerce-list--orders .commerce-row,
-  .commerce-list--preorders .commerce-row,
-  .commerce-list--orders-mini .commerce-row {
-    min-width: 0;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px 20px;
-    padding: 18px 44px 18px 18px;
-  }
-  .commerce-row > span:not(.commerce-primary, .catalog-arrow)::before {
-    display: block;
-    margin-bottom: 5px;
-    color: var(--steel);
-    content: attr(data-label);
-    font-family: Rajdhani, sans-serif;
-    font-size: var(--text-meta);
-    font-weight: 700;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
-  }
-  .commerce-primary {
+  /* Scoped to the rows that stack it on its own line; content and file
+     rows place it themselves. */
+  .commerce-row .commerce-primary,
+  .grant-row .commerce-primary {
     grid-column: 1 / -1;
   }
   .commerce-primary strong {
     font-size: var(--text-body-lg);
   }
-  .commerce-row .catalog-arrow {
-    position: absolute;
-    top: 18px;
-    right: 16px;
-  }
-  .order-line-editor {
-    grid-template-columns: 28px 1fr 44px;
-    align-items: start;
-  }
-  .order-line-variant {
-    grid-column: 2 / 3;
-  }
-  .order-line-editor > .field:not(.order-line-variant) {
-    grid-column: span 1;
-  }
-  .order-line-editor > .field:nth-of-type(2) {
-    grid-column: 2;
-  }
-  .order-line-editor > .field:nth-of-type(3) {
-    grid-column: 2;
-  }
-  .order-line-editor > .icon-button {
-    grid-column: 3;
-    grid-row: 1;
-    margin-top: 0;
-  }
-  .order-line-total {
-    grid-column: 2 / 3;
-    grid-row: auto;
-    justify-content: flex-start;
-  }
-  .order-line-index {
-    margin-top: 29px;
-  }
-  .order-totals-editor {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-  .order-command-bar {
-    align-items: stretch;
-    flex-direction: column;
-  }
-  .order-command-actions .button {
-    flex: 1;
-  }
-  .order-side-column {
-    grid-template-columns: 1fr;
-  }
-  .workflow-panel {
-    grid-column: auto;
-  }
 }
 
 @media (max-width: 560px) {
-  .identity-lead {
-    min-height: 0;
-    padding: 24px 18px;
-  }
-  .identity-stats {
-    grid-template-columns: 1fr;
-  }
-  .identity-stats > div,
-  .identity-stats > div:nth-child(even) {
-    min-height: 82px;
-    border-right: 0;
+  .order-side-column .order-context {
+    grid-template-columns: minmax(0, 1fr);
   }
   .order-item {
     grid-template-columns: 1fr auto;
@@ -3364,13 +3624,11 @@ td strong {
     grid-column: 1 / -1;
     text-align: left;
   }
-  .order-command-statuses,
-  .order-command-actions {
-    display: grid;
-    grid-template-columns: 1fr;
-  }
-  .order-command-actions .button {
-    width: 100%;
+  /* The line total stays flush right beside the product name, in line with
+     the totals list, rather than auto-placing under the quantity. */
+  .order-item > strong:last-child {
+    grid-column: 2;
+    grid-row: 1;
   }
   .payment-capacity {
     grid-template-columns: 1fr;
@@ -3393,7 +3651,6 @@ td strong {
     max-height: calc(100dvh - 16px);
   }
 }
-
 
 .sign-in-page {
   display: grid;
@@ -3535,47 +3792,39 @@ td strong {
   align-items: center;
   gap: 6px;
 }
+/* Role select and row actions share the shared 44px button height. */
+.inline-role-form > .select {
+  width: auto;
+  min-width: 0;
+  flex: 0 1 120px;
+}
+.inline-role-form > .button {
+  flex: none;
+}
 .inline-role-form select,
 .inline-role-form .select-trigger {
-  width: 110px;
-  min-height: 34px;
+  width: 100%;
+  min-height: 44px;
   border: 1px solid var(--line);
   background: var(--paper);
-  padding: 6px 8px;
-  font-size: var(--text-label);
-}
-.inline-role-form button,
-.staff-status-action {
-  min-height: 34px;
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--onyx);
-  cursor: pointer;
-  padding: 6px 9px;
-  font-size: var(--text-meta);
-  font-weight: 650;
+  padding: 0 12px;
+  font-size: var(--text-body);
 }
 .staff-status-action:disabled {
   cursor: not-allowed;
   opacity: 0.45;
 }
+/* Same inset as .resource-panel-head, so its kicker lines up with the
+   access register beside or below it. */
 .staff-create-panel {
   border: 1px solid var(--line);
   background: var(--paper);
-  padding: 24px;
-}
-.staff-create-heading {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-}
-.staff-create-heading > svg {
-  width: 20px;
+  padding: 17px 20px 20px;
 }
 .staff-create-heading h2 {
   margin: 0;
   font-family: Rajdhani, sans-serif;
-  font-size: 22px;
+  font-size: var(--text-section);
   font-weight: 600;
 }
 .staff-create-panel > p {
@@ -3583,6 +3832,10 @@ td strong {
   color: var(--muted);
   font-size: var(--text-label);
   line-height: 1.6;
+}
+.staff-create-form {
+  display: grid;
+  gap: 16px;
 }
 .staff-create-form .form-grid {
   grid-template-columns: 1fr;
@@ -3612,8 +3865,49 @@ td strong {
   color: var(--muted);
   font-size: var(--text-small);
 }
-.account-page-panel .identity-facts {
-  grid-template-columns: 1fr 1fr;
+/* Account facts: two columns of label/value cells that use the Settings
+   index row sizing. The 1px gap paints single dividers at any column count. */
+.account-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  background: var(--line);
+}
+.account-facts > div {
+  display: grid;
+  min-width: 0;
+  min-height: 64px;
+  align-content: center;
+  justify-items: start;
+  gap: 3px;
+  padding: 14px 20px;
+  background: var(--paper);
+}
+.account-facts dt {
+  color: var(--muted);
+  font-size: var(--text-small);
+}
+.account-facts dd {
+  max-width: 100%;
+  margin: 0;
+  font-size: var(--text-body-lg);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.account-facts .skeleton--row-title {
+  margin-top: 6px;
+}
+@media (max-width: 520px) {
+  .account-facts {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 820px) {
+  .account-facts > div,
+  .staff-create-panel {
+    padding-inline: 16px;
+  }
 }
 .account-page-note {
   max-width: 640px;
@@ -3626,9 +3920,6 @@ td strong {
 @media (max-width: 1100px) {
   .staff-layout {
     grid-template-columns: 1fr;
-  }
-  .staff-create-panel {
-    max-width: 680px;
   }
 }
 
@@ -3656,6 +3947,12 @@ td strong {
   }
   .sign-in-mark {
     display: none;
+  }
+}
+@media (max-width: 600px) {
+  .sign-in-brand,
+  .sign-in-panel {
+    padding-inline: 16px;
   }
 }
 
@@ -3694,13 +3991,12 @@ td strong {
   .staff-row {
     grid-template-columns: 1fr;
   }
-  .inline-role-form select,
-  .inline-role-form .select-trigger {
+  /* The select takes the row; Save keeps its natural width. */
+  .inline-role-form > .select {
     flex: 1;
-    width: auto;
   }
   .staff-create-panel {
-    padding: 20px 16px;
+    padding: 17px 16px 20px;
   }
 }
 
@@ -3715,13 +4011,25 @@ td strong {
   color: var(--onyx);
 }
 .supply-detail-page .detail-actions {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
+/* 17px top inset and a flush heading put the kicker and title at the same
+   offsets as a .resource-panel-head, so text and list sections sitting side
+   by side line up. */
 .supply-detail-page .detail-section {
   margin-top: 0;
-  padding: 18px;
+  padding: 17px 20px 20px;
   border: 1px solid var(--line);
   background: var(--paper);
+}
+/* One spacing rule for every block after the actions bar (messages, summary
+   strip, sections, grids, Files) so bordered blocks never touch. */
+.supply-detail-page > .detail-actions ~ * {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.supply-detail-page > .detail-actions ~ * ~ * {
+  margin-top: 14px;
 }
 .supply-detail-page .detail-section-head,
 .money-page .detail-section-head,
@@ -3744,35 +4052,47 @@ td strong {
   font-weight: 600;
   line-height: 1;
 }
+.supply-detail-page .detail-section-head h2 {
+  margin-top: 0;
+  line-height: 1.1;
+}
 .supply-detail-page .detail-section-head > span,
 .money-page .detail-section-head > span {
   color: var(--steel);
   font-size: var(--text-meta);
 }
+/* Cell dividers are 1px gaps over a Line background, so any column count
+   (and any wrap) draws exactly one rule between cells. */
 .supply-summary-strip {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1px;
   margin-bottom: 14px;
   border: 1px solid var(--line);
-  background: var(--paper);
+  background: var(--line);
 }
 .supply-summary-strip--six {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1.6fr) repeat(5, minmax(0, 1fr));
 }
 .supply-summary-strip--four {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.supply-summary-strip.supply-summary-strip--two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.supply-summary-strip > div > .status {
+  justify-self: start;
 }
 .supply-summary-strip > div {
   display: grid;
   min-width: 0;
   min-height: 68px;
-  align-content: center;
+  /* Top-aligned, so labels in one row line up even when a value wraps. */
+  align-content: start;
   gap: 6px;
   padding: 12px 15px;
-  border-right: 1px solid var(--line);
-}
-.supply-summary-strip > div:last-child {
-  border-right: 0;
+  border: 0;
+  background: var(--paper);
 }
 .supply-summary-strip span:not(.status),
 .terms-row > div > span,
@@ -3787,39 +4107,75 @@ td strong {
   letter-spacing: 0.09em;
   text-transform: uppercase;
 }
+/* Values wrap rather than truncate, so a long supplier or product name
+   stays readable. */
 .supply-summary-strip strong:not(.status) {
   min-width: 0;
-  overflow: hidden;
   color: var(--onyx);
   font-family: var(--font-display);
   font-size: 15px;
   font-weight: 600;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+/* External links ("Open website", "Open post") keep their icon on the same
+   line. */
+.supply-summary-strip strong a[target="_blank"] {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.supply-summary-strip strong a {
-  display: inline-flex;
-  min-width: 0;
-  align-items: center;
-  gap: 5px;
+.supply-summary-strip strong a:not([target="_blank"]) {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.supply-summary-strip strong a:not([target="_blank"]):hover {
+  text-decoration-thickness: 2px;
+}
+.supply-summary-strip strong a svg {
+  margin-left: 5px;
+  vertical-align: -1px;
 }
 .supply-summary-strip svg {
   width: 12px;
 }
+/* Touch layouts: links (tel:, mailto:, records) get a 44px tap area that
+   does not change the row height. External links clip their overflow for
+   the ellipsis, so they extend with padding and cancel it with margin. */
+@media (max-width: 820px) {
+  .supply-summary-strip strong a {
+    position: relative;
+  }
+  .supply-summary-strip strong a::after {
+    position: absolute;
+    inset: -12px -4px;
+    content: "";
+  }
+  .supply-summary-strip strong a[target="_blank"] {
+    padding-block: 12px;
+    margin-block: -12px;
+  }
+  .supply-summary-strip strong a[target="_blank"]::after {
+    content: none;
+  }
+}
+/* Columns hug their content: a short section never stretches to its
+   neighbour's height and leaves empty paper. */
 .supply-detail-grid {
   display: grid;
   grid-template-columns: minmax(0, 2.15fr) minmax(270px, 0.85fr);
   align-items: start;
   gap: 14px;
-  margin-bottom: 14px;
 }
+/* A main column with several stacked sections uses the rail's rhythm. */
+.supply-main-column,
 .supply-side-rail {
   display: grid;
+  min-width: 0;
   gap: 14px;
-}
-.supply-secondary-grid {
-  gap: 14px;
-  margin-top: 0;
 }
 .compact-detail-section {
   padding-bottom: 14px !important;
@@ -3837,20 +4193,22 @@ td strong {
   display: grid;
   gap: 4px;
 }
-.compact-empty strong {
+.compact-empty > div > strong {
   color: var(--onyx);
   font-size: var(--text-small);
 }
-.compact-empty p {
+.compact-empty > div > p {
   margin: 0;
   color: var(--steel);
-  font-size: 9.5px;
+  font-size: var(--text-label);
   line-height: 1.5;
 }
 .compact-empty .button,
 .compact-empty .text-link {
   flex: 0 0 auto;
-  margin: 0;
+}
+.compact-activity-list {
+  border-top: 1px solid var(--line);
 }
 .compact-activity-list > a,
 .compact-activity-list > div {
@@ -3960,21 +4318,40 @@ td strong {
 .rail-money-list dd {
   font-size: 17px;
 }
+.rail-stat-list dd a {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.rail-stat-list dd a:hover {
+  text-decoration-thickness: 2px;
+}
 .rail-stat-list--compact > div {
   min-height: 40px;
 }
 .rail-stat-list--text dd {
+  min-width: 0;
   font-size: 14px;
   text-align: right;
+  overflow-wrap: anywhere;
+}
+/* Touch layouts: tel:, mailto: and record links get a 44px tap area that
+   does not change the row height. */
+@media (max-width: 820px) {
+  .rail-stat-list dd a {
+    position: relative;
+  }
+  .rail-stat-list dd a::after {
+    position: absolute;
+    inset: -12px -4px;
+    content: "";
+  }
 }
 .supply-editor-dialog {
   width: min(760px, calc(100vw - 32px));
 }
 .supply-editor-dialog .dialog-body {
   padding: 18px 22px 22px;
-}
-.supply-editor-dialog .supply-inline-form > .button {
-  justify-self: end;
 }
 .workflow-control {
   display: grid;
@@ -4130,7 +4507,7 @@ td strong {
   gap: 3px;
 }
 .shipment-event-list strong {
-  font-size: 10.5px;
+  font-size: var(--text-small);
 }
 .shipment-event-list p,
 .shipment-event-list small {
@@ -4145,14 +4522,23 @@ td strong {
 .sample-decision-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
+  gap: 8px;
 }
 .sample-decision-actions form {
   display: grid;
   gap: 3px;
 }
-.sample-decision-actions .button {
-  margin: 0;
+@media (max-width: 820px) {
+  /* Add evaluation keeps its own full-width row; the decisions share one. */
+  .sample-decision-actions {
+    display: grid;
+    width: 100%;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+  }
+  .sample-decision-actions .button {
+    width: 100%;
+  }
 }
 .sample-results-panel {
   margin-bottom: 14px !important;
@@ -4176,9 +4562,6 @@ td strong {
   color: var(--steel);
   font-size: var(--text-meta);
 }
-.sample-content-grid {
-  grid-template-columns: minmax(0, 1.9fr) minmax(270px, 0.8fr);
-}
 .evaluation-score-line {
   color: var(--onyx) !important;
   font-family: var(--font-display);
@@ -4192,23 +4575,25 @@ td strong {
   .supply-summary-strip--four {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-  .supply-summary-strip > div:nth-child(3n) {
-    border-right: 0;
+  /* A short last row spans the leftover columns instead of leaving a hole. */
+  .supply-summary-strip > div:last-child:nth-child(3n + 2) {
+    grid-column: span 2;
   }
-  .supply-summary-strip > div:nth-child(n + 4) {
-    border-top: 1px solid var(--line);
+  .supply-summary-strip > div:last-child:nth-child(3n + 1) {
+    grid-column: 1 / -1;
   }
   .supply-summary-strip--four {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .supply-summary-strip--four > div:nth-child(3n) {
-    border-right: 1px solid var(--line);
+  .supply-summary-strip--four > div:last-child:nth-child(3n + 2),
+  .supply-summary-strip--four > div:last-child:nth-child(3n + 1) {
+    grid-column: auto;
   }
-  .supply-summary-strip--four > div:nth-child(even) {
-    border-right: 0;
+  .supply-summary-strip--four > div:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
   }
-  .supply-summary-strip--four > div:nth-child(n + 3) {
-    border-top: 1px solid var(--line);
+  .supply-summary-strip--two > div:last-child:nth-child(n) {
+    grid-column: auto;
   }
   .terms-row {
     grid-template-columns: minmax(170px, 1.3fr) repeat(3, 0.65fr);
@@ -4227,14 +4612,10 @@ td strong {
     grid-column: 1 / -1;
     justify-self: start;
   }
-  .supply-table--import-detail .supply-table-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 900px) {
-  .supply-detail-grid,
-  .sample-content-grid {
+  .supply-detail-grid {
     grid-template-columns: 1fr;
   }
   .supply-side-rail {
@@ -4251,24 +4632,19 @@ td strong {
 }
 
 @media (max-width: 700px) {
-  .supply-detail-page .detail-section {
-    padding: 15px;
-  }
   .supply-summary-strip,
   .supply-summary-strip--six,
   .supply-summary-strip--four {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .supply-summary-strip > div,
-  .supply-summary-strip > div:nth-child(3n) {
-    border-right: 1px solid var(--line);
-    border-top: 1px solid var(--line);
+  .supply-summary-strip > div:last-child:nth-child(n) {
+    grid-column: auto;
   }
-  .supply-summary-strip > div:nth-child(-n + 2) {
-    border-top: 0;
+  .supply-summary-strip > div:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
   }
-  .supply-summary-strip > div:nth-child(even) {
-    border-right: 0;
+  .supply-summary-strip--two > div:last-child:nth-child(n) {
+    grid-column: auto;
   }
   .terms-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4287,42 +4663,18 @@ td strong {
   .workflow-control .supply-inline-form {
     grid-template-columns: 1fr;
   }
-  .workflow-control .supply-inline-form > .button {
+  .workflow-control .supply-inline-form > .button,
+  .cost-edit-action {
     grid-column: auto;
     width: 100%;
   }
   .shipment-event-list article {
     grid-template-columns: 84px 14px minmax(0, 1fr);
   }
-  .sample-decision-actions {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    width: 100%;
-  }
-  .sample-decision-actions .button {
-    width: 100%;
-  }
 }
 
 @media (max-width: 480px) {
-  .supply-summary-strip,
-  .supply-summary-strip--six,
-  .supply-summary-strip--four {
-    grid-template-columns: 1fr;
-  }
-  .supply-summary-strip > div,
-  .supply-summary-strip > div:nth-child(even),
-  .supply-summary-strip > div:nth-child(-n + 2) {
-    border-top: 1px solid var(--line);
-    border-right: 0;
-  }
-  .supply-summary-strip > div:first-child {
-    border-top: 0;
-  }
   .shipment-timeline--horizontal {
-    grid-template-columns: 1fr;
-  }
-  .sample-decision-actions {
     grid-template-columns: 1fr;
   }
 }
@@ -4344,8 +4696,11 @@ td strong {
   gap: 4px;
 }
 .money-range-bar nav a {
-  min-height: 36px;
-  padding: 10px 12px;
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
   color: var(--muted);
   font-size: var(--text-label);
   font-weight: 650;
@@ -4363,7 +4718,7 @@ td strong {
   display: grid;
   gap: 3px;
 }
-.money-custom-range label span {
+.money-custom-range label > span:not(.date-picker) {
   color: var(--steel);
   font-family: var(--font-display);
   font-size: var(--text-meta);
@@ -4372,10 +4727,9 @@ td strong {
   text-transform: uppercase;
 }
 .money-custom-range input,
-.money-filter-bar .search-field input,
-.task-filter-bar .search-field input {
+.money-filter-bar .search-field input {
   width: 100%;
-  height: 36px;
+  height: 44px;
   border: 1px solid var(--line);
   border-radius: 0;
   background: var(--paper);
@@ -4387,24 +4741,17 @@ td strong {
   letter-spacing: -0.01em;
   outline: none;
 }
-.money-filter-bar .search-field input,
-.task-filter-bar .search-field input {
-  height: 44px;
+.money-filter-bar .search-field input {
   padding-left: 39px;
 }
-.money-filter-bar .search-field input::placeholder,
-.task-filter-bar .search-field input::placeholder {
+.money-filter-bar .search-field input::placeholder {
   color: var(--muted);
   opacity: 1;
 }
 .money-custom-range input:focus,
-.money-filter-bar .search-field input:focus,
-.task-filter-bar .search-field input:focus {
+.money-filter-bar .search-field input:focus {
   border-color: var(--onyx);
   box-shadow: 0 0 0 2px var(--volt);
-}
-.money-custom-range .button {
-  min-height: 36px;
 }
 .money-summary-strip,
 .task-summary-strip {
@@ -4452,7 +4799,7 @@ td strong {
   line-height: 1.4;
 }
 .task-summary-strip > a.is-urgent {
-  box-shadow: inset 3px 0 0 var(--volt);
+  box-shadow: inset 3px 0 0 var(--danger);
 }
 .money-page .detail-section,
 .tasks-page .detail-section {
@@ -4484,11 +4831,15 @@ td strong {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
+/* Emphasis is a tint and weight, never a larger figure. */
 .profitability-grid .is-emphasized {
   background: #f7f7f3;
 }
 .profitability-grid .is-emphasized strong {
-  font-size: 24px;
+  font-weight: 700;
+}
+.profitability-range {
+  white-space: nowrap;
 }
 .profit-warning {
   margin: 12px 0 0;
@@ -4496,58 +4847,53 @@ td strong {
   border-left: 2px solid #a98024;
   background: #fffdf0;
   color: var(--muted);
-  font-size: 9.5px;
+  font-size: var(--text-label);
 }
-.money-filter-bar,
-.task-filter-bar {
+.money-filter-bar {
   display: grid;
+  flex: 1;
+  min-width: 0;
   grid-template-columns:
     minmax(210px, 1.5fr) repeat(2, minmax(140px, 0.7fr))
     auto;
   align-items: end;
   gap: 8px;
-  margin-bottom: 12px;
 }
-.task-filter-bar {
-  grid-template-columns:
-    minmax(210px, 1.5fr) repeat(3, minmax(125px, 0.65fr))
-    auto;
-}
-.money-filter-bar .search-field,
-.task-filter-bar .search-field {
+.money-filter-bar .search-field {
   width: 100%;
 }
-.money-filter-bar .field,
-.task-filter-bar .field {
+.money-filter-bar .field {
   gap: 0;
 }
 .money-filter-bar input,
 .money-filter-bar select,
-.task-filter-bar input,
-.task-filter-bar select,
-.money-filter-bar .select-trigger,
-.task-filter-bar .select-trigger {
+.money-filter-bar .select-trigger {
   height: 44px;
 }
-.money-activity-list,
 .task-queue {
   border-top: 1px solid var(--line);
 }
+/* Money history is a list panel: rows run edge to edge under the
+   resource-panel head, inset 20px (16px on touch layouts). */
 .money-activity-row {
   display: grid;
   grid-template-columns:
-    95px minmax(220px, 1.6fr) minmax(110px, 0.75fr)
-    105px 105px 110px;
+    80px minmax(0, 1.6fr) minmax(0, 0.7fr) 95px 95px
+    minmax(0, 0.8fr);
   align-items: center;
   gap: 13px;
   min-height: 64px;
-  padding: 10px 12px;
+  padding: 10px 20px;
   border-bottom: 1px solid var(--line);
   color: var(--muted);
-  font-size: 9.5px;
+  font-size: var(--text-label);
+}
+.money-activity-row:last-child {
+  border-bottom: 0;
 }
 .money-activity-head,
-.task-row--head {
+.task-row--head,
+.content-row--head {
   min-height: 36px !important;
   color: var(--steel);
   font-family: var(--font-display);
@@ -4566,7 +4912,7 @@ td strong {
 .task-row-copy strong {
   overflow: hidden;
   color: var(--onyx);
-  font-size: 10.5px;
+  font-size: var(--text-small);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -4631,38 +4977,39 @@ td strong {
 .money-original:focus::after {
   visibility: visible;
 }
-.money-entry-form .money-input {
-  display: grid;
-  grid-template-columns: 52px minmax(0, 1fr);
-}
-.money-entry-form .money-input > span {
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--line);
-  border-right: 0;
-  color: var(--muted);
-  font-family: var(--font-display);
-  font-size: var(--text-label);
-  font-weight: 700;
+/* The amount prefix switches between MVR and USD; a fixed width keeps the
+   input from shifting when the currency changes. */
+.money-entry-form .input-with-prefix > span {
+  min-width: 56px;
+  justify-content: center;
 }
 .task-summary-strip > a {
   min-height: 86px;
 }
+/* Table rows from 1301px; below that rows turn into compact records. */
 .task-row {
   display: grid;
   grid-template-columns:
-    76px minmax(220px, 1.5fr) minmax(100px, 0.65fr) minmax(100px, 0.65fr)
-    105px 230px 38px;
+    76px minmax(160px, 1.5fr) minmax(84px, 0.65fr) minmax(84px, 0.65fr)
+    105px minmax(200px, 230px) 34px;
   align-items: center;
   gap: 12px;
   min-height: 68px;
-  padding: 10px 12px;
+  padding: 10px 20px;
   border-bottom: 1px solid var(--line);
   color: var(--muted);
-  font-size: 9.5px;
+  font-size: var(--text-label);
+}
+.task-row:last-child {
+  border-bottom: 0;
+}
+/* Related, Assignee and Due are table columns here; compact rows turn the
+   wrapper into one meta line. */
+.task-row-meta {
+  display: contents;
 }
 .task-row.is-overdue {
-  box-shadow: inset 3px 0 0 #a82d2d;
+  box-shadow: inset 3px 0 0 var(--danger);
 }
 .task-priority {
   display: inline-flex;
@@ -4679,24 +5026,25 @@ td strong {
   content: "";
 }
 .task-priority--high::before {
-  background: #a82d2d;
+  background: var(--danger);
 }
 .task-priority--medium::before {
   background: #a98024;
 }
 .task-due-overdue {
-  color: #8b2222;
+  color: var(--danger-strong);
   font-weight: 650;
 }
 .task-status-control {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
+  align-items: center;
   gap: 5px;
 }
 .task-status-form {
   display: grid;
   grid-template-columns: minmax(90px, 1fr) auto;
+  align-items: center;
   gap: 5px;
 }
 .task-status-control .field-error {
@@ -4709,6 +5057,18 @@ td strong {
 .task-done-button svg {
   width: 14px;
 }
+/* Desktop table rows: compact 34px status controls, and Edit matches them.
+   Compact records below 1301px keep the standard 44px button. */
+@media (min-width: 1301px) {
+  .task-status-control .button {
+    min-height: 34px;
+    padding: 0 9px;
+  }
+  .task-row-edit .icon-button {
+    width: 34px;
+    height: 34px;
+  }
+}
 .task-view-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -4716,31 +5076,47 @@ td strong {
   margin-bottom: 12px;
 }
 .task-view-tabs a {
+  display: inline-flex;
   min-height: 34px;
-  padding: 10px 12px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
   border: 1px solid var(--line);
   color: var(--muted);
   font-size: var(--text-label);
   font-weight: 650;
+}
+.task-view-tabs a span {
+  color: var(--steel);
+  font-variant-numeric: tabular-nums;
 }
 .task-view-tabs a.is-active {
   border-color: var(--onyx);
   background: var(--onyx);
   color: var(--white);
 }
+.task-view-tabs a.is-active span {
+  color: var(--volt);
+}
+/* Tasks and Content queues: view tabs sit under the panel head and rows run
+   full bleed, as in every other resource panel. */
+.queue-panel > .task-view-tabs {
+  margin: 0;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.queue-panel .task-queue {
+  border-top: 0;
+}
 .task-status-control select,
 .task-status-control .select-trigger {
   width: 100%;
   height: 34px;
+  min-height: 34px;
   border: 1px solid var(--line);
   background: var(--paper);
   padding: 0 7px;
-  font-size: var(--text-meta);
-}
-.task-status-control .button {
-  min-height: 34px;
-  padding: 0 9px;
-  font-size: var(--text-meta);
+  font-size: var(--text-body);
 }
 .status--doing,
 .status--waiting {
@@ -4754,46 +5130,99 @@ td strong {
 }
 
 @media (max-width: 1180px) {
+  /* Two by two, with Operating Profit closing the grid at full width. */
   .profitability-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .profitability-grid > div:nth-child(3) {
+  .profitability-grid > div:nth-child(even) {
     border-right: 0;
   }
-  .profitability-grid > div:nth-child(n + 4) {
+  .profitability-grid > div:nth-child(n + 3) {
     border-top: 1px solid var(--line);
   }
-  .money-activity-head,
+  .profitability-grid > div:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Task rows need about 1300px of viewport for the full table beside the
+   sidebar; narrower screens get compact records. */
+@media (max-width: 1300px) {
   .task-row--head {
     display: none;
   }
-  .money-activity-row,
+  /* Compact record: priority dot and title with Edit on the right, one meta
+     line, then the status control. */
   .task-row {
-    position: relative;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px 20px;
-    padding: 16px;
+    grid-template-columns: 6px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "priority copy edit"
+      "priority meta edit"
+      "priority status status";
+    align-items: start;
+    gap: 6px 12px;
+    padding: 14px 20px;
   }
-  .money-activity-copy,
+  .task-row-priority {
+    grid-area: priority;
+    padding-top: 6px;
+  }
+  /* The label stays for screen readers; the dot carries it visually. */
+  .task-row-priority .task-priority {
+    gap: 0;
+    font-size: 0;
+  }
   .task-row-copy {
-    grid-column: 1 / -1;
+    grid-area: copy;
+    align-self: center;
   }
-  .money-activity-row > span:not(.money-activity-copy)::before,
-  .task-row > span:not(.task-row-copy)::before {
-    display: block;
-    margin-bottom: 3px;
+  .task-row-copy strong {
+    font-size: var(--text-body);
+    white-space: normal;
+  }
+  .task-row-edit {
+    grid-area: edit;
+  }
+  /* Compact records use 44px controls, so Edit does too. */
+  .task-row-edit .icon-button {
+    width: 44px;
+    height: 44px;
+  }
+  .task-row-meta {
+    display: flex;
+    grid-area: meta;
+    flex-wrap: wrap;
+    align-items: center;
     color: var(--steel);
-    content: attr(data-label);
-    font-family: var(--font-display);
-    font-size: var(--text-meta);
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
   }
-  .task-row > span:last-child {
-    position: absolute;
-    top: 12px;
-    right: 12px;
+  .task-row-meta > span:last-child::before,
+  .task-row-related::before {
+    margin-inline: 6px;
+    color: var(--steel);
+    content: "·";
+    font-weight: 400;
+  }
+  .task-row-meta > .task-row-related {
+    order: 1;
+  }
+  .task-row-related.is-empty {
+    display: none;
+  }
+  .task-row-status {
+    grid-area: status;
+    margin-top: 4px;
+  }
+  .task-row-status .task-status-control {
+    max-width: 420px;
+  }
+  .task-row-status .task-status-control .select-trigger,
+  .task-row-status .task-status-control select,
+  .task-row-status .task-status-control .button {
+    height: 44px;
+    min-height: 44px;
+  }
+  .task-row-status .task-status-control .task-done-button {
+    width: 44px;
   }
 }
 
@@ -4805,12 +5234,10 @@ td strong {
   .money-custom-range {
     align-items: stretch;
   }
-  .money-filter-bar,
-  .task-filter-bar {
+  .money-filter-bar {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .money-filter-bar .search-field,
-  .task-filter-bar .search-field {
+  .money-filter-bar .search-field {
     grid-column: 1 / -1;
   }
   .money-summary-strip,
@@ -4838,40 +5265,36 @@ td strong {
     text-align: center;
   }
   .money-custom-range,
-  .money-filter-bar,
-  .task-filter-bar,
-  .money-activity-row,
-  .task-row {
+  .money-filter-bar {
     grid-template-columns: 1fr;
   }
   .money-custom-range {
     display: grid;
   }
   .money-summary-strip,
-  .task-summary-strip,
   .profitability-grid {
     grid-template-columns: 1fr;
   }
   .money-summary-strip article,
-  .task-summary-strip > a,
   .profitability-grid > div,
   .profitability-grid > div:nth-child(3) {
     border-top: 1px solid var(--line);
     border-right: 0;
   }
   .money-summary-strip article:first-child,
-  .task-summary-strip > a:first-child,
   .profitability-grid > div:first-child {
     border-top: 0;
   }
-  .task-view-tabs {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    margin-inline: -2px;
-    padding-bottom: 2px;
+  .profitability-grid > div {
+    min-height: 0;
   }
-  .task-view-tabs a {
-    flex: 0 0 auto;
+  .profitability-grid > div:last-child:nth-child(odd) {
+    grid-column: auto;
+  }
+  /* Task tiles stay two by two (from 900px) and just get shorter. */
+  .task-summary-strip > a {
+    min-height: 72px;
+    padding: 12px 14px;
   }
 }
 
@@ -4916,19 +5339,17 @@ td strong {
 /* Ambassadors */
 .supply-row--ambassador {
   grid-template-columns:
-    minmax(180px, 1.4fr) 0.9fr 0.65fr 0.8fr 0.7fr 0.6fr
-    28px;
+    minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 0.9fr) minmax(0, 0.8fr)
+    76px 24px;
 }
 .ambassador-main {
   display: grid;
   gap: 14px;
 }
-.supply-detail-page .ambassador-main .detail-section {
-  margin: 0;
-}
+/* Rows run edge to edge under the resource-panel head, inset like every
+   other list row. */
 .grant-list {
   display: grid;
-  border-top: 1px solid var(--line);
 }
 .grant-row {
   display: grid;
@@ -4936,7 +5357,7 @@ td strong {
   align-items: center;
   gap: 14px;
   min-height: 56px;
-  padding: 9px 0;
+  padding: 9px 20px;
   border-bottom: 1px solid var(--line);
   color: var(--muted);
   font-size: var(--text-label);
@@ -4952,8 +5373,10 @@ td strong {
   color: var(--steel);
   font-size: var(--text-meta);
 }
-.grant-row--link:hover {
-  background: #fafaf8;
+@media (hover: hover) {
+  .grant-row--link:hover {
+    background: #f7f7f5;
+  }
 }
 .grant-quantity {
   color: var(--onyx);
@@ -4964,14 +5387,12 @@ td strong {
 }
 
 /* Content planner */
-.content-group {
-  margin-top: 18px;
-}
 .content-group-title {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 0 0 6px;
+  margin: 0;
+  padding: 16px 20px 8px;
   color: var(--onyx);
   font-family: var(--font-display);
   font-size: var(--text-small);
@@ -4984,7 +5405,7 @@ td strong {
   font-size: var(--text-label);
 }
 .content-group--overdue .content-group-title {
-  color: #8b2222;
+  color: var(--danger-strong);
 }
 .content-list {
   display: grid;
@@ -4998,24 +5419,33 @@ td strong {
   align-items: center;
   gap: 14px;
   min-height: 64px;
-  padding: 10px 12px;
+  padding: 10px 20px;
   border-bottom: 1px solid var(--line);
   color: var(--muted);
   font-size: var(--text-label);
 }
-.content-row:hover {
-  background: #fafaf8;
+.content-group:last-child .content-row:last-child {
+  border-bottom: 0;
+}
+@media (hover: hover) {
+  a.content-row:hover {
+    background: #f7f7f5;
+  }
+}
+/* Product and owner have their own columns until 1100px. */
+.content-row-extra {
+  display: none;
 }
 .content-row--scheduled,
 .content-row--ready {
   box-shadow: inset 3px 0 0 var(--volt);
 }
 .content-row.is-overdue {
-  box-shadow: inset 3px 0 0 #a82d2d;
+  box-shadow: inset 3px 0 0 var(--danger);
 }
 .content-row.is-overdue .status {
-  border-color: #a82d2d;
-  color: #8b2222;
+  border-color: var(--danger);
+  color: var(--danger-strong);
 }
 .content-row--posted .task-date,
 .content-row--cancelled .task-date {
@@ -5029,16 +5459,50 @@ td strong {
 .content-row .task-date small {
   font-size: var(--text-meta);
 }
-.content-status-actions,
+/* Status moves join Edit in the record's actions bar, so they follow its
+   wrap rules on phones. */
+.content-status-actions {
+  display: contents;
+}
+.content-status-actions > form {
+  display: flex;
+}
+.detail-actions > .content-detail-actions {
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+}
 .content-schedule-form {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-.content-schedule-form {
   align-items: end;
+  justify-content: flex-end;
+  gap: 8px;
+}
+/* While scheduling, Edit lines up with the field's bottom edge. */
+.detail-actions > .content-detail-actions:has(> .content-schedule-form) {
+  align-items: flex-end;
+}
+.content-schedule-form > .text-link {
+  min-height: 44px;
+  padding-inline: 12px;
+}
+@media (max-width: 820px) {
+  /* Scheduling takes the whole actions row (the shared primary rule above
+     lifts it): the date field on top, Schedule and its dismiss link below. */
+  .detail-actions > .content-detail-actions > .content-schedule-form {
+    min-width: 0;
+    justify-content: flex-start;
+  }
+  .content-schedule-form > .field {
+    flex-basis: 100%;
+  }
+  .queue-panel > .task-view-tabs,
+  .content-group-title,
+  .content-row,
+  .task-row {
+    padding-inline: 16px;
+  }
 }
 .content-schedule-form .field-error,
 .content-status-actions .field-error {
@@ -5052,37 +5516,25 @@ td strong {
   white-space: pre-wrap;
 }
 
-/* Files */
+/* Files — a list panel on every record page (and the Files library): the
+   resource-panel head draws the rule and the rows run edge to edge. Pages
+   without the .supply-detail-page spacing rule get the section gap here. */
 .file-panel {
-  margin-top: 14px;
-  padding: 16px 18px;
-  border: 1px solid var(--line);
-  background: var(--paper);
+  margin-top: 16px;
 }
-.file-panel .detail-section-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 10px;
-}
-.file-panel .detail-section-head h2 {
-  margin: 3px 0 0;
-  font-family: var(--font-display);
-  font-size: var(--text-section);
-  font-weight: 600;
-  line-height: 1;
-}
-.file-panel-empty {
+.supply-detail-page .detail-section-head .button {
+  flex: 0 0 auto;
   margin: 0;
-  padding-top: 10px;
-  border-top: 1px solid var(--line);
-  color: var(--steel);
-  font-size: var(--text-label);
+}
+/* One record-section inset: 20px on desktop, 16px on touch layouts so
+   kickers line up with the page gutter. */
+@media (max-width: 820px) {
+  .supply-detail-page .detail-section {
+    padding: 17px 16px 16px;
+  }
 }
 .file-list {
   display: grid;
-  border-top: 1px solid var(--line);
 }
 .file-row {
   display: grid;
@@ -5092,13 +5544,10 @@ td strong {
   align-items: center;
   gap: 12px;
   min-height: 54px;
-  padding: 8px 0;
+  padding: 8px 20px;
   border-bottom: 1px solid var(--line);
   color: var(--muted);
   font-size: var(--text-label);
-}
-.file-list--library .file-row {
-  padding-inline: 18px;
 }
 .file-row:last-child {
   border-bottom: 0;
@@ -5110,7 +5559,6 @@ td strong {
 }
 .file-row--head {
   min-height: 40px;
-  background: #f4f4f1;
   color: var(--steel);
   font-family: var(--font-display);
   font-size: var(--text-meta);
@@ -5133,7 +5581,7 @@ td strong {
   text-decoration: underline;
 }
 .file-retention-expired {
-  color: #8b2222;
+  color: var(--danger-strong);
   font-weight: 650;
 }
 .file-row-actions {
@@ -5150,13 +5598,10 @@ td strong {
 .file-row-actions .icon-button svg {
   width: 14px;
 }
-.file-row-actions .button {
-  margin: 0;
-}
 .file-delete-trigger:hover,
 .file-delete-trigger[aria-expanded="true"] {
-  border-color: #a82d2d;
-  color: #8b2222;
+  border-color: var(--danger);
+  color: var(--danger-strong);
 }
 .file-delete-popover {
   position: fixed;
@@ -5165,7 +5610,7 @@ td strong {
   margin: 0;
   padding: 0;
   border: 1px solid var(--onyx);
-  border-top: 3px solid #8b2222;
+  border-top: 3px solid var(--danger-strong);
   border-radius: 0;
   background: var(--paper);
   box-shadow: 0 18px 40px rgb(10 10 10 / 18%);
@@ -5228,7 +5673,6 @@ td strong {
 .file-delete-actions .button {
   width: 100%;
   min-height: 36px;
-  margin: 0;
   padding: 0 12px;
   border: 1px solid transparent;
   font-size: var(--text-label);
@@ -5237,13 +5681,10 @@ td strong {
   border-color: var(--line);
 }
 .file-delete-actions .button--danger-solid {
-  border-color: #8b2222;
+  border-color: var(--danger-strong);
 }
 .file-delete-actions .button svg {
   width: 13px;
-}
-.file-delete-trigger--button {
-  margin: 0;
 }
 .file-delete-copy {
   margin: 0 0 12px;
@@ -5257,11 +5698,9 @@ td strong {
   justify-items: start;
 }
 .file-details-form .form-grid,
-.file-details-form .field {
+.file-details-form .field,
+.file-details-form .form-actions {
   width: 100%;
-}
-.files-filter-bar > label:not(.search-field) {
-  width: 150px;
 }
 .file-upload-target {
   display: grid;
@@ -5309,21 +5748,16 @@ td strong {
   text-transform: uppercase;
 }
 
-@media (max-width: 1100px) {
-  .supply-row--ambassador {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+@media (max-width: 820px) {
   .file-row--head {
     display: none;
   }
   .file-row {
     position: relative;
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
     gap: 10px 16px;
-    padding: 12px 0;
-  }
-  .file-list--library .file-row {
-    padding: 14px 18px;
+    padding: 14px 20px;
   }
   .file-row .commerce-primary,
   .file-row .file-row-actions {
@@ -5343,19 +5777,36 @@ td strong {
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
+  .file-row .file-name {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    margin-block: -10px;
+  }
+}
+
+@media (max-width: 1100px) {
   .content-row {
     grid-template-columns: 42px minmax(0, 1fr) auto;
   }
+  .content-row--head,
   .content-row > span[data-label="Product"],
   .content-row > span[data-label="Owner"] {
     display: none;
   }
+  .content-row-extra {
+    display: block;
+  }
+}
+
+@media (max-width: 820px) {
+  .file-row,
+  .grant-row {
+    padding-inline: 16px;
+  }
 }
 
 @media (max-width: 620px) {
-  .supply-row--ambassador {
-    grid-template-columns: 1fr;
-  }
   .file-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -5369,18 +5820,21 @@ td strong {
   .grant-row time {
     order: -1;
   }
+  /* Phone record: the date tile down the left, title, meta and status
+     stacked beside it. */
   .content-row {
-    grid-template-columns: 38px minmax(0, 1fr);
+    grid-template-columns: 42px minmax(0, 1fr);
+    align-items: start;
+    gap: 8px 12px;
+  }
+  .content-row > .task-date {
+    grid-row: 1 / span 2;
   }
   .content-row > span[data-label="Status"] {
     grid-column: 2;
   }
-  .files-filter-bar > label:not(.search-field) {
-    width: auto;
-  }
-  .content-status-actions > form,
-  .content-status-actions .button {
-    flex: 1 1 auto;
+  .content-row .commerce-primary strong {
+    white-space: normal;
   }
 }
 
@@ -5409,10 +5863,11 @@ td strong {
 .date-picker-trigger {
   display: flex;
   width: 100%;
+  height: 44px;
   min-height: 44px;
   align-items: center;
   gap: 9px;
-  padding: 10px 36px 10px 12px;
+  padding: 0 36px 0 12px;
   border: 1px solid var(--line);
   background: var(--paper);
   color: var(--onyx);
@@ -5445,8 +5900,8 @@ td strong {
   color: var(--muted);
 }
 .date-picker--compact .date-picker-trigger {
+  height: 36px;
   min-height: 36px;
-  padding-block: 0;
 }
 .date-picker-clear {
   position: absolute;
@@ -5580,13 +6035,17 @@ td strong {
 }
 .date-picker-time select,
 .date-picker-time .select-trigger {
-  width: 64px;
+  width: 72px;
   height: 34px;
+  min-height: 34px;
   border: 1px solid var(--line);
   background-color: var(--paper);
-  padding: 0 26px 0 10px;
+  padding: 0 8px 0 10px;
   font-size: var(--text-body);
   font-variant-numeric: tabular-nums;
+}
+.date-picker-time .select-chevron {
+  width: 12px;
 }
 .date-picker-time small {
   margin-left: auto;
@@ -5762,9 +6221,9 @@ td strong {
   cursor: pointer;
 }
 .select-option span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 .select-option svg {
   width: 14px;
@@ -5890,9 +6349,31 @@ td strong {
 .delivery-option > summary::-webkit-details-marker {
   display: none;
 }
-.delivery-option > summary span {
+.delivery-option > summary > span:first-child {
   display: grid;
+  flex: 1;
+  min-width: 0;
   gap: 2px;
+}
+.delivery-option > summary > strong {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.delivery-option-toggle {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  color: var(--steel);
+  font-size: var(--text-label);
+  font-weight: 650;
+}
+.delivery-option-toggle svg {
+  width: 14px;
+  transition: transform 140ms ease;
+}
+.delivery-option[open] .delivery-option-toggle svg {
+  transform: rotate(180deg);
 }
 .delivery-option > summary small {
   color: var(--steel);
@@ -5945,9 +6426,40 @@ td strong {
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+/* Four equal controls under each image, never wider than the image. */
 .product-media-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 4px;
+}
+.product-media-actions .icon-button {
+  width: 100%;
+}
+/* Media action errors sit under the images, inset like the grid. */
+.product-media-message {
+  margin: 0 18px 16px;
+}
+.resource-panel-head + .product-media-message {
+  margin-top: 16px;
+}
+@media (max-width: 700px) {
+  .product-media-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    padding: 16px;
+  }
+  .product-media-message {
+    margin-inline: 16px;
+  }
+  /* Two by two, so each touch target stays 44px tall without overflowing
+     a narrow card. */
+  .product-media-grid .product-media-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .product-media-grid .product-media-actions .icon-button {
+    width: 100%;
+    min-width: 0;
+  }
 }
 
 .delivery-option-create {
@@ -5956,6 +6468,30 @@ td strong {
 }
 .delivery-option-create > .kicker {
   margin-bottom: 14px;
+}
+.delivery-option-create .embedded-editor {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+/* Same inset as the Store settings form sections above. */
+.delivery-panel > .resource-panel-head,
+.delivery-panel .delivery-option,
+.delivery-panel > .inline-empty--compact {
+  padding-inline: 28px;
+}
+.delivery-panel .delivery-option-create {
+  padding: 22px 28px 28px;
+}
+@media (max-width: 700px) {
+  .delivery-panel > .resource-panel-head,
+  .delivery-panel .delivery-option,
+  .delivery-panel > .inline-empty--compact {
+    padding-inline: 16px;
+  }
+  .delivery-panel .delivery-option-create {
+    padding: 20px 16px;
+  }
 }
 
 /* Settings index */
@@ -5978,6 +6514,11 @@ td strong {
 .settings-index a:hover {
   background: var(--white);
 }
+@media (max-width: 820px) {
+  .settings-index a {
+    padding-inline: 16px;
+  }
+}
 .settings-index svg {
   width: 16px;
   height: 16px;
@@ -5998,25 +6539,216 @@ td strong {
   margin-bottom: 16px;
 }
 
-/* Numeric table columns align right on desktop; stacked mobile rows stay left. */
+/* List rows: one desktop table and one phone record for every list.
+   Desktop rows are ruled tables with numeric columns right-aligned in tabular
+   figures; .col-wide columns drop out at 1180px and below so the rest fits.
+   At the 820px shell breakpoint each row becomes a stacked record: the
+   identifier with its status (.row-status) on line one, up to four labelled
+   key values in two columns (.col-desktop cells and "—" placeholders marked
+   .is-empty hide), and the arrow or row action as a 44px target pinned
+   top-right. */
 .catalog-row > .num,
 .stock-row > .num,
-.variant-row > .num {
+.variant-row > .num,
+.supply-row > .num,
+.commerce-row > .num,
+.money-activity-row > .num {
   justify-self: end;
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
-@media (max-width: 820px) {
-  .variant-row > .num {
-    justify-self: start;
-    text-align: left;
+.money-activity-row > .num .money-amount {
+  justify-content: flex-end;
+}
+/* Air between a right-aligned figure and the pill column that follows it
+   (reset in the stacked phone record below). */
+.catalog-row > .num,
+.stock-row > .num,
+.variant-row > .num,
+.supply-row > .num,
+.commerce-row > .num,
+.money-activity-row > .num {
+  padding-right: 8px;
+}
+.money-sign,
+.money-activity-meta {
+  display: none;
+}
+@media (max-width: 1180px) {
+  .catalog-row > .col-wide,
+  .stock-row > .col-wide,
+  .variant-row > .col-wide,
+  .supply-row > .col-wide,
+  .commerce-row > .col-wide {
+    display: none;
   }
 }
-@media (max-width: 700px) {
+@media (max-width: 820px) {
+  .catalog-row.catalog-row--head,
+  .stock-row.stock-row--head,
+  .variant-row.variant-row--head,
+  .supply-row.supply-row--head,
+  .commerce-row.commerce-row--head,
+  .money-activity-row.money-activity-head,
+  .catalog-row > .col-desktop,
+  .stock-row > .col-desktop,
+  .variant-row > .col-desktop,
+  .supply-row > .col-desktop,
+  .commerce-row > .col-desktop,
+  .money-activity-row > .col-desktop,
+  .supply-row > .is-empty,
+  .commerce-row > .is-empty,
+  .money-activity-row > .is-empty {
+    display: none;
+  }
+  .catalog-row,
+  .stock-row,
+  .variant-row,
+  .supply-row,
+  .commerce-list .commerce-row {
+    position: relative;
+    min-height: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 12px 16px;
+    padding: 14px 52px 14px 16px;
+    /* Room kept beside the identifier for the widest status pill the list
+       can show ("Out of stock", 70px at 375). */
+    --row-status-reserve: 72px;
+  }
+  /* "Out for Delivery", 86px */
+  .commerce-list .commerce-row {
+    --row-status-reserve: 88px;
+  }
+  /* "Ready for Collection", 104px */
+  .supply-row--import {
+    --row-status-reserve: 106px;
+  }
+  .catalog-row > span,
+  .stock-row > span,
+  .variant-row > span,
+  .supply-row > span,
+  .commerce-row > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .catalog-row > .catalog-product,
+  .stock-row > .catalog-product,
+  .variant-row > .catalog-product,
+  .supply-row > .commerce-primary,
+  .commerce-row > .commerce-primary {
+    grid-column: 1 / -1;
+  }
+  /* Line one: the identifier runs the full width with its status pinned
+     top-right over the reserved space, so a long name only wraps when it
+     would actually reach the pill. */
+  .catalog-row:has(> .row-status) > .catalog-product,
+  .stock-row:has(> .row-status) > .catalog-product,
+  .variant-row:has(> .row-status) > .catalog-product,
+  .supply-row:has(> .row-status) > .commerce-primary,
+  .commerce-row:has(> .row-status) > .commerce-primary {
+    grid-row: 1;
+    grid-column: 1 / -1;
+    padding-right: calc(var(--row-status-reserve) + 12px);
+  }
+  .catalog-row > .row-status,
+  .stock-row > .row-status,
+  .variant-row > .row-status,
+  .supply-row > .row-status,
+  .commerce-row > .row-status {
+    grid-row: 1;
+    grid-column: 1 / -1;
+    align-self: start;
+    justify-self: end;
+  }
+  .catalog-row > .catalog-product strong,
+  .stock-row > .catalog-product strong,
+  .variant-row > .catalog-product strong,
+  .supply-row > .commerce-primary strong,
+  .commerce-row > .commerce-primary strong {
+    font-size: var(--text-body-lg);
+    white-space: normal;
+  }
+  .catalog-row > [data-label]:not(.row-status, .status)::before,
+  .stock-row > [data-label]:not(.row-status, .status)::before,
+  .variant-row > [data-label]:not(.row-status, .status)::before,
+  .supply-row > [data-label]:not(.row-status, .status)::before,
+  .commerce-row > [data-label]:not(.row-status, .status)::before {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--steel);
+    content: attr(data-label);
+    font-family: var(--font-display);
+    font-size: var(--text-meta);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
   .catalog-row > .num,
-  .stock-row > .num {
+  .stock-row > .num,
+  .variant-row > .num,
+  .supply-row > .num,
+  .commerce-row > .num {
     justify-self: start;
+    padding-right: 0;
     text-align: left;
+  }
+  .catalog-row > .catalog-arrow,
+  .stock-row > .catalog-arrow,
+  .supply-row > .catalog-arrow,
+  .commerce-row > .catalog-arrow,
+  .variant-row > span:last-child {
+    position: absolute;
+    top: 3px;
+    right: 8px;
+    display: grid;
+    width: 44px;
+    height: 44px;
+    place-items: center;
+    transform: none;
+  }
+  .variant-row > span:last-child .row-link {
+    width: 44px;
+    height: 44px;
+  }
+  .catalog-loading__row {
+    grid-template-columns: 1fr 1fr;
+    gap: 15px 24px;
+    padding: 17px 16px;
+  }
+  .catalog-loading__row > div:first-child {
+    grid-column: 1 / -1;
+  }
+  /* Money history: date and description left, one signed amount right, and
+     Related · Recorded By folded into the description as one meta line. */
+  .money-activity-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 4px 16px;
+    min-height: 0;
+    padding: 12px 16px;
+  }
+  .money-activity-date {
+    grid-row: 1;
+    grid-column: 1;
+    color: var(--steel);
+    font-size: var(--text-meta);
+  }
+  .money-activity-copy {
+    grid-row: 2;
+    grid-column: 1;
+  }
+  .money-activity-row > .money-in-value,
+  .money-activity-row > .money-out-value {
+    grid-row: 1 / span 2;
+    grid-column: 2;
+  }
+  .money-sign {
+    display: inline;
+  }
+  .money-activity-meta {
+    display: block;
   }
 }
 
@@ -6072,6 +6804,18 @@ td strong {
 @media (max-width: 820px) {
   .app-main {
     padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  }
+  /* A field scrolled into view (first error after a rejected submit) clears
+     the fixed top bar and tab bar. */
+  .field,
+  .field :is(input, textarea, select, button) {
+    scroll-margin-top: calc(58px + 16px);
+    scroll-margin-bottom: calc(64px + env(safe-area-inset-bottom) + 16px);
+  }
+  /* Native required-field checks scroll the control itself, so it also
+     leaves room for its label above. */
+  .field :is(input, textarea, select, button) {
+    scroll-margin-top: calc(58px + 16px + 24px);
   }
   .tab-bar {
     position: fixed;
@@ -6142,9 +6886,6 @@ td strong {
   .more-sheet::backdrop {
     background: rgb(10 10 10 / 0.55);
   }
-  .more-sheet-panel {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
   .more-sheet-head {
     position: sticky;
     top: 0;
@@ -6174,11 +6915,15 @@ td strong {
   .more-sheet-head svg {
     width: 20px;
   }
+  /* Balanced columns: short groups do not leave holes beside long ones. */
   .more-sheet .nav-groups {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4px 12px;
+    display: block;
     padding: 4px 8px 16px;
+    column-gap: 12px;
+    columns: 2;
+  }
+  .more-sheet .nav-group {
+    break-inside: avoid;
   }
   .more-sheet .nav-link {
     min-height: 44px;
@@ -6191,14 +6936,20 @@ td strong {
     outline: 2px solid var(--volt);
     outline-offset: -2px;
   }
+  /* Pinned to the foot of the sheet so Account and Sign out never need a
+     scroll. It also carries the device safe-area padding. */
   .more-account {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 12px 16px;
-    padding: 16px 20px 20px;
+    padding: 16px 20px calc(20px + env(safe-area-inset-bottom));
     border-top: 1px solid #272727;
+    background: var(--onyx);
   }
   .more-account > div:first-child {
     display: flex;
@@ -6233,10 +6984,11 @@ td strong {
   .more-account-actions svg {
     width: 14px;
   }
-}
-@media (max-width: 380px) {
-  .more-sheet .nav-groups {
-    grid-template-columns: 1fr;
+  /* Same signal as an active sheet link: dark fill and a Volt rule. */
+  .more-account-actions a[aria-current="page"] {
+    border-color: #4a4a4a;
+    background: #171717;
+    box-shadow: inset 2px 0 0 var(--volt);
   }
 }
 
@@ -6347,7 +7099,7 @@ td strong {
   color: #5f6264;
 }
 .waitlist-quick-add {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   padding: 18px 20px 20px;
   border: 1px solid var(--onyx);
   background: var(--paper);
@@ -6366,20 +7118,96 @@ td strong {
 .waitlist-quick-add .field {
   max-width: 420px;
 }
-.waitlist-quick-add .field input {
-  font-size: 16px;
+/* Single column up to 1024px: handle, Source, interest, then the details
+   toggle and the submit last. */
+.waitlist-quick-add .waitlist-more-toggle {
+  order: 1;
+}
+.waitlist-quick-add .waitlist-more {
+  order: 2;
+}
+.waitlist-quick-add form > .form-message {
+  order: 3;
+}
+.waitlist-quick-add .waitlist-submit {
+  order: 4;
+}
+.waitlist-interest {
+  display: grid;
+  align-content: start;
+  gap: 14px;
 }
 .waitlist-more {
   display: grid;
+  max-width: 860px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px 16px;
 }
 .waitlist-more[hidden] {
   display: none;
 }
-.waitlist-more .field:last-child {
-  grid-column: 1 / -1;
+.waitlist-quick-add .waitlist-more .field {
   max-width: none;
+}
+.waitlist-more-notes {
+  grid-column: 1 / -1;
+}
+.waitlist-more-label--phone {
+  display: none;
+}
+/* Wide screens: who and where on the left with the submit and its result
+   message, interest on the right; the details toggle and its fields run
+   full width below. */
+@media (min-width: 1024px) {
+  .waitlist-quick-add form {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+    grid-template-areas:
+      "handle interest"
+      "source interest"
+      "submit interest"
+      "message interest"
+      "toggle toggle";
+    column-gap: 32px;
+  }
+  .waitlist-quick-add form > .field:first-child {
+    grid-area: handle;
+  }
+  .waitlist-quick-add form > .chip-group {
+    grid-area: source;
+  }
+  .waitlist-quick-add .waitlist-submit {
+    grid-area: submit;
+    align-self: start;
+  }
+  .waitlist-interest {
+    grid-area: interest;
+  }
+  .waitlist-quick-add .waitlist-more-toggle {
+    grid-area: toggle;
+  }
+  /* Only rendered rows get a track, so no empty gaps below the toggle.
+     The details reuse the form's two columns, so Name | Phone and
+     Code | Notes line up with the handle and interest columns above. */
+  .waitlist-quick-add .waitlist-more {
+    grid-column: 1 / -1;
+    max-width: none;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 32px;
+  }
+  .waitlist-quick-add .waitlist-more-notes {
+    grid-column: auto;
+  }
+  .waitlist-quick-add form > .form-message {
+    grid-area: message;
+    align-self: start;
+  }
+}
+@media (min-width: 1360px) {
+  .waitlist-quick-add form,
+  .waitlist-quick-add .waitlist-more {
+    grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+  }
 }
 .waitlist-more-toggle {
   display: inline-flex;
@@ -6408,7 +7236,6 @@ td strong {
   width: 100%;
   max-width: 420px;
   min-height: 48px;
-  margin-top: 0;
 }
 .waitlist-added {
   display: flex;
@@ -6430,17 +7257,13 @@ td strong {
   padding: 0;
   border: 0;
 }
+/* Same label treatment as .field > span, so groups and inputs line up. */
 .chip-group legend {
-  margin-bottom: 8px;
+  margin-bottom: 7px;
   padding: 0;
-  color: var(--muted);
+  color: var(--onyx);
   font-size: var(--text-label);
-  font-weight: 600;
-}
-.form-section .chip-group + .chip-group,
-.form-section .chip-group + .form-grid,
-.form-section .form-grid + .field {
-  margin-top: 16px;
+  font-weight: 650;
 }
 .chips {
   display: flex;
@@ -6489,33 +7312,6 @@ td strong {
 }
 .chip--toggle {
   width: fit-content;
-  align-self: end;
-}
-.waitlist-search {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-.waitlist-search .search-field {
-  flex: 1;
-  width: auto;
-  max-width: 420px;
-}
-.waitlist-search input {
-  width: 100%;
-  min-height: 44px;
-  padding: 10px 12px 10px 39px;
-  border: 1px solid var(--line);
-  background: var(--paper);
-  font-size: var(--text-body);
-  outline: none;
-}
-.waitlist-search input:focus {
-  border-color: var(--onyx);
-  box-shadow: 0 0 0 2px var(--volt);
-}
-.waitlist-search .button {
-  margin-top: 0;
 }
 .status-tabs {
   display: flex;
@@ -6556,9 +7352,11 @@ td strong {
   padding: 0;
   list-style: none;
 }
+/* Fixed status and action tracks so pills and buttons line up from row to
+   row, including Ordered rows that have no next step. */
 .waitlist-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) 200px 250px;
   align-items: center;
   gap: 12px 20px;
   padding: 12px 20px;
@@ -6594,6 +7392,7 @@ td strong {
 .waitlist-row-status {
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 6px;
 }
 .waitlist-actions {
@@ -6604,18 +7403,32 @@ td strong {
 }
 .waitlist-action.button {
   min-width: 44px;
-  margin-top: 0;
   padding-inline: 12px;
+}
+/* DM and Copy lead at the same x on every row; the next step fills the rest
+   of the action track. */
+.waitlist-row > .waitlist-actions {
+  justify-content: flex-start;
+}
+.waitlist-row .waitlist-next {
+  flex: 1;
+}
+.waitlist-row .waitlist-next .button {
+  width: 100%;
+}
+/* Read-only (Staff) rows have no next step, so DM and Copy sit flush right
+   instead of leaving an empty action track. */
+@media (min-width: 821px) {
+  .waitlist-list--read-only .waitlist-row {
+    grid-template-columns: minmax(0, 1fr) 200px auto;
+  }
+  .waitlist-list--read-only .waitlist-row > .waitlist-actions {
+    justify-content: flex-end;
+  }
 }
 .waitlist-next {
   display: grid;
   gap: 4px;
-}
-.waitlist-page .detail-section {
-  margin-top: 16px;
-  padding: 18px 20px;
-  border: 1px solid var(--line);
-  background: var(--paper);
 }
 .waitlist-dm-preview {
   margin: 0 0 14px;
@@ -6682,9 +7495,25 @@ td strong {
   line-height: 1.6;
   white-space: pre-wrap;
 }
+/* Matches the collapsed quick add at each layout. */
 .sk-quick-add {
-  height: 330px;
-  margin-bottom: 20px;
+  height: 604px;
+  margin-bottom: 16px;
+}
+@media (min-width: 1024px) {
+  .sk-quick-add {
+    height: 432px;
+  }
+}
+@media (min-width: 1360px) {
+  .sk-quick-add {
+    height: 382px;
+  }
+}
+/* Write-only placeholders (quick add) are dropped for read-only staff once the
+   navigation has rendered its role marker. */
+.app-shell:has(.sidebar[data-staff-role="STAFF"]) .sk-write-only {
+  display: none;
 }
 .sk-tabs {
   display: flex;
@@ -6698,9 +7527,15 @@ td strong {
   flex: 0 0 auto;
 }
 @media (max-width: 820px) {
+  /* Phone record: who and status on top, contact actions underneath. */
   .waitlist-row {
     grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 10px 16px;
     padding: 14px 16px;
+  }
+  .waitlist-row-main {
+    padding-block: 0;
   }
   .waitlist-row-status {
     flex-direction: column;
@@ -6709,24 +7544,13 @@ td strong {
   .waitlist-row > .waitlist-actions {
     grid-column: 1 / -1;
   }
-  .waitlist-row .waitlist-next {
-    flex: 1;
-  }
-  .waitlist-row .waitlist-next .button {
-    width: 100%;
-  }
   .waitlist-facts {
     grid-template-columns: 1fr 1fr;
-  }
-  .waitlist-page .detail-section {
-    padding: 16px;
   }
 }
 @media (max-width: 600px) {
   .waitlist-quick-add {
-    margin-inline: -16px;
     padding: 16px;
-    border-inline: 0;
   }
   .waitlist-more {
     grid-template-columns: 1fr;
@@ -6735,15 +7559,74 @@ td strong {
   .waitlist-submit {
     max-width: none;
   }
-  .waitlist-page .resource-panel {
-    margin-inline: -16px;
-    border-inline: 0;
+  /* Phones: handle, Source, then submit with a compact details toggle
+     beside it; interest and contact details open above that row. */
+  .waitlist-quick-add form {
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 16px;
   }
-  .waitlist-status-picker fieldset {
+  .waitlist-quick-add form > * {
+    grid-column: 1 / -1;
+  }
+  .waitlist-quick-add .waitlist-more,
+  .waitlist-quick-add form > .form-message {
+    order: 0;
+  }
+  .waitlist-quick-add .waitlist-submit {
+    grid-column: 1;
+  }
+  .waitlist-quick-add .waitlist-more-toggle {
+    order: 5;
+    grid-column: 2;
+    align-self: center;
+  }
+  .waitlist-interest:not([data-open]) {
+    display: none;
+  }
+  .waitlist-more-label--wide {
+    display: none;
+  }
+  .waitlist-more-label--phone {
+    display: inline;
+  }
+  .sk-quick-add {
+    height: 300px;
+  }
+  /* Six tabs in two rows of three, so every status stays visible. */
+  .status-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    overflow: visible;
+  }
+  .status-tabs a {
+    justify-content: center;
+    padding-inline: 8px;
+  }
+  .sk-tabs {
+    display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+  .sk-tab {
+    width: auto;
+  }
+  .waitlist-page .resource-panel-head {
+    align-items: flex-end;
+    flex-direction: row;
+  }
+  /* Five statuses: three over two, every cell filled. */
+  .waitlist-status-picker fieldset {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
   .waitlist-status-picker button {
+    grid-column: span 2;
     border-bottom: 1px solid var(--line);
+  }
+  .waitlist-status-picker button:nth-of-type(3) {
+    border-right: 0;
+  }
+  .waitlist-status-picker button:nth-of-type(n + 4) {
+    grid-column: span 3;
+    border-bottom: 0;
   }
   .waitlist-contact .waitlist-actions > * {
     flex: 1 1 calc(50% - 6px);
@@ -6751,9 +7634,6 @@ td strong {
 }
 
 /* Today (pre-launch dashboard) */
-.waitlist-hero .section-heading .button {
-  margin-top: 0;
-}
 .waitlist-hero-body {
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
@@ -6830,14 +7710,14 @@ td strong {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   border-top: 1px solid var(--line);
-  margin: 0 -22px -21px;
+  margin: 0 -20px -20px;
 }
 .pipeline-strip a {
   display: grid;
   min-height: 64px;
   align-content: center;
   gap: 4px;
-  padding: 10px 22px;
+  padding: 10px 20px;
   border-right: 1px solid var(--line);
 }
 .pipeline-strip a:last-child {
@@ -6860,9 +7740,17 @@ td strong {
 .today-metrics {
   margin-top: 16px;
 }
+/* Each tile shares its row's label, value and caption tracks, so a label
+   that wraps or a smaller money figure never shifts the values or captions
+   out of line with the tiles beside it. */
 .today-metrics .metric {
-  display: block;
+  display: grid;
   min-height: 44px;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+}
+.today-metrics .metric > strong {
+  align-self: end;
 }
 .today-metrics .metric:hover {
   background: #f1f1ed;
@@ -6878,36 +7766,29 @@ td strong {
 .today-metrics .metric span {
   font-size: var(--text-small);
 }
-.today-metrics .metric-money {
+/* A money figure wraps at its space rather than being cut off. */
+.today-metrics .metric > .metric-money {
   font-size: clamp(22px, 2vw, 30px);
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
 }
 .today-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
-.today-grid .task-list {
-  margin-inline: -22px;
-  margin-bottom: -21px;
-}
-.money-total {
-  margin: 18px 0 12px;
-  font-family: var(--font-display);
-  font-size: 40px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.03em;
-  line-height: 1;
-}
+/* Ruled rows run edge to edge under the panel head, like .task-list. */
 .money-breakdown {
   display: grid;
-  margin: 0;
+  margin: 0 -20px;
 }
 .money-breakdown div {
   display: flex;
-  min-height: 40px;
+  min-height: 44px;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  border-top: 1px solid var(--line);
+  padding-inline: 20px;
+  border-bottom: 1px solid var(--line);
   font-size: var(--text-body-lg);
 }
 .money-breakdown dd {
@@ -6934,34 +7815,15 @@ td strong {
 .sk-waitlist-hero {
   height: 330px;
 }
+/* Four tiles get too narrow beside the sidebar below 1100px: 2 x 2. */
 @media (max-width: 1100px) {
-  .today-grid {
-    grid-template-columns: 1fr;
-  }
-}
-@media (max-width: 820px) {
-  .waitlist-hero-body {
-    grid-template-columns: 1fr;
-  }
-}
-@media (max-width: 600px) {
-  .pipeline-strip {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    margin: 0 -16px -18px;
-  }
-  .pipeline-strip a {
-    padding-inline: 16px;
-    border-bottom: 1px solid var(--line);
-  }
-  .pipeline-strip a:nth-child(2n) {
-    border-right: 0;
-  }
-  .today-metrics {
+  .today-metrics,
+  .skeleton-metrics {
     grid-template-columns: 1fr 1fr;
   }
   .today-metrics .metric,
   .today-metrics .metric:nth-child(2) {
-    padding: 14px 16px;
+    border-right: 0;
     border-bottom: 1px solid var(--line);
   }
   .today-metrics .metric:nth-child(odd) {
@@ -6970,16 +7832,52 @@ td strong {
   .today-metrics .metric:nth-child(n + 3) {
     border-bottom: 0;
   }
+}
+@media (max-width: 960px) {
+  .today-grid,
+  .skeleton-panels {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 820px) {
+  .waitlist-hero-body {
+    grid-template-columns: 1fr;
+  }
+  .pipeline-strip {
+    margin: 0 -16px -16px;
+  }
+  .pipeline-strip a {
+    padding-inline: 16px;
+  }
+  .money-breakdown {
+    margin-inline: -16px;
+  }
+  .money-breakdown div {
+    padding-inline: 16px;
+  }
+}
+@media (max-width: 600px) {
+  .pipeline-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pipeline-strip a {
+    border-bottom: 1px solid var(--line);
+  }
+  .pipeline-strip a:nth-child(2n) {
+    border-right: 0;
+  }
+  .pipeline-strip a:nth-child(n + 3) {
+    border-bottom: 0;
+  }
+  .today-metrics .metric,
+  .today-metrics .metric:nth-child(2) {
+    padding: 14px 16px;
+  }
   .today-metrics .metric > strong {
     font-size: 28px;
   }
-  .today-metrics .metric-money {
-    font-size: 18px !important;
-    white-space: normal;
-  }
-  .today-grid .task-list {
-    margin-inline: -16px;
-    margin-bottom: -18px;
+  .today-metrics .metric > .metric-money {
+    font-size: 22px;
   }
 }
 
@@ -7001,13 +7899,56 @@ td strong {
   .date-picker--compact .date-picker-trigger,
   .inline-role-form .select-trigger,
   .inline-role-form button,
-  .staff-status-action {
+  .staff-status-action,
+  .date-picker-time .select-trigger,
+  .date-picker-link,
+  .date-picker-done,
+  .select-option {
     min-height: 44px;
   }
   .text-link,
-  .inline-empty a {
+  .inline-empty a,
+  .date-picker-link {
     display: inline-flex;
     align-items: center;
+  }
+  .date-picker-popover {
+    max-height: calc(100dvh - 16px - 64px);
+    overflow: auto;
+  }
+  .date-picker-nav {
+    width: 44px;
+    height: 44px;
+  }
+  .date-picker-day {
+    height: 44px;
+  }
+  /* 16px text in touch form controls stops iOS zooming on focus and keeps
+     sibling toolbars the same size. Compact in-row controls keep theirs. */
+  .field input,
+  .field select,
+  .field textarea,
+  .field .select-trigger,
+  .filter-bar input,
+  .filter-bar select,
+  .filter-bar .select-trigger,
+  .money-filter-bar input,
+  .money-filter-bar .select-trigger,
+  .money-filter-bar .search-field input,
+  .waitlist-quick-add .field textarea,
+  .field .input-with-prefix > span,
+  .inline-role-form .select-trigger,
+  .date-picker-trigger {
+    font-size: 16px;
+  }
+  .date-picker-time .select-trigger {
+    font-size: var(--text-body);
+  }
+  /* Keeps single-line inputs at the 44px control height with 16px text. */
+  .field input,
+  .filter-bar input,
+  .money-filter-bar input {
+    line-height: 22px;
   }
   .check-field {
     min-height: 44px;
@@ -7028,4 +7969,32 @@ td strong {
 .section-heading .text-link {
   flex: 0 0 auto;
   white-space: nowrap;
+}
+/* Record links inside a meta line stay inline at the meta size, so the
+   44px touch rule above does not open a blank band in the row. On touch
+   layouts an invisible overlay keeps the tap area generous. Task rows only
+   fold into a meta line at 1300px and below. */
+.money-activity-meta .text-link {
+  display: inline;
+  min-height: 0;
+  font-size: inherit;
+}
+@media (max-width: 1300px) {
+  .task-row-related .text-link {
+    display: inline;
+    min-height: 0;
+    font-size: inherit;
+  }
+}
+@media (max-width: 820px) {
+  .money-activity-meta .text-link,
+  .task-row-related .text-link {
+    position: relative;
+  }
+  .money-activity-meta .text-link::after,
+  .task-row-related .text-link::after {
+    position: absolute;
+    inset: -12px -4px;
+    content: "";
+  }
 }

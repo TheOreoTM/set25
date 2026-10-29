@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Plus, Search } from "lucide-react";
+import { ArrowRight, Plus, Search, SlidersHorizontal } from "lucide-react";
 import { teamTypeLabels } from "@set25/shared";
 import { PageHeader } from "@/components/page-header";
 import { getTeams } from "@/lib/commerce/data";
@@ -18,10 +18,15 @@ export default async function TeamsPage({
   return (
     <main className="page-wrap">
       <PageHeader
-        eyebrow="Commerce / Teams"
+        eyebrow="People / Teams"
         title="Teams"
         description="Schools, clubs, islands, resorts, and tournament organisations."
       />
+      {params.forbidden === "write" ? (
+        <div className="form-message form-message--error" role="alert">
+          Staff access to Teams is read-only.
+        </div>
+      ) : null}
       <div className="resource-toolbar">
         <form className="filter-bar filter-bar--search-only">
           <label className="search-field">
@@ -33,8 +38,11 @@ export default async function TeamsPage({
               placeholder="Search team, contact, or phone"
             />
           </label>
-          <button className="button button--secondary" type="submit">
-            Search
+          <button
+            className="button button--secondary filter-submit"
+            type="submit"
+          >
+            <SlidersHorizontal aria-hidden="true" /> Apply
           </button>
         </form>
         {staff.role !== "STAFF" ? (
@@ -59,7 +67,7 @@ export default async function TeamsPage({
               <span>Team</span>
               <span>Type</span>
               <span>Contact</span>
-              <span>Orders</span>
+              <span className="num">Orders</span>
               <span />
             </div>
             {teams.map((team) => (
@@ -73,8 +81,13 @@ export default async function TeamsPage({
                   <small>{team.phone ?? "No phone recorded"}</small>
                 </span>
                 <span data-label="Type">{teamTypeLabels[team.type]}</span>
-                <span data-label="Contact">{team.contactName ?? "—"}</span>
-                <span data-label="Orders">
+                <span
+                  data-label="Contact"
+                  className={team.contactName ? undefined : "is-empty"}
+                >
+                  {team.contactName ?? "—"}
+                </span>
+                <span data-label="Orders" className="num">
                   <strong>{team._count.orders}</strong>
                 </span>
                 <span className="catalog-arrow">
@@ -85,12 +98,27 @@ export default async function TeamsPage({
           </div>
         ) : (
           <div className="inline-empty">
-            <p>No teams found.</p>
-            {staff.role !== "STAFF" ? (
-              <Link href="/teams/new">
-                Create the first team <ArrowRight aria-hidden="true" />
-              </Link>
-            ) : null}
+            {search ? (
+              <>
+                <p>
+                  {search
+                    ? `No teams match "${search}".`
+                    : "No teams match these filters."}
+                </p>
+                <Link href="/teams">
+                  Clear search <ArrowRight aria-hidden="true" />
+                </Link>
+              </>
+            ) : (
+              <>
+                <p>No teams yet.</p>
+                {staff.role !== "STAFF" ? (
+                  <Link href="/teams/new">
+                    Add the first team <ArrowRight aria-hidden="true" />
+                  </Link>
+                ) : null}
+              </>
+            )}
           </div>
         )}
       </section>

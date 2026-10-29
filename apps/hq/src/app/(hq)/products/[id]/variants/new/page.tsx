@@ -27,14 +27,16 @@ async function NewVariant({ params }: { params: Promise<{ id: string }> }) {
   return (
     <>
       <PageHeader
-        eyebrow={`Commerce / Products / ${product.code} / Variants`}
-        title="Add variant"
+        eyebrow={`Supply / Products / ${product.code} / New variant`}
+        title="New variant"
         description="Create a sellable size or colour. Opening stock is recorded separately."
       />
       <VariantForm
         action={createVariantAction.bind(null, product.id)}
         cancelHref={`/products/${product.id}`}
-        basePrice={product.retailPrice.toString()}
+        basePrice={product.retailPrice.toFixed(2)}
+        submitLabel="Create variant"
+        pendingLabel="Creating…"
       />
     </>
   );

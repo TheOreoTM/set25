@@ -19,7 +19,7 @@ export default async function NewContentPage({
   return (
     <main className="page-wrap">
       <PageHeader
-        eyebrow="Company / Content / New"
+        eyebrow="Pre-launch / Content / New"
         title="New content"
         description="Capture the idea now; scheduling and posting details can follow."
       />

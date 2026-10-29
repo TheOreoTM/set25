@@ -73,10 +73,7 @@ export async function createWaitlistEntryAction(
   const staff = await requireOperationalAccess();
   const result = validateWaitlistEntry(formData);
   if (!result.success)
-    return failure(
-      result.errors.instagramHandle?.[0] ?? "Check the highlighted details.",
-      result.errors,
-    );
+    return failure("Check the highlighted details.", result.errors);
   const duplicate = await duplicateFailure(result.data);
   if (duplicate) return duplicate;
   let id: string;

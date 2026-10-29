@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Search } from "lucide-react";
+import { ArrowRight, Search, SlidersHorizontal } from "lucide-react";
 import {
   WAITLIST_STATUSES,
   waitlistSourceLabels,
@@ -35,7 +35,10 @@ export default async function WaitlistPage({
   const [staff, query] = await Promise.all([requireStaff(), searchParams]);
   const canWrite = staff.role !== "STAFF";
   const { entries, counts, status } = await getWaitlist(query);
-  const total = WAITLIST_STATUSES.reduce((sum, value) => sum + counts[value], 0);
+  const total = WAITLIST_STATUSES.reduce(
+    (sum, value) => sum + counts[value],
+    0,
+  );
   const search = query.search?.trim() ?? "";
   const tabHref = (value?: string) => {
     const params = new URLSearchParams();
@@ -52,30 +55,34 @@ export default async function WaitlistPage({
         title="Waitlist"
         description="People waiting for the first drop. Contact stays on Instagram."
       />
-      {canWrite ? (
-        <WaitlistQuickAdd action={createWaitlistEntryAction} />
-      ) : null}
-
-      <form className="waitlist-search" action="/waitlist" role="search">
-        <label className="search-field">
-          <Search aria-hidden="true" />
-          <span className="sr-only">Search the waitlist</span>
-          <input
-            type="search"
-            name="search"
-            defaultValue={search}
-            placeholder="Handle, name, phone, or code"
-            autoCapitalize="none"
-            autoCorrect="off"
-            enterKeyHint="search"
-          />
-        </label>
-        {status ? <input type="hidden" name="status" value={status} /> : null}
-        <button className="button button--secondary" type="submit">
-          Search
-        </button>
-      </form>
-
+      <div className="resource-toolbar">
+        <form
+          className="filter-bar filter-bar--search-only"
+          action="/waitlist"
+          role="search"
+        >
+          <label className="search-field">
+            <Search aria-hidden="true" />
+            <span className="sr-only">Search the waitlist</span>
+            <input
+              type="search"
+              name="search"
+              defaultValue={search}
+              placeholder="Handle, name, phone, or code"
+              autoCapitalize="none"
+              autoCorrect="off"
+              enterKeyHint="search"
+            />
+          </label>
+          {status ? <input type="hidden" name="status" value={status} /> : null}
+          <button
+            className="button button--secondary filter-submit"
+            type="submit"
+          >
+            <SlidersHorizontal aria-hidden="true" /> Apply
+          </button>
+        </form>
+      </div>
       <nav className="status-tabs" aria-label="Filter by status">
         <Link
           href={tabHref()}
@@ -96,6 +103,10 @@ export default async function WaitlistPage({
         ))}
       </nav>
 
+      {canWrite ? (
+        <WaitlistQuickAdd action={createWaitlistEntryAction} />
+      ) : null}
+
       <section className="resource-panel" aria-labelledby="waitlist-title">
         <div className="resource-panel-head">
           <div>
@@ -106,10 +117,12 @@ export default async function WaitlistPage({
               {entries.length} {entries.length === 1 ? "person" : "people"}
             </h2>
           </div>
-          <p>Newest first</p>
+          {entries.length ? <p>Newest first</p> : null}
         </div>
         {entries.length ? (
-          <ul className="waitlist-list">
+          <ul
+            className={`waitlist-list${canWrite ? "" : " waitlist-list--read-only"}`}
+          >
             {entries.map((entry) => {
               const message = waitlistDmMessage(entry);
               const interest = waitlistInterest(entry);
@@ -167,7 +180,7 @@ export default async function WaitlistPage({
           <div className="inline-empty">
             <p>
               {search || status
-                ? "Nobody matches this search."
+                ? "Nobody matches these filters."
                 : "Nobody is on the waitlist yet."}
             </p>
             {search || status ? (

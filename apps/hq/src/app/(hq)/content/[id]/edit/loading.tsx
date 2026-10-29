@@ -4,7 +4,7 @@ export default function Loading() {
   return (
     <PageSkeleton
       kind="form"
-      eyebrow="Company / Content / Edit"
+      eyebrow="Pre-launch / Content / Edit"
     />
   );
 }

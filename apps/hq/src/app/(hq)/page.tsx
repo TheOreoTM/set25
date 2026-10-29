@@ -77,7 +77,10 @@ export default async function TodayPage({
             <h2 id="waitlist-hero">People waiting for launch</h2>
           </div>
           {canWrite ? (
-            <Link className="button button--dark" href="/waitlist#quick-add-title">
+            <Link
+              className="button button--dark"
+              href="/waitlist#quick-add-title"
+            >
               <Plus aria-hidden="true" /> Add
             </Link>
           ) : null}
@@ -168,9 +171,15 @@ export default async function TodayPage({
               <Sparkles aria-hidden="true" /> Content this week
             </p>
             <strong>{content.items.length}</strong>
-            <span>
-              {content.posted} posted · {planned} to go
-              {content.overdue ? ` · ${content.overdue} overdue` : ""}
+            <span className="metric-breakdown">
+              <span className="nowrap">{content.posted} posted</span> ·{" "}
+              <span className="nowrap">{planned} to go</span>
+              {content.overdue ? (
+                <>
+                  {" · "}
+                  <span className="nowrap">{content.overdue} overdue</span>
+                </>
+              ) : null}
             </span>
           </Link>
           <Link className="metric" href="/tasks">
@@ -199,7 +208,7 @@ export default async function TodayPage({
           <div className="section-heading">
             <div>
               <p className="kicker">Supply</p>
-              <h2 id="samples-title">Samples awaiting a decision</h2>
+              <h2 id="samples-title">Samples to decide</h2>
             </div>
             <Link className="text-link" href="/samples">
               All samples <ArrowRight aria-hidden="true" />
@@ -215,7 +224,9 @@ export default async function TodayPage({
                 >
                   <span className="task-date">
                     <strong>{sample._count.evaluations}</strong>
-                    <small>TESTS</small>
+                    <small>
+                      {sample._count.evaluations === 1 ? "TEST" : "TESTS"}
+                    </small>
                   </span>
                   <span>
                     <strong>
@@ -234,6 +245,11 @@ export default async function TodayPage({
           ) : (
             <div className="inline-empty inline-empty--panel">
               <p>No samples are waiting for a decision.</p>
+              {canWrite ? (
+                <Link href="/samples/new">
+                  Log a sample <ArrowRight aria-hidden="true" />
+                </Link>
+              ) : null}
             </div>
           )}
         </section>
@@ -305,11 +321,7 @@ export default async function TodayPage({
               {tasks.map((task) => {
                 const tile = publishTile(task.dueAt);
                 return (
-                  <Link
-                    className="task-item"
-                    href="/tasks"
-                    key={task.id}
-                  >
+                  <Link className="task-item" href="/tasks" key={task.id}>
                     <span className="task-date">
                       <strong>{tile.day}</strong>
                       <small>{tile.month}</small>
@@ -333,6 +345,11 @@ export default async function TodayPage({
           ) : (
             <div className="inline-empty inline-empty--panel">
               <p>No open tasks right now.</p>
+              {canWrite ? (
+                <Link href="/tasks/new">
+                  Add a task <ArrowRight aria-hidden="true" />
+                </Link>
+              ) : null}
             </div>
           )}
         </section>
@@ -341,13 +358,12 @@ export default async function TodayPage({
           <div className="section-heading">
             <div>
               <p className="kicker">Money</p>
-              <h2 id="money-title">Spent so far</h2>
+              <h2 id="money-title">Where it went</h2>
             </div>
             <Link className="text-link" href="/money">
               Money <ArrowRight aria-hidden="true" />
             </Link>
           </div>
-          <p className="money-total">{formatMVR(money.total)}</p>
           {money.topCategories.length ? (
             <dl className="money-breakdown">
               {money.topCategories.map((row) => (
@@ -360,6 +376,11 @@ export default async function TodayPage({
           ) : (
             <div className="inline-empty inline-empty--panel">
               <p>No Money Out has been recorded yet.</p>
+              {canWrite ? (
+                <Link href="/money/new?direction=OUT">
+                  Record Money Out <ArrowRight aria-hidden="true" />
+                </Link>
+              ) : null}
             </div>
           )}
           <p className="money-note">
@@ -369,8 +390,8 @@ export default async function TodayPage({
       </div>
 
       <p className="today-launch-note">
-        <Rocket aria-hidden="true" /> Orders, Preorders, Stock, and Store
-        live under Launch in the menu.
+        <Rocket aria-hidden="true" /> Orders, Preorders, Stock, and Store live
+        under Launch in the menu.
       </p>
     </main>
   );

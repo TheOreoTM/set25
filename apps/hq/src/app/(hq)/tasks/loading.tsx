@@ -4,7 +4,7 @@ export default function Loading() {
   return (
     <PageSkeleton
       kind="list"
-      eyebrow="Company / Tasks"
+      eyebrow="Pre-launch / Tasks"
       title="Tasks"
       description="Operational work that needs a clear owner, priority, and next state."
     />

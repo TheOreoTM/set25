@@ -3,6 +3,7 @@ import { Select } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
   ArrowDownLeft,
+  ArrowRight,
   ArrowUpRight,
   Search,
   SlidersHorizontal,
@@ -40,6 +41,7 @@ export default async function MoneyPage({
   const report = await getMoneyReport(query);
   const canWrite = staff.role !== "STAFF";
   const { summary } = report;
+  const filtered = Boolean(query.search || query.direction || query.category);
 
   return (
     <main className="page-wrap money-page">
@@ -48,8 +50,8 @@ export default async function MoneyPage({
         title="Money"
         description="Recorded cash movement and operational profitability—not a bank balance or formal accounting statement."
       />
-      <div className="detail-actions detail-actions--end money-page-actions">
-        {canWrite ? (
+      {canWrite ? (
+        <div className="detail-actions detail-actions--end money-page-actions">
           <div>
             <Link
               className="button button--secondary"
@@ -64,8 +66,8 @@ export default async function MoneyPage({
               <ArrowUpRight aria-hidden="true" /> Record Money Out
             </Link>
           </div>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
 
       {query.recorded === "1" ? (
         <div className="form-message form-message--success" role="status">
@@ -83,7 +85,7 @@ export default async function MoneyPage({
       <section className="money-summary-strip" aria-label="Money summary">
         <MoneyMetric
           label="Money In"
-          value={formatMVR(summary.moneyIn)}
+          value={formatSignedMVR(summary.moneyIn)}
           note="Order payments less refunds, plus manual income"
         />
         <MoneyMetric
@@ -94,7 +96,9 @@ export default async function MoneyPage({
         <MoneyMetric
           label="Sales Profit"
           value={
-            summary.salesProfit ? formatMVR(summary.salesProfit) : "Incomplete"
+            summary.salesProfit
+              ? formatSignedMVR(summary.salesProfit)
+              : "Incomplete"
           }
           note={
             summary.missingCostLines
@@ -104,7 +108,7 @@ export default async function MoneyPage({
         />
         <MoneyMetric
           label="Net Cash Recorded"
-          value={formatMVR(summary.netCashRecorded)}
+          value={formatSignedMVR(summary.netCashRecorded)}
           note="Money In less Money Out—not a bank balance"
         />
       </section>
@@ -115,8 +119,9 @@ export default async function MoneyPage({
             <p className="kicker">Profitability</p>
             <h2>Operational profit view</h2>
           </div>
-          <span>
-            {report.range.from} → {report.range.to}
+          <span className="profitability-range">
+            {formatDate(new Date(report.range.from))} –{" "}
+            {formatDate(new Date(report.range.to))}
           </span>
         </div>
         <div className="profitability-grid">
@@ -130,14 +135,14 @@ export default async function MoneyPage({
             note={
               summary.missingCostUnits
                 ? `${summary.missingCostUnits} sold ${summary.missingCostUnits === 1 ? "item" : "items"} missing historical cost`
-                : "Historical OrderLine Cost Each"
+                : "Uses the cost recorded on each sold item"
             }
           />
           <ProfitFact
             label="Sales Profit"
             value={
               summary.salesProfit
-                ? formatMVR(summary.salesProfit)
+                ? formatSignedMVR(summary.salesProfit)
                 : "Unavailable"
             }
             emphasized
@@ -151,7 +156,7 @@ export default async function MoneyPage({
             label="Operating Profit"
             value={
               summary.operatingProfit
-                ? formatMVR(summary.operatingProfit)
+                ? formatSignedMVR(summary.operatingProfit)
                 : "Unavailable"
             }
             note="Excludes inventory acquisition and equipment payments"
@@ -166,37 +171,57 @@ export default async function MoneyPage({
         ) : null}
       </section>
 
-      <section className="detail-section money-activity-panel">
-        <div className="detail-section-head">
+      <div className="resource-toolbar">
+        <MoneyFilters query={query} />
+      </div>
+      <section className="resource-panel money-activity-panel">
+        <div className="resource-panel-head">
           <div>
             <p className="kicker">Money History</p>
-            <h2>Recorded activity</h2>
+            <h2>
+              {report.activity.length}{" "}
+              {report.activity.length === 1 ? "entry" : "entries"}
+            </h2>
           </div>
-          <span>
-            {report.activity.length}{" "}
-            {report.activity.length === 1 ? "entry" : "entries"}
-          </span>
+          <p>Newest first</p>
         </div>
-        <MoneyFilters query={query} />
         {report.activity.length ? (
           <div className="money-activity-list">
             <div className="money-activity-row money-activity-head">
               <span>Date</span>
               <span>Type / Description</span>
               <span>Related</span>
-              <span>Money In</span>
-              <span>Money Out</span>
+              <span className="num">Money In</span>
+              <span className="num">Money Out</span>
               <span>Recorded By</span>
             </div>
             {report.activity.map((item) => (
               <article className="money-activity-row" key={item.id}>
-                <span data-label="Date">{formatDate(new Date(item.date))}</span>
+                <span data-label="Date" className="money-activity-date">
+                  {formatDate(new Date(item.date))}
+                </span>
                 <span className="money-activity-copy">
                   <strong>{item.type}</strong>
                   <small>{item.description}</small>
                   {item.reference ? <small>Ref: {item.reference}</small> : null}
+                  {/* Phones fold Related and Recorded By into one meta line. */}
+                  <small className="money-activity-meta">
+                    {item.related ? (
+                      <>
+                        {item.relatedHref ? (
+                          <Link className="text-link" href={item.relatedHref}>
+                            {item.related}
+                          </Link>
+                        ) : (
+                          item.related
+                        )}
+                        {" · "}
+                      </>
+                    ) : null}
+                    {item.recordedBy}
+                  </small>
                 </span>
-                <span data-label="Related">
+                <span data-label="Related" className="col-desktop">
                   {item.relatedHref && item.related ? (
                     <Link className="text-link" href={item.relatedHref}>
                       {item.related}
@@ -205,9 +230,17 @@ export default async function MoneyPage({
                     (item.related ?? "—")
                   )}
                 </span>
-                <span data-label="Money In" className="money-in-value">
+                <span
+                  data-label="Money In"
+                  className={`money-in-value num${item.inAmount ? "" : " is-empty"}`}
+                >
                   {item.inAmount ? (
                     <span className="money-amount">
+                      {item.inAmount.startsWith("-") ? null : (
+                        <span className="money-sign" aria-hidden="true">
+                          +
+                        </span>
+                      )}
                       {formatSignedMVR(item.inAmount)}
                       <OriginalAmount original={item.original} />
                     </span>
@@ -215,9 +248,15 @@ export default async function MoneyPage({
                     "—"
                   )}
                 </span>
-                <span data-label="Money Out" className="money-out-value">
+                <span
+                  data-label="Money Out"
+                  className={`money-out-value num${item.outAmount ? "" : " is-empty"}`}
+                >
                   {item.outAmount ? (
                     <span className="money-amount">
+                      <span className="money-sign" aria-hidden="true">
+                        −
+                      </span>
                       {formatMVR(item.outAmount)}
                       <OriginalAmount original={item.original} />
                     </span>
@@ -225,16 +264,28 @@ export default async function MoneyPage({
                     "—"
                   )}
                 </span>
-                <span data-label="Recorded By">{item.recordedBy}</span>
+                <span data-label="Recorded By" className="col-desktop">
+                  {item.recordedBy}
+                </span>
               </article>
             ))}
           </div>
         ) : (
-          <div className="inline-empty inline-empty--panel">
-            <p>No recorded activity in this view.</p>
-            <span>
-              Change the period or filters to review other cash movements.
-            </span>
+          <div className="inline-empty">
+            {filtered ? (
+              <>
+                <p>No entries match these filters.</p>
+                <span>Try a different search or filter.</span>
+                <Link href={periodHref(query)}>
+                  Clear filters <ArrowRight aria-hidden="true" />
+                </Link>
+              </>
+            ) : (
+              <>
+                <p>No recorded activity in this period.</p>
+                <span>Change the period to review other cash movements.</span>
+              </>
+            )}
           </div>
         )}
       </section>
@@ -250,9 +301,9 @@ function DateRangeBar({
   range: { preset: string; from: string; to: string };
 }) {
   const presets = [
-    ["this-month", "This Month"],
-    ["last-month", "Last Month"],
-    ["this-year", "This Year"],
+    ["this-month", "This month"],
+    ["last-month", "Last month"],
+    ["this-year", "This year"],
   ];
   return (
     <div className="money-range-bar">
@@ -276,7 +327,6 @@ function DateRangeBar({
             name="from"
             defaultValue={query.from ?? range.from}
             required
-            compact
           />
         </label>
         <label>
@@ -286,7 +336,6 @@ function DateRangeBar({
             name="to"
             defaultValue={query.to ?? range.to}
             required
-            compact
           />
         </label>
         <button className="button button--secondary" type="submit">
@@ -295,6 +344,16 @@ function DateRangeBar({
       </form>
     </div>
   );
+}
+
+/** The current period without the history filters. */
+function periodHref(query: SearchParams) {
+  const params = new URLSearchParams({ preset: query.preset ?? "this-month" });
+  if (query.preset === "custom") {
+    if (query.from) params.set("from", query.from);
+    if (query.to) params.set("to", query.to);
+  }
+  return `/money?${params.toString()}`;
 }
 
 function MoneyFilters({ query }: { query: SearchParams }) {
@@ -404,8 +463,10 @@ function OriginalAmount({
   );
 }
 
-function formatSignedMVR(value: string) {
-  return value.startsWith("-")
-    ? `− ${formatMVR(value.slice(1))}`
-    : formatMVR(value);
+/** Negatives read "− MVR x" everywhere on the page; positives stay unsigned. */
+function formatSignedMVR(value: string | { toString(): string }) {
+  const text = value.toString();
+  return text.startsWith("-")
+    ? `− ${formatMVR(text.slice(1))}`
+    : formatMVR(text);
 }

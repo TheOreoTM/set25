@@ -25,8 +25,8 @@ export async function FileAttachmentsPanel({
   const files = await getRecordFiles(target, staff.role);
   const canUpload = canUploadFiles(staff.role);
   return (
-    <section className="detail-section file-panel" aria-label="Files">
-      <div className="detail-section-head">
+    <section className="resource-panel file-panel" aria-label="Files">
+      <div className="resource-panel-head resource-panel-head--action">
         <div>
           <p className="kicker">Files</p>
           <h2>
@@ -47,14 +47,25 @@ export async function FileAttachmentsPanel({
       </div>
       {files.length ? (
         <div className="file-list">
+          <div className="file-row file-row--head">
+            <span>File</span>
+            <span>Type</span>
+            <span>Size</span>
+            <span>Uploaded</span>
+            <span>Access</span>
+            <span>Retention</span>
+            <span />
+          </div>
           {files.map((file) => (
             <FileRow file={file} key={file.id} />
           ))}
         </div>
       ) : (
-        <p className="file-panel-empty">
-          No files attached{canUpload ? " yet" : " that you can access"}.
-        </p>
+        <div className="inline-empty inline-empty--compact">
+          <p>
+            No files attached{canUpload ? " yet" : " that you can access"}.
+          </p>
+        </div>
       )}
     </section>
   );

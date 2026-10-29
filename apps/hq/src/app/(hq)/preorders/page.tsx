@@ -36,10 +36,11 @@ export default async function PreordersPage({
   )
     ? allOrders.filter((order) => order.preorder?.status === requestedStatus)
     : allOrders;
+  const filtered = Boolean(search || requestedStatus || paymentFilter);
   return (
     <main className="page-wrap">
       <PageHeader
-        eyebrow="Commerce / Preorders"
+        eyebrow="Launch / Preorders"
         title="Preorders"
         description="Deposits, balances, arrival expectations, and customer readiness."
       />
@@ -51,7 +52,7 @@ export default async function PreordersPage({
             <input
               name="search"
               defaultValue={search}
-              placeholder="Order, customer, team, or SKU"
+              placeholder="Order, customer or SKU"
             />
           </label>
           <label>
@@ -104,10 +105,10 @@ export default async function PreordersPage({
             <div className="commerce-row commerce-row--head">
               <span>Preorder</span>
               <span>Customer</span>
-              <span>Items</span>
-              <span>Total</span>
-              <span>Amount Paid</span>
-              <span>Balance Left</span>
+              <span className="num col-wide">Total</span>
+              <span className="num col-wide">Amount Paid</span>
+              <span className="num">Balance Left</span>
+              <span>Payment</span>
               <span>ETA</span>
               <span>Status</span>
               <span />
@@ -122,25 +123,39 @@ export default async function PreordersPage({
                 >
                   <span className="commerce-primary">
                     <strong>{formatOrderNumber(order.orderNumber)}</strong>
-                    <small>{paymentStatusLabels[payment.status]}</small>
+                    <small>
+                      {order._count.lines}{" "}
+                      {order._count.lines === 1 ? "item" : "items"}
+                    </small>
                   </span>
                   <span data-label="Customer">
-                    {order.customer?.name ?? "Not recorded"}
+                    {order.customer?.name ?? order.team?.name ?? "Not recorded"}
                   </span>
-                  <span data-label="Items">{order._count.lines}</span>
-                  <span data-label="Total">{formatMVR(order.total)}</span>
-                  <span data-label="Amount Paid">
+                  <span data-label="Total" className="numeric num col-wide">
+                    {formatMVR(order.total)}
+                  </span>
+                  <span
+                    data-label="Amount Paid"
+                    className="numeric num col-wide"
+                  >
                     {formatMVR(payment.paid)}
                   </span>
-                  <span data-label="Balance Left">
+                  <span data-label="Balance Left" className="numeric num">
                     <strong>{formatMVR(payment.balance)}</strong>
+                  </span>
+                  <span data-label="Payment">
+                    <span
+                      className={`status status--${payment.status.toLowerCase()}`}
+                    >
+                      {paymentStatusLabels[payment.status]}
+                    </span>
                   </span>
                   <span data-label="ETA">
                     {order.preorder?.estimatedArrival
                       ? formatDate(order.preorder.estimatedArrival)
                       : "Not set"}
                   </span>
-                  <span data-label="Status">
+                  <span data-label="Status" className="row-status">
                     <span
                       className={`status status--${order.preorder?.status.toLowerCase()}`}
                     >
@@ -158,12 +173,24 @@ export default async function PreordersPage({
           </div>
         ) : (
           <div className="inline-empty">
-            <p>No preorders match these filters.</p>
-            {staff.role !== "STAFF" ? (
-              <Link href="/preorders/new">
-                Create the first preorder <ArrowRight aria-hidden="true" />
-              </Link>
-            ) : null}
+            {filtered ? (
+              <>
+                <p>No preorders match these filters.</p>
+                <span>Try a different search or filter.</span>
+                <Link href="/preorders">
+                  Clear filters <ArrowRight aria-hidden="true" />
+                </Link>
+              </>
+            ) : (
+              <>
+                <p>No preorders yet.</p>
+                {staff.role !== "STAFF" ? (
+                  <Link href="/preorders/new">
+                    Create the first preorder <ArrowRight aria-hidden="true" />
+                  </Link>
+                ) : null}
+              </>
+            )}
           </div>
         )}
       </section>

@@ -4,7 +4,7 @@ export default function Loading() {
   return (
     <PageSkeleton
       kind="detail"
-      eyebrow="Commerce / Customers"
+      eyebrow="People / Customers"
     />
   );
 }

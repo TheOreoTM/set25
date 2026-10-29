@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { ArrowRight, AtSign, Edit3, Mail, Phone } from "lucide-react";
+import { ArrowLeft, ArrowRight, Pencil } from "lucide-react";
 import { notFound } from "next/navigation";
 import {
   formatMVR,
   formatOrderNumber,
   fulfilmentStatusLabels,
+  paymentStatusLabels,
 } from "@set25/shared";
 import { PageHeader } from "@/components/page-header";
 import { getCustomer } from "@/lib/commerce/data";
@@ -14,10 +15,12 @@ import { FileAttachmentsPanel } from "@/components/files/file-attachments-panel"
 
 export default async function CustomerDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ created?: string; saved?: string }>;
 }) {
-  const { id } = await params;
+  const [{ id }, query] = await Promise.all([params, searchParams]);
   const [customer, staff] = await Promise.all([
     getCustomer(id),
     requireStaff(),
@@ -34,57 +37,74 @@ export default async function CustomerDetailPage({
     (order) => order.type === "PREORDER",
   );
   return (
-    <main className="page-wrap">
+    <main className="page-wrap supply-detail-page">
       <PageHeader
-        eyebrow="Commerce / Customers"
+        eyebrow="People / Customers"
         title={customer.name}
-        description="Contact, order history, and preorder context in one place."
+        description={[
+          customer.instagramHandle
+            ? `@${customer.instagramHandle.replace(/^@/, "")}`
+            : null,
+          customer.phone,
+        ]
+          .filter(Boolean)
+          .join(" · ")}
       />
       <div className="detail-actions">
+        <Link className="text-link back-link" href="/customers">
+          <ArrowLeft aria-hidden="true" /> All customers
+        </Link>
         {staff.role !== "STAFF" ? (
-          <Link className="button button--dark" href={`/customers/${id}/edit`}>
-            <Edit3 aria-hidden="true" /> Edit customer
-          </Link>
+          <div>
+            <Link
+              className="button button--secondary"
+              href={`/customers/${id}/edit`}
+            >
+              <Pencil aria-hidden="true" /> Edit customer
+            </Link>
+          </div>
         ) : null}
       </div>
-      <section className="identity-grid">
-        <div className="identity-lead">
-          <p className="kicker">Customer</p>
-          <h2>{customer.name}</h2>
-          <div className="contact-links">
-            <a href={`tel:${customer.phone}`}>
-              <Phone aria-hidden="true" /> {customer.phone}
-            </a>
-            {customer.email ? (
-              <a href={`mailto:${customer.email}`}>
-                <Mail aria-hidden="true" /> {customer.email}
-              </a>
-            ) : null}
-            {customer.instagramHandle ? (
-              <span>
-                <AtSign aria-hidden="true" /> {customer.instagramHandle}
-              </span>
-            ) : null}
-          </div>
+      {query.created || query.saved ? (
+        <div className="form-message form-message--success" role="status">
+          Customer {query.created ? "created" : "saved"}.
         </div>
-        <dl className="identity-stats">
-          <div>
-            <dt>Total orders</dt>
-            <dd>{customer.orders.length}</dd>
-          </div>
-          <div>
-            <dt>Value ordered</dt>
-            <dd>{formatMVR(total)}</dd>
-          </div>
-          <div>
-            <dt>Preorders</dt>
-            <dd>{preorders.length}</dd>
-          </div>
-        </dl>
+      ) : null}
+      <section className="supply-summary-strip" aria-label="Customer summary">
+        <div>
+          <span>Total Orders</span>
+          <strong>{customer.orders.length}</strong>
+        </div>
+        <div>
+          <span>Value Ordered</span>
+          <strong>{formatMVR(total)}</strong>
+        </div>
+        <div>
+          <span>Preorders</span>
+          <strong>{preorders.length}</strong>
+        </div>
+        <div>
+          <span>Phone</span>
+          <strong>
+            <a href={`tel:${customer.phone.replace(/\s/g, "")}`}>
+              {customer.phone}
+            </a>
+          </strong>
+        </div>
+        <div>
+          <span>Email</span>
+          <strong>
+            {customer.email ? (
+              <a href={`mailto:${customer.email}`}>{customer.email}</a>
+            ) : (
+              "—"
+            )}
+          </strong>
+        </div>
       </section>
       {customer.notes ? (
-        <section className="detail-section compact-section">
-          <div className="section-heading">
+        <section className="detail-section">
+          <div className="detail-section-head">
             <div>
               <p className="kicker">Context</p>
               <h2>Notes</h2>
@@ -119,6 +139,13 @@ function OrderHistory({
       </div>
       {orders.length ? (
         <div className="commerce-list commerce-list--orders-mini">
+          <div className="commerce-row commerce-row--head">
+            <span>Order</span>
+            <span>Total</span>
+            <span>Payment</span>
+            <span>Fulfilment</span>
+            <span />
+          </div>
           {orders.map((order) => {
             const payment = paymentSummary(order.total, order.payments);
             return (
@@ -135,23 +162,19 @@ function OrderHistory({
                   </small>
                 </span>
                 <span data-label="Total">{formatMVR(order.total)}</span>
-                <span
-                  data-label="Payment"
-                  className={`status status--${payment.status.toLowerCase()}`}
-                >
-                  {payment.status === "PART_PAID"
-                    ? "Part Paid"
-                    : payment.status === "UNPAID"
-                      ? "Unpaid"
-                      : payment.status === "REFUNDED"
-                        ? "Refunded"
-                        : "Paid"}
+                <span data-label="Payment">
+                  <span
+                    className={`status status--${payment.status.toLowerCase()}`}
+                  >
+                    {paymentStatusLabels[payment.status]}
+                  </span>
                 </span>
-                <span
-                  data-label="Fulfilment"
-                  className={`status status--${order.fulfilmentStatus.toLowerCase()}`}
-                >
-                  {fulfilmentStatusLabels[order.fulfilmentStatus]}
+                <span data-label="Fulfilment" className="row-status">
+                  <span
+                    className={`status status--${order.fulfilmentStatus.toLowerCase()}`}
+                  >
+                    {fulfilmentStatusLabels[order.fulfilmentStatus]}
+                  </span>
                 </span>
                 <span className="catalog-arrow">
                   <ArrowRight aria-hidden="true" />
@@ -161,7 +184,7 @@ function OrderHistory({
           })}
         </div>
       ) : (
-        <div className="inline-empty">
+        <div className="inline-empty inline-empty--compact">
           <p>No orders recorded for this customer.</p>
         </div>
       )}

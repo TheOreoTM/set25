@@ -128,8 +128,8 @@ export function validatePurchaseOrder(formData: FormData) {
   const lines = variantIds.map((variantId, index) => {
     const quantity = Number(quantities[index]);
     const unitCost = costs[index] ?? "";
-    if (!variantId || seen.has(variantId))
-      errors.lines = ["Choose each variant once."];
+    if (!variantId) errors.lines = ["Choose a variant for every line."];
+    else if (seen.has(variantId)) errors.lines = ["Choose each variant once."];
     seen.add(variantId);
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100000)
       errors.lines = ["Each quantity must be a positive whole number."];

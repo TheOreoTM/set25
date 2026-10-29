@@ -29,7 +29,7 @@ export default async function SuppliersPage({
         description="Contacts, product links, and practical buying terms."
       />
       <div className="resource-toolbar">
-        <form className="filter-bar" action="/suppliers">
+        <form className="filter-bar filter-bar--single" action="/suppliers">
           <label className="search-field">
             <Search aria-hidden="true" />
             <span className="sr-only">Search suppliers</span>
@@ -77,9 +77,9 @@ export default async function SuppliersPage({
               <span>Supplier</span>
               <span>Contact</span>
               <span>Country</span>
-              <span>Products</span>
-              <span>POs</span>
-              <span>Samples</span>
+              <span className="num">Products</span>
+              <span className="num col-desktop">Orders</span>
+              <span className="num col-desktop">Samples</span>
               <span>Status</span>
               <span />
             </div>
@@ -95,12 +95,28 @@ export default async function SuppliersPage({
                     {supplier.email ?? supplier.phone ?? "No contact recorded"}
                   </small>
                 </span>
-                <span data-label="Contact">{supplier.contactName ?? "—"}</span>
-                <span data-label="Country">{supplier.country ?? "—"}</span>
-                <span data-label="Products">{supplier._count.products}</span>
-                <span data-label="POs">{supplier._count.purchaseOrders}</span>
-                <span data-label="Samples">{supplier._count.samples}</span>
-                <span data-label="Status">
+                <span
+                  data-label="Contact"
+                  className={supplier.contactName ? undefined : "is-empty"}
+                >
+                  {supplier.contactName ?? "Not recorded"}
+                </span>
+                <span
+                  data-label="Country"
+                  className={supplier.country ? undefined : "is-empty"}
+                >
+                  {supplier.country ?? "Not recorded"}
+                </span>
+                <span data-label="Products" className="num">
+                  {supplier._count.products}
+                </span>
+                <span data-label="Orders" className="num col-desktop">
+                  {supplier._count.purchaseOrders}
+                </span>
+                <span data-label="Samples" className="num col-desktop">
+                  {supplier._count.samples}
+                </span>
+                <span data-label="Status" className="row-status">
                   <span
                     className={`status status--${supplier.active ? "active" : "archived"}`}
                   >

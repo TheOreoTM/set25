@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Plus, Search } from "lucide-react";
+import { ArrowRight, Plus, Search, SlidersHorizontal } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { getCustomers } from "@/lib/commerce/data";
 import { requireStaff } from "@/lib/auth/session";
@@ -20,10 +20,15 @@ export default async function CustomersPage({
   return (
     <main className="page-wrap">
       <PageHeader
-        eyebrow="Commerce / Customers"
+        eyebrow="People / Customers"
         title="Customers"
         description="People behind direct, social, preorder, and team sales."
       />
+      {params.forbidden === "write" ? (
+        <div className="form-message form-message--error" role="alert">
+          Staff access to Customers is read-only.
+        </div>
+      ) : null}
       <div className="resource-toolbar">
         <form className="filter-bar filter-bar--search-only">
           <label className="search-field">
@@ -35,8 +40,11 @@ export default async function CustomersPage({
               placeholder="Search name, phone, or email"
             />
           </label>
-          <button className="button button--secondary" type="submit">
-            Search
+          <button
+            className="button button--secondary filter-submit"
+            type="submit"
+          >
+            <SlidersHorizontal aria-hidden="true" /> Apply
           </button>
         </form>
         {staff.role !== "STAFF" ? (
@@ -62,7 +70,7 @@ export default async function CustomersPage({
               <span>Customer</span>
               <span>Phone</span>
               <span>Email</span>
-              <span>Orders</span>
+              <span className="num">Orders</span>
               <span />
             </div>
             {customers.map((customer) => (
@@ -80,8 +88,13 @@ export default async function CustomersPage({
                   </small>
                 </span>
                 <span data-label="Phone">{customer.phone}</span>
-                <span data-label="Email">{customer.email ?? "—"}</span>
-                <span data-label="Orders">
+                <span
+                  data-label="Email"
+                  className={customer.email ? undefined : "is-empty"}
+                >
+                  {customer.email ?? "—"}
+                </span>
+                <span data-label="Orders" className="num">
                   <strong>{customer._count.orders}</strong>
                 </span>
                 <span className="catalog-arrow">
@@ -92,12 +105,27 @@ export default async function CustomersPage({
           </div>
         ) : (
           <div className="inline-empty">
-            <p>No customers found.</p>
-            {staff.role !== "STAFF" ? (
-              <Link href="/customers/new">
-                Create the first customer <ArrowRight aria-hidden="true" />
-              </Link>
-            ) : null}
+            {search ? (
+              <>
+                <p>
+                  {search
+                    ? `No customers match "${search}".`
+                    : "No customers match these filters."}
+                </p>
+                <Link href="/customers">
+                  Clear search <ArrowRight aria-hidden="true" />
+                </Link>
+              </>
+            ) : (
+              <>
+                <p>No customers yet.</p>
+                {staff.role !== "STAFF" ? (
+                  <Link href="/customers/new">
+                    Add the first customer <ArrowRight aria-hidden="true" />
+                  </Link>
+                ) : null}
+              </>
+            )}
           </div>
         )}
       </section>

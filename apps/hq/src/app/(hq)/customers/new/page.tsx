@@ -10,7 +10,7 @@ export default async function NewCustomerPage() {
   return (
     <main className="page-wrap page-wrap--editor">
       <PageHeader
-        eyebrow="Commerce / Customers / New"
+        eyebrow="People / Customers / New"
         title="New customer"
         description="Create a practical contact record for sales and preorders."
       />

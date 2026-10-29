@@ -1,8 +1,8 @@
 "use client";
 
 import { Select } from "@/components/ui/select";
-import { useActionState, useState } from "react";
-import { Check, PackageCheck, X } from "lucide-react";
+import { useActionState, useRef, useState, type ReactNode } from "react";
+import { Ban, Check, PackageCheck, Send, X } from "lucide-react";
 import {
   IMPORT_SHIPMENT_STATUSES,
   importShipmentStatusLabels,
@@ -14,6 +14,8 @@ import {
   initialSupplyFormState,
   type SupplyFormState,
 } from "@/lib/supply/validation";
+import { ModalDialog } from "@/components/ui/modal-dialog";
+import { useFormAction } from "@/components/ui/use-form-action";
 import { FormResult } from "./supplier-forms";
 
 type Action = (
@@ -22,54 +24,114 @@ type Action = (
 ) => Promise<SupplyFormState>;
 
 export function PurchaseOrderStatusButtons({
+  purchaseOrderNumber,
   placeAction,
   cancelAction,
 }: {
+  purchaseOrderNumber: string;
   placeAction?: Action;
   cancelAction: Action;
 }) {
+  // Danger before the Onyx primary, so Place sits last like other records.
   return (
     <div className="supply-action-group">
-      {placeAction ? (
-        <SimpleAction
-          action={placeAction}
-          label="Place purchase order"
-          className="button button--dark"
-        />
-      ) : null}
-      <SimpleAction
+      <ConfirmedAction
         action={cancelAction}
         label="Cancel PO"
-        className="button button--danger"
+        icon={<Ban aria-hidden="true" />}
+        title="Cancel this purchase order?"
+        description="It can no longer be placed, shipped or received. This can't be undone."
+        confirmLabel="Cancel purchase order"
+        danger
       />
+      {placeAction ? (
+        <ConfirmedAction
+          action={placeAction}
+          label="Place purchase order"
+          icon={<Send aria-hidden="true" />}
+          title={`Place ${purchaseOrderNumber}?`}
+          description="Its remaining quantities will count as Incoming stock, and the draft can no longer be edited."
+          confirmLabel="Place purchase order"
+        />
+      ) : null}
     </div>
   );
 }
 
-function SimpleAction({
+function ConfirmedAction({
   action,
   label,
-  className,
+  icon,
+  title,
+  description,
+  confirmLabel,
+  danger = false,
 }: {
   action: Action;
   label: string;
-  className: string;
+  icon: ReactNode;
+  title: string;
+  description: string;
+  confirmLabel: string;
+  danger?: boolean;
 }) {
+  const dialog = useRef<HTMLDialogElement>(null);
   const [state, formAction, pending] = useActionState(
     action,
     initialSupplyFormState,
   );
   return (
-    <form action={formAction}>
-      <button className={className} type="submit" disabled={pending}>
-        {pending ? "Working…" : label}
+    <>
+      <button
+        className={`button ${danger ? "button--danger" : "button--dark"}`}
+        type="button"
+        onClick={() => dialog.current?.showModal()}
+      >
+        {icon} {label}
       </button>
-      {state.message ? (
-        <span className="sr-only" role="alert">
-          {state.message}
-        </span>
-      ) : null}
-    </form>
+      <dialog className="commerce-dialog commerce-dialog--confirm" ref={dialog}>
+        <form action={formAction}>
+          <div className="dialog-head">
+            <div>
+              <p className="kicker">Confirm action</p>
+              <h2>{title}</h2>
+            </div>
+            <button
+              className="icon-button"
+              type="button"
+              onClick={() => dialog.current?.close()}
+              aria-label="Close confirmation"
+            >
+              <X aria-hidden="true" />
+            </button>
+          </div>
+          <div className="dialog-body">
+            <p>{description}</p>
+            {state.message ? (
+              <div className="form-message form-message--error" role="alert">
+                {state.message}
+              </div>
+            ) : null}
+          </div>
+          <div className="dialog-actions">
+            <button
+              className="button button--secondary"
+              type="button"
+              onClick={() => dialog.current?.close()}
+            >
+              Back
+            </button>
+            <button
+              className={`button ${danger ? "button--danger-solid" : "button--dark"}`}
+              type="submit"
+              disabled={pending}
+            >
+              {pending ? "Applying once…" : confirmLabel}
+            </button>
+          </div>
+        </form>
+      </dialog>
+    </>
   );
 }
 
@@ -80,7 +142,7 @@ export function ShipmentStatusForm({
   action: Action;
   current: ImportShipmentStatusValue;
 }) {
-  const [state, formAction, pending] = useActionState(
+  const { formRef, state, pending, onSubmit } = useFormAction(
     action,
     initialSupplyFormState,
   );
@@ -90,7 +152,7 @@ export function ShipmentStatusForm({
       status !== "RECEIVED" && (status === "CANCELLED" || index > currentIndex),
   );
   return (
-    <form action={formAction} className="supply-inline-form">
+    <form ref={formRef} onSubmit={onSubmit} className="supply-inline-form">
       <div className="form-grid">
         <label className="field">
           <span>New status</span>
@@ -136,7 +198,7 @@ export function ReceiveShipment({
   };
 }) {
   const [open, setOpen] = useState(false);
-  const [state, formAction, pending] = useActionState(
+  const { formRef, state, pending, onSubmit } = useFormAction(
     action,
     initialSupplyFormState,
   );
@@ -150,87 +212,70 @@ export function ReceiveShipment({
         <PackageCheck aria-hidden="true" /> Receive shipment
       </button>
       {open ? (
-        <div className="dialog-backdrop" role="presentation">
-          <section
-            className="dialog-panel supply-receive-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="receive-title"
-          >
-            <div className="dialog-head">
-              <div>
-                <p className="kicker">Critical inventory action</p>
-                <h2 id="receive-title">
-                  Receive {formatImportNumber(receive.importNumber)}?
-                </h2>
+        <ModalDialog
+          titleId="receive-title"
+          kicker="Critical inventory action"
+          title={`Receive ${formatImportNumber(receive.importNumber)}?`}
+          onClose={() => setOpen(false)}
+          busy={pending}
+          className="supply-receive-dialog"
+        >
+          <form ref={formRef} onSubmit={onSubmit}>
+            <div className="dialog-body">
+              <p>
+                Confirm the actual quantities. All stock, movement, PO, and
+                final-cost changes will commit together.
+              </p>
+              <div className="receive-line-list">
+                {receive.lines.map((line) => (
+                  <label className="receive-line" key={line.id}>
+                    <span>
+                      <strong>
+                        {line.productName} · {line.variantLabel}
+                      </strong>
+                      <small>
+                        {line.sku} · expected {line.quantityShipped} ·{" "}
+                        {formatMVR(line.actualUnitCostMvr)} each
+                      </small>
+                      <small>
+                        Product {formatMVR(line.productCostMvr)} · allocated
+                        fees {formatMVR(line.allocatedSharedCostMvr)}
+                      </small>
+                    </span>
+                    <input
+                      aria-label={`Actual quantity for ${line.sku}`}
+                      name={`received:${line.id}`}
+                      type="number"
+                      min={1}
+                      max={line.quantityShipped}
+                      step={1}
+                      defaultValue={line.quantityShipped}
+                      required
+                    />
+                  </label>
+                ))}
               </div>
+              <FormResult state={state} />
+            </div>
+            <div className="dialog-actions">
               <button
-                className="icon-button"
+                className="button button--secondary"
                 type="button"
-                aria-label="Close"
                 onClick={() => setOpen(false)}
                 disabled={pending}
               >
-                <X aria-hidden="true" />
+                Back
+              </button>
+              <button
+                className="button button--dark"
+                type="submit"
+                disabled={pending}
+              >
+                {pending ? "Receiving…" : "Confirm and add stock"}
               </button>
             </div>
-            <form action={formAction}>
-              <div className="dialog-body">
-                <p>
-                  Confirm the actual quantities. All stock, movement, PO, and
-                  final-cost changes will commit together.
-                </p>
-                <div className="receive-line-list">
-                  {receive.lines.map((line) => (
-                    <label className="receive-line" key={line.id}>
-                      <span>
-                        <strong>
-                          {line.productName} · {line.variantLabel}
-                        </strong>
-                        <small>
-                          {line.sku} · expected {line.quantityShipped} ·{" "}
-                          {formatMVR(line.actualUnitCostMvr)} each
-                        </small>
-                        <small>
-                          Product {formatMVR(line.productCostMvr)} · allocated
-                          fees {formatMVR(line.allocatedSharedCostMvr)}
-                        </small>
-                      </span>
-                      <input
-                        aria-label={`Actual quantity for ${line.sku}`}
-                        name={`received:${line.id}`}
-                        type="number"
-                        min={1}
-                        max={line.quantityShipped}
-                        step={1}
-                        defaultValue={line.quantityShipped}
-                        required
-                      />
-                    </label>
-                  ))}
-                </div>
-                <FormResult state={state} />
-              </div>
-              <div className="dialog-actions">
-                <button
-                  className="button button--secondary"
-                  type="button"
-                  onClick={() => setOpen(false)}
-                  disabled={pending}
-                >
-                  Back
-                </button>
-                <button
-                  className="button button--dark"
-                  type="submit"
-                  disabled={pending}
-                >
-                  {pending ? "Receiving…" : "Confirm and add stock"}
-                </button>
-              </div>
-            </form>
-          </section>
-        </div>
+          </form>
+        </ModalDialog>
       ) : null}
     </>
   );

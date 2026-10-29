@@ -14,9 +14,12 @@ export function SignInForm() {
       <input type="hidden" name="returnTo" value="/" />
       <label className="field">
         <span>Email</span>
+        {/* Keyed on the returned email so it refills after the form reset. */}
         <input
+          key={state.email ?? ""}
           type="email"
           name="email"
+          defaultValue={state.email}
           autoComplete="username"
           inputMode="email"
           maxLength={254}

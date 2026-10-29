@@ -3,7 +3,9 @@
 import { AuthError } from "next-auth";
 import { signIn, signOut } from "@/auth";
 
-export type SignInState = { message: string };
+// `email` comes back on failure so the form can refill it: React resets the
+// form once the action settles, and only the password should clear.
+export type SignInState = { message: string; email?: string };
 
 export async function signInAction(
   _previous: SignInState,
@@ -26,6 +28,7 @@ export async function signInAction(
       return {
         message:
           "Sign-in failed. Check your details or ask an Owner to confirm your access.",
+        email: typeof email === "string" ? email : "",
       };
     }
     throw error;

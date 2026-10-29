@@ -10,7 +10,7 @@ export default async function NewAmbassadorPage() {
   return (
     <main className="page-wrap">
       <PageHeader
-        eyebrow="Company / Ambassadors / New"
+        eyebrow="People / Ambassadors / New"
         title="New ambassador"
         description="Record the player, their terms, and how SET25 works with them."
       />

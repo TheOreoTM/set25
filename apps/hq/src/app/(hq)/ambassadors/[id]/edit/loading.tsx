@@ -4,7 +4,7 @@ export default function Loading() {
   return (
     <PageSkeleton
       kind="form"
-      eyebrow="Company / Ambassadors / Edit"
+      eyebrow="People / Ambassadors / Edit"
     />
   );
 }

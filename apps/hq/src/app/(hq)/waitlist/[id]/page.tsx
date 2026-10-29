@@ -43,7 +43,7 @@ export default async function WaitlistEntryPage({
   const message = waitlistDmMessage(entry);
 
   return (
-    <main className="page-wrap waitlist-page">
+    <main className="page-wrap supply-detail-page waitlist-page">
       <PageHeader
         eyebrow="Pre-launch / Waitlist"
         title={waitlistDisplayName(entry)}
@@ -109,7 +109,7 @@ export default async function WaitlistEntryPage({
               <p className="kicker">Pipeline</p>
               <h2>Status</h2>
             </div>
-            <p>Since {formatDate(entry.statusChangedAt)}</p>
+            <span>Since {formatDate(entry.statusChangedAt)}</span>
           </div>
           <StatusPicker
             action={setWaitlistStatusAction.bind(null, entry.id)}

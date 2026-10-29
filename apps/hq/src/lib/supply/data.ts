@@ -2,8 +2,10 @@ import "server-only";
 
 import { db, Prisma } from "@set25/database";
 import {
+  IMPORT_SHIPMENT_STATUSES,
   PURCHASE_ORDER_STATUSES,
   SAMPLE_STATUSES,
+  type ImportShipmentStatusValue,
   type PurchaseOrderStatusValue,
   type SampleStatusValue,
 } from "@set25/shared";
@@ -176,8 +178,41 @@ export async function getEligiblePurchaseOrderLines() {
     .filter((line) => line.remainingToShip > 0);
 }
 
-export async function getImports() {
+export async function getImports(
+  filters: { search?: string; status?: string } = {},
+) {
+  const status = IMPORT_SHIPMENT_STATUSES.includes(
+    filters.status as ImportShipmentStatusValue,
+  )
+    ? (filters.status as ImportShipmentStatusValue)
+    : undefined;
+  const search = filters.search?.trim();
+  const numericSearch = Number(search?.replace(/\D/g, ""));
   return db.importShipment.findMany({
+    where: {
+      status,
+      ...(search
+        ? {
+            OR: [
+              ...(Number.isInteger(numericSearch) && numericSearch > 0
+                ? [{ importNumber: numericSearch }]
+                : []),
+              {
+                trackingReference: {
+                  contains: search,
+                  mode: "insensitive" as const,
+                },
+              },
+              {
+                freightForwarder: {
+                  contains: search,
+                  mode: "insensitive" as const,
+                },
+              },
+            ],
+          }
+        : {}),
+    },
     include: {
       lines: {
         include: {

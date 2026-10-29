@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, User, Users } from "lucide-react";
+import { ArrowLeft, CalendarDays, User, Users } from "lucide-react";
 import {
   fulfilmentStatusLabels,
   formatMVR,
@@ -51,69 +51,95 @@ export function OrderDetail({
   const number = formatOrderNumber(order.orderNumber);
   const payment = paymentSummary(order.total, order.payments);
   const canWrite = staff.role !== "STAFF";
+  // One primary action: collect the balance first, then complete.
+  const paymentDue = payment.balance.greaterThan(0);
+  const paymentControl = (
+    <PaymentControl
+      orderId={order.id}
+      balance={payment.balance.toString()}
+      refundable={payment.paid.toString()}
+      submissionKey={paymentKey}
+      returnTo={preorder ? "preorder" : "order"}
+      primary={paymentDue}
+    />
+  );
   return (
-    <main className="page-wrap order-detail-page">
+    <main className="page-wrap supply-detail-page order-detail-page">
       <PageHeader
-        eyebrow={`Commerce / ${preorder ? "Preorders" : "Orders"}`}
+        eyebrow={`Launch / ${preorder ? "Preorders" : "Orders"}`}
         title={number}
         description={`${preorder ? "Preorder" : "Order"} created ${formatDate(order.createdAt)} ${order.createdBy ? `by ${order.createdBy.name}` : "through Store checkout"}.`}
       />
+      <div className="detail-actions">
+        <Link
+          className="text-link back-link"
+          href={preorder ? "/preorders" : "/orders"}
+        >
+          <ArrowLeft aria-hidden="true" /> All{" "}
+          {preorder ? "preorders" : "orders"}
+        </Link>
+        {canWrite ? (
+          <div>
+            {/* The Onyx primary always sits last: Record payment while a
+                balance is due, otherwise Complete order. */}
+            {paymentDue ? null : paymentControl}
+            <TerminalOrderControls
+              orderId={order.id}
+              status={order.fulfilmentStatus}
+              returnTo={preorder ? "preorder" : "order"}
+              primary={!paymentDue}
+            />
+            {paymentDue ? paymentControl : null}
+          </div>
+        ) : null}
+      </div>
       {saved ? (
         <div className="form-message form-message--success" role="status">
           {successMessage(saved)}
         </div>
       ) : null}
-      <section className="order-command-bar">
-        <div className="order-command-statuses">
-          <span>
-            <small>Fulfilment</small>
-            <strong
-              className={`status status--${order.fulfilmentStatus.toLowerCase()}`}
-            >
-              {fulfilmentStatusLabels[order.fulfilmentStatus]}
-            </strong>
-          </span>
-          <span>
-            <small>Payment</small>
-            <strong
-              className={`status status--${payment.status.toLowerCase()}`}
-            >
-              {paymentStatusLabels[payment.status]}
-            </strong>
-          </span>
-          {preorder && order.preorder ? (
-            <span>
-              <small>Preorder</small>
-              <strong
-                className={`status status--${order.preorder.status.toLowerCase()}`}
-              >
-                {preorderStatusLabels[order.preorder.status]}
-              </strong>
-            </span>
-          ) : null}
+      <section
+        className={`supply-summary-strip${preorder && order.preorder ? "" : " supply-summary-strip--four"}`}
+        aria-label={`${preorder ? "Preorder" : "Order"} summary`}
+      >
+        <div>
+          <span>Fulfilment</span>
+          <strong
+            className={`status status--${order.fulfilmentStatus.toLowerCase()}`}
+          >
+            {fulfilmentStatusLabels[order.fulfilmentStatus]}
+          </strong>
         </div>
-        {canWrite ? (
-          <div className="order-command-actions">
-            <PaymentControl
-              orderId={order.id}
-              balance={payment.balance.toString()}
-              refundable={payment.paid.toString()}
-              submissionKey={paymentKey}
-              returnTo={preorder ? "preorder" : "order"}
-            />
-            <TerminalOrderControls
-              orderId={order.id}
-              status={order.fulfilmentStatus}
-              returnTo={preorder ? "preorder" : "order"}
-            />
+        <div>
+          <span>Payment</span>
+          <strong className={`status status--${payment.status.toLowerCase()}`}>
+            {paymentStatusLabels[payment.status]}
+          </strong>
+        </div>
+        {preorder && order.preorder ? (
+          <div>
+            <span>Preorder</span>
+            <strong
+              className={`status status--${order.preorder.status.toLowerCase()}`}
+            >
+              {preorderStatusLabels[order.preorder.status]}
+            </strong>
           </div>
         ) : null}
+        <div>
+          <span>Total</span>
+          <strong>{formatMVR(order.total)}</strong>
+        </div>
+        <div>
+          <span>Balance Left</span>
+          <strong>{formatMVR(payment.balance)}</strong>
+        </div>
       </section>
 
       <div className="order-detail-grid">
         <section className="order-main-column">
           <div className="detail-section order-items-panel">
-            <div className="section-heading">
+            <div className="detail-section-head">
               <div>
                 <p className="kicker">Items</p>
                 <h2>
@@ -121,7 +147,7 @@ export function OrderDetail({
                   {order.lines.length === 1 ? "line" : "lines"}
                 </h2>
               </div>
-              <p>Immutable sale snapshot</p>
+              <span>Immutable sale snapshot</span>
             </div>
             <div className="order-items">
               {order.lines.map((line) => (
@@ -173,12 +199,12 @@ export function OrderDetail({
           </div>
 
           <div className="detail-section">
-            <div className="section-heading">
+            <div className="detail-section-head">
               <div>
                 <p className="kicker">Payments</p>
                 <h2>Transaction history</h2>
               </div>
-              <p>Append-only ledger</p>
+              <span>Append-only ledger</span>
             </div>
             {order.payments.length ? (
               <div className="payment-ledger">
@@ -213,16 +239,20 @@ export function OrderDetail({
                 ))}
               </div>
             ) : (
-              <div className="inline-empty">
+              <div className="inline-empty inline-empty--compact">
                 <p>No payments recorded yet.</p>
+                {canWrite ? (
+                  <span>Use Record payment to add the first transaction.</span>
+                ) : null}
               </div>
             )}
           </div>
+          {files}
         </section>
 
         <aside className="order-side-column">
           <section className="detail-section order-contact-panel">
-            <div className="section-heading">
+            <div className="detail-section-head">
               <div>
                 <p className="kicker">Sale</p>
                 <h2>Order context</h2>
@@ -279,7 +309,7 @@ export function OrderDetail({
 
           {preorder && order.preorder ? (
             <section className="detail-section preorder-panel">
-              <div className="section-heading">
+              <div className="detail-section-head">
                 <div>
                   <p className="kicker">Preorder</p>
                   <h2>Arrival details</h2>
@@ -370,7 +400,7 @@ export function OrderDetail({
           {canWrite &&
           !["COMPLETED", "CANCELLED"].includes(order.fulfilmentStatus) ? (
             <section className="detail-section workflow-panel">
-              <div className="section-heading">
+              <div className="detail-section-head">
                 <div>
                   <p className="kicker">Operations</p>
                   <h2>Move forward</h2>
@@ -391,7 +421,6 @@ export function OrderDetail({
           ) : null}
         </aside>
       </div>
-      {files}
     </main>
   );
 }
@@ -435,7 +464,7 @@ function StoreCheckoutPanel({ order }: { order: OrderDetailRecord }) {
   }
   return (
     <section className="detail-section order-contact-panel">
-      <div className="section-heading">
+      <div className="detail-section-head">
         <div>
           <p className="kicker">Store checkout</p>
           <h2>Delivery & payment</h2>

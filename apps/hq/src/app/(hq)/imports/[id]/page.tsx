@@ -237,73 +237,86 @@ export default async function ImportPage({
             {units} {units === 1 ? "unit" : "units"}
           </span>
         </div>
-        <div className="supply-context">
-          {[...supplyGroups.entries()].map(([number, po]) => (
-            <Link href={`/purchase-orders/${po.id}`} key={number}>
-              <strong>{formatPurchaseOrderNumber(number)}</strong>
-              <span>{po.supplier}</span>
-            </Link>
-          ))}
-        </div>
-        <div className="supply-table supply-table--import-detail">
-          <div className="supply-table-row supply-table-head">
-            <span>Product / Variant</span>
-            <span>Source</span>
-            <span>Shipped</span>
-            <span>Received</span>
-            <span>Product Cost</span>
-            <span>Allocated Fees</span>
-            <span>Actual Cost / Unit</span>
-          </div>
-          {shipment.lines.map((line) => {
-            const cost = costs.get(line.id)!;
-            return (
-              <div className="supply-table-row" key={line.id}>
-                <span>
-                  <strong>{line.purchaseOrderLine.productName}</strong>
-                  <small>
-                    {[line.purchaseOrderLine.color, line.purchaseOrderLine.size]
-                      .filter(Boolean)
-                      .join(" / ") || "Default"}
-                  </small>
-                  <small>{line.purchaseOrderLine.sku}</small>
-                </span>
-                <span data-label="Source">
-                  <strong>
-                    <Link
-                      href={`/purchase-orders/${line.purchaseOrderLine.purchaseOrder.id}`}
-                    >
-                      {formatPurchaseOrderNumber(
-                        line.purchaseOrderLine.purchaseOrder
-                          .purchaseOrderNumber,
-                      )}
-                    </Link>
-                  </strong>
-                  <small>
-                    {line.purchaseOrderLine.purchaseOrder.supplier.name}
-                  </small>
-                </span>
-                <span data-label="Shipped">{line.quantityShipped}</span>
-                <span data-label="Received">{line.quantityReceived}</span>
-                <span data-label="Product Cost">
-                  {formatMVR(cost.productCostMvr)}
-                </span>
-                <span data-label="Allocated Fees">
-                  {formatMVR(
-                    line.allocatedSharedCostMvr ?? cost.allocatedSharedCostMvr,
-                  )}
-                </span>
-                <span data-label="Actual Cost / Unit">
-                  <strong>
-                    {formatMVR(
-                      line.actualUnitCostMvr ?? cost.actualUnitCostMvr,
-                    )}
-                  </strong>
-                </span>
+        {shipment.lines.length ? (
+          <>
+            <div className="supply-context">
+              {[...supplyGroups.entries()].map(([number, po]) => (
+                <Link href={`/purchase-orders/${po.id}`} key={number}>
+                  <strong>{formatPurchaseOrderNumber(number)}</strong>
+                  <span>{po.supplier}</span>
+                </Link>
+              ))}
+            </div>
+            <div className="supply-table supply-table--import-detail">
+              <div className="supply-table-row supply-table-head">
+                <span>Product / Variant</span>
+                <span>Source</span>
+                <span>Shipped</span>
+                <span>Received</span>
+                <span>Product Cost</span>
+                <span>Allocated Fees</span>
+                <span>Actual Cost / Unit</span>
               </div>
-            );
-          })}
-        </div>
+              {shipment.lines.map((line) => {
+                const cost = costs.get(line.id)!;
+                return (
+                  <div className="supply-table-row" key={line.id}>
+                    <span>
+                      <strong>{line.purchaseOrderLine.productName}</strong>
+                      <small>
+                        {[
+                          line.purchaseOrderLine.color,
+                          line.purchaseOrderLine.size,
+                        ]
+                          .filter(Boolean)
+                          .join(" / ") || "Default"}
+                      </small>
+                      <small>{line.purchaseOrderLine.sku}</small>
+                    </span>
+                    <span data-label="Source">
+                      <strong>
+                        <Link
+                          href={`/purchase-orders/${line.purchaseOrderLine.purchaseOrder.id}`}
+                        >
+                          {formatPurchaseOrderNumber(
+                            line.purchaseOrderLine.purchaseOrder
+                              .purchaseOrderNumber,
+                          )}
+                        </Link>
+                      </strong>
+                      <small>
+                        {line.purchaseOrderLine.purchaseOrder.supplier.name}
+                      </small>
+                    </span>
+                    <span data-label="Shipped">{line.quantityShipped}</span>
+                    <span data-label="Received">{line.quantityReceived}</span>
+                    <span data-label="Product Cost">
+                      {formatMVR(cost.productCostMvr)}
+                    </span>
+                    <span data-label="Allocated Fees">
+                      {formatMVR(
+                        line.allocatedSharedCostMvr ??
+                          cost.allocatedSharedCostMvr,
+                      )}
+                    </span>
+                    <span data-label="Actual Cost / Unit">
+                      <strong>
+                        {formatMVR(
+                          line.actualUnitCostMvr ?? cost.actualUnitCostMvr,
+                        )}
+                      </strong>
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        ) : (
+          <div className="inline-empty inline-empty--compact">
+            <p>No items in this shipment yet.</p>
+            <span>Add purchase order lines when creating the import.</span>
+          </div>
+        )}
       </section>
 
       <section className="detail-section compact-detail-section">
@@ -313,21 +326,27 @@ export default async function ImportPage({
             <h2>Status history</h2>
           </div>
         </div>
-        <div className="shipment-event-list">
-          {[...shipment.events].reverse().map((event) => (
-            <article key={event.id}>
-              <time dateTime={event.createdAt.toISOString()}>
-                {formatDateTime(event.createdAt)}
-              </time>
-              <span className="event-marker" />
-              <div>
-                <strong>{importShipmentStatusLabels[event.status]}</strong>
-                <p>{event.notes ?? "Status updated"}</p>
-                <small>{event.createdBy.name}</small>
-              </div>
-            </article>
-          ))}
-        </div>
+        {shipment.events.length ? (
+          <div className="shipment-event-list">
+            {[...shipment.events].reverse().map((event) => (
+              <article key={event.id}>
+                <time dateTime={event.createdAt.toISOString()}>
+                  {formatDateTime(event.createdAt)}
+                </time>
+                <span className="event-marker" />
+                <div>
+                  <strong>{importShipmentStatusLabels[event.status]}</strong>
+                  <p>{event.notes ?? "Status updated"}</p>
+                  <small>{event.createdBy.name}</small>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="inline-empty inline-empty--compact">
+            <p>No status changes yet.</p>
+          </div>
+        )}
       </section>
       <FileAttachmentsPanel
         staff={staff}

@@ -76,8 +76,10 @@ export function validateWaitlistEntry(formData: FormData) {
     errors.instagramHandle = [
       "Use the handle only: letters, numbers, dots, and underscores.",
     ];
-  if (!instagramHandle && !name)
+  if (!instagramHandle && !name) {
     errors.instagramHandle = ["Enter an Instagram handle or a name."];
+    errors.name = ["Enter an Instagram handle or a name."];
+  }
   if (name.length > 120) errors.name = ["Keep the name under 120 characters."];
   if (phone && !/^\+?[\d\s-]{7,20}$/.test(phone))
     errors.phone = ["Enter a phone number, e.g. 7771234."];

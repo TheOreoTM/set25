@@ -4,7 +4,7 @@ export default function Loading() {
   return (
     <PageSkeleton
       kind="list"
-      eyebrow="Supply / Samples"
+      eyebrow="Pre-launch / Samples"
       title="Samples"
       description="Supplier samples, tester feedback, and product decisions."
     />

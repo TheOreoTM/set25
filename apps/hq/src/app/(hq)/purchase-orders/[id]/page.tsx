@@ -77,13 +77,11 @@ export default async function PurchaseOrderPage({
                 <Pencil aria-hidden="true" /> Edit draft
               </Link>
             ) : null}
-            {po.status === "PLACED" && incoming > 0 ? (
-              <Link className="button button--dark" href="/imports/new">
-                <Plus aria-hidden="true" /> Create import
-              </Link>
-            ) : null}
             {["DRAFT", "PLACED"].includes(po.status) ? (
               <PurchaseOrderStatusButtons
+                purchaseOrderNumber={formatPurchaseOrderNumber(
+                  po.purchaseOrderNumber,
+                )}
                 placeAction={
                   po.status === "DRAFT"
                     ? changePurchaseOrderStatusAction.bind(null, id, "PLACED")
@@ -96,6 +94,11 @@ export default async function PurchaseOrderPage({
                 )}
               />
             ) : null}
+            {po.status === "PLACED" && incoming > 0 ? (
+              <Link className="button button--dark" href="/imports/new">
+                <Plus aria-hidden="true" /> Create import
+              </Link>
+            ) : null}
           </div>
         ) : null}
       </div>
@@ -107,7 +110,9 @@ export default async function PurchaseOrderPage({
         <div>
           <span>Supplier</span>
           <strong>
-            <Link href={`/suppliers/${po.supplierId}`}>{po.supplier.name}</Link>
+            <Link href={`/suppliers/${po.supplierId}`} title={po.supplier.name}>
+              {po.supplier.name}
+            </Link>
           </strong>
         </div>
         <SummaryFact

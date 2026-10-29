@@ -49,7 +49,7 @@ export async function createCustomerAction(
   await requireOperationalAccess();
   const result = validateCustomer(formData);
   if (!result.success)
-    return failure("Check the highlighted fields.", result.errors);
+    return failure("Check the highlighted details.", result.errors);
   let id: string;
   try {
     ({ id } = await db.customer.create({
@@ -60,7 +60,7 @@ export async function createCustomerAction(
     return databaseFailure(error);
   }
   revalidatePath("/customers");
-  redirect(`/customers/${id}`);
+  redirect(`/customers/${id}?created=customer`);
 }
 
 export async function updateCustomerAction(
@@ -71,7 +71,7 @@ export async function updateCustomerAction(
   await requireOperationalAccess();
   const result = validateCustomer(formData);
   if (!result.success)
-    return failure("Check the highlighted fields.", result.errors);
+    return failure("Check the highlighted details.", result.errors);
   try {
     await db.customer.update({ where: { id }, data: result.data });
   } catch (error) {
@@ -89,7 +89,7 @@ export async function createTeamAction(
   await requireOperationalAccess();
   const result = validateTeam(formData);
   if (!result.success)
-    return failure("Check the highlighted fields.", result.errors);
+    return failure("Check the highlighted details.", result.errors);
   let id: string;
   try {
     ({ id } = await db.team.create({
@@ -100,7 +100,7 @@ export async function createTeamAction(
     return databaseFailure(error);
   }
   revalidatePath("/teams");
-  redirect(`/teams/${id}`);
+  redirect(`/teams/${id}?created=team`);
 }
 
 export async function updateTeamAction(
@@ -111,7 +111,7 @@ export async function updateTeamAction(
   await requireOperationalAccess();
   const result = validateTeam(formData);
   if (!result.success)
-    return failure("Check the highlighted fields.", result.errors);
+    return failure("Check the highlighted details.", result.errors);
   try {
     await db.team.update({ where: { id }, data: result.data });
   } catch (error) {
@@ -130,7 +130,7 @@ export async function createOrderAction(
   const staff = await requireOperationalAccess();
   const result = validateOrder(formData, preorder);
   if (!result.success)
-    return failure("Check the order details.", result.errors);
+    return failure("Check the highlighted details.", result.errors);
   const input = result.data;
 
   const duplicate = await db.order.findUnique({
@@ -245,7 +245,7 @@ export async function recordPaymentAction(
   const staff = await requireOperationalAccess();
   const result = validatePayment(formData);
   if (!result.success)
-    return failure("Check the payment details.", result.errors);
+    return failure("Check the highlighted details.", result.errors);
   const input = result.data;
   try {
     await db.$transaction(

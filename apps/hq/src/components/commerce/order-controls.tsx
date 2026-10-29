@@ -2,7 +2,15 @@
 
 import { Select } from "@/components/ui/select";
 import { useActionState, useRef } from "react";
-import { Check, CircleDollarSign, PackageCheck, X } from "lucide-react";
+import { useFormAction } from "@/components/ui/use-form-action";
+import {
+  Ban,
+  Check,
+  CircleDollarSign,
+  ListChecks,
+  PackageCheck,
+  X,
+} from "lucide-react";
 import {
   FULFILMENT_STATUSES,
   PAYMENT_METHODS,
@@ -29,29 +37,33 @@ export function PaymentControl({
   refundable,
   submissionKey,
   returnTo,
+  primary = true,
 }: {
   orderId: string;
   balance: string;
   refundable: string;
   submissionKey: string;
   returnTo: "order" | "preorder";
+  primary?: boolean;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
-  const [state, action, pending] = useActionState(
+  const { formRef, state, pending, onSubmit, error } = useFormAction(
     recordPaymentAction.bind(null, orderId),
     initialCommerceFormState,
   );
+  const fieldError = (key: string) =>
+    error(key) ? <small className="field-error">{error(key)}</small> : null;
   return (
     <>
       <button
-        className="button button--dark"
+        className={`button ${primary ? "button--dark" : "button--secondary"}`}
         type="button"
         onClick={() => dialog.current?.showModal()}
       >
         <CircleDollarSign aria-hidden="true" /> Record payment
       </button>
       <dialog className="commerce-dialog" ref={dialog}>
-        <form action={action}>
+        <form ref={formRef} onSubmit={onSubmit}>
           <input type="hidden" name="idempotencyKey" value={submissionKey} />
           <input type="hidden" name="returnTo" value={returnTo} />
           <div className="dialog-head">
@@ -82,10 +94,15 @@ export function PaymentControl({
             <div className="form-grid form-grid--dialog">
               <label className="field">
                 <span>Transaction</span>
-                <Select name="type" defaultValue="PAYMENT">
+                <Select
+                  name="type"
+                  defaultValue="PAYMENT"
+                  aria-invalid={Boolean(error("type"))}
+                >
                   <option value="PAYMENT">Payment</option>
                   <option value="REFUND">Refund</option>
                 </Select>
+                {fieldError("type")}
               </label>
               <label className="field">
                 <span>Amount</span>
@@ -96,23 +113,25 @@ export function PaymentControl({
                     inputMode="decimal"
                     placeholder="0.00"
                     required
+                    aria-invalid={Boolean(error("amount"))}
                   />
                 </div>
-                {state.errors?.amount ? (
-                  <small className="field-error">
-                    {state.errors.amount[0]}
-                  </small>
-                ) : null}
+                {fieldError("amount")}
               </label>
               <label className="field">
                 <span>Method</span>
-                <Select name="method" defaultValue="BANK_TRANSFER">
+                <Select
+                  name="method"
+                  defaultValue="BANK_TRANSFER"
+                  aria-invalid={Boolean(error("method"))}
+                >
                   {PAYMENT_METHODS.map((method) => (
                     <option value={method} key={method}>
                       {paymentMethodLabels[method]}
                     </option>
                   ))}
                 </Select>
+                {fieldError("method")}
               </label>
               <label className="field">
                 <span>Reference (optional)</span>
@@ -120,16 +139,25 @@ export function PaymentControl({
                   name="reference"
                   maxLength={100}
                   placeholder="Transfer or receipt reference"
+                  aria-invalid={Boolean(error("reference"))}
                 />
+                {fieldError("reference")}
               </label>
             </div>
             <label className="field">
               <span>Notes (optional)</span>
-              <textarea name="notes" rows={3} maxLength={500} />
+              <textarea
+                name="notes"
+                rows={3}
+                maxLength={500}
+                aria-invalid={Boolean(error("notes"))}
+              />
+              {fieldError("notes")}
             </label>
             {state.message ? (
               <div className="form-message form-message--error" role="alert">
                 {state.message}
+                {error("idempotencyKey") ? ` ${error("idempotencyKey")}` : null}
               </div>
             ) : null}
           </div>
@@ -236,7 +264,7 @@ export function PreorderStatusControl({
         type="submit"
         disabled={pending}
       >
-        {pending ? "Updating…" : "Update"}
+        <ListChecks aria-hidden="true" /> {pending ? "Updating…" : "Update"}
       </button>
       {state.message ? (
         <p className="field-error" role="alert">
@@ -251,10 +279,12 @@ export function TerminalOrderControls({
   orderId,
   status,
   returnTo,
+  primary = true,
 }: {
   orderId: string;
   status: FulfilmentStatusValue;
   returnTo: "order" | "preorder";
+  primary?: boolean;
 }) {
   const completeDialog = useRef<HTMLDialogElement>(null);
   const cancelDialog = useRef<HTMLDialogElement>(null);
@@ -267,25 +297,31 @@ export function TerminalOrderControls({
     initialCommerceFormState,
   );
   if (["COMPLETED", "CANCELLED"].includes(status)) return null;
+  const noun = returnTo;
+  const complete = (
+    <button
+      className={`button ${primary ? "button--dark" : "button--secondary"}`}
+      type="button"
+      onClick={() => completeDialog.current?.showModal()}
+    >
+      <Check aria-hidden="true" /> Complete {noun}
+    </button>
+  );
+  // Secondary actions, then the danger action, then the Onyx primary last.
   return (
     <>
+      {primary ? null : complete}
       <button
-        className="button button--dark"
-        type="button"
-        onClick={() => completeDialog.current?.showModal()}
-      >
-        <Check aria-hidden="true" /> Complete order
-      </button>
-      <button
-        className="button button--secondary button--danger"
+        className="button button--danger"
         type="button"
         onClick={() => cancelDialog.current?.showModal()}
       >
-        Cancel order
+        <Ban aria-hidden="true" /> Cancel {noun}
       </button>
+      {primary ? complete : null}
       <ConfirmDialog
         dialogRef={completeDialog}
-        title="Complete this order?"
+        title={`Complete this ${noun}?`}
         description="All item quantities will be checked and deducted together. This cannot be casually reversed."
         action={completeAction}
         pending={completing}
@@ -295,12 +331,12 @@ export function TerminalOrderControls({
       />
       <ConfirmDialog
         dialogRef={cancelDialog}
-        title="Cancel this order?"
-        description="No stock will change. A cancelled order cannot continue through fulfilment."
+        title={`Cancel this ${noun}?`}
+        description={`No stock will change. A cancelled ${noun} cannot continue through fulfilment.`}
         action={cancelAction}
         pending={cancelling}
         error={cancelState.message}
-        confirmLabel="Cancel order"
+        confirmLabel={`Cancel ${noun}`}
         danger
         returnTo={returnTo}
       />

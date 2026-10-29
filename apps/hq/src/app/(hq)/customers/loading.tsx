@@ -4,7 +4,7 @@ export default function Loading() {
   return (
     <PageSkeleton
       kind="list"
-      eyebrow="Commerce / Customers"
+      eyebrow="People / Customers"
       title="Customers"
       description="People behind direct, social, preorder, and team sales."
     />

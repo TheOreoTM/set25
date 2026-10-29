@@ -248,14 +248,25 @@ export function Navigation({ staff }: { staff: StaffIdentity }) {
 
   return (
     <>
-      <aside className="sidebar">
+      {/* The role marker lets static loading skeletons drop write-only
+          placeholders (see .sk-write-only) for read-only staff. */}
+      <aside className="sidebar" data-staff-role={staff.role}>
         <SidebarBrand />
         <NavigationLinks staff={staff} />
         <div className="sidebar-footer">
           <span className="monogram-frame">
             <Image src={monogram} alt="" width={38} height={38} />
           </span>
-          <Link className="sidebar-account" href="/account">
+          {/* /account is not in the nav groups, so mark it here. */}
+          <Link
+            className={
+              pathname === "/account"
+                ? "sidebar-account is-active"
+                : "sidebar-account"
+            }
+            href="/account"
+            aria-current={pathname === "/account" ? "page" : undefined}
+          >
             <strong>{staff.name}</strong>
             <span>{staffRoleLabels[staff.role]}</span>
           </Link>
@@ -280,7 +291,8 @@ export function Navigation({ staff }: { staff: StaffIdentity }) {
         ))}
         <button
           className={
-            moreOpen || (activeHref && !tabHrefs.has(activeHref)) ||
+            moreOpen ||
+            (activeHref && !tabHrefs.has(activeHref)) ||
             pathname === "/account"
               ? "tab-link is-active"
               : "tab-link"
@@ -313,14 +325,22 @@ export function Navigation({ staff }: { staff: StaffIdentity }) {
               <span className="sr-only">Close</span>
             </button>
           </div>
-          <NavigationLinks staff={staff} exclude={tabHrefs} onNavigate={close} />
+          <NavigationLinks
+            staff={staff}
+            exclude={tabHrefs}
+            onNavigate={close}
+          />
           <div className="more-account">
             <div>
               <strong>{staff.name}</strong>
               <span>{staffRoleLabels[staff.role]}</span>
             </div>
             <div className="more-account-actions">
-              <Link href="/account" onClick={close}>
+              <Link
+                href="/account"
+                aria-current={pathname === "/account" ? "page" : undefined}
+                onClick={close}
+              >
                 <UserRound aria-hidden="true" /> Account
               </Link>
               <form action={signOutAction}>

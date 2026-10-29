@@ -19,7 +19,7 @@ export default async function EditCustomerPage({
   return (
     <main className="page-wrap page-wrap--editor">
       <PageHeader
-        eyebrow="Commerce / Customers / Edit"
+        eyebrow="People / Customers / Edit"
         title={`Edit ${customer.name}`}
         description="Update contact details without changing order history."
       />

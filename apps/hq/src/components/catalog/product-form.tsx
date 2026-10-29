@@ -1,7 +1,6 @@
 "use client";
 
 import { Select } from "@/components/ui/select";
-import { useActionState } from "react";
 import Link from "next/link";
 import {
   PRODUCT_CATEGORIES,
@@ -13,6 +12,7 @@ import {
 } from "@set25/shared";
 import { ArrowLeft, Save } from "lucide-react";
 import { initialFormState, type FormState } from "@/lib/catalog/validation";
+import { useFormAction } from "@/components/ui/use-form-action";
 
 type ProductDefaults = {
   name?: string;
@@ -38,11 +38,13 @@ export function ProductForm({
   cancelHref: string;
   submitLabel: string;
 }) {
-  const [state, formAction, pending] = useActionState(action, initialFormState);
-  const error = (field: string) => state.errors?.[field]?.[0];
+  const { formRef, state, pending, onSubmit, error } = useFormAction(
+    action,
+    initialFormState,
+  );
 
   return (
-    <form action={formAction} className="editor-form">
+    <form ref={formRef} onSubmit={onSubmit} className="editor-form">
       <div className="form-section">
         <div className="form-section-title">
           <p className="kicker">Identity</p>

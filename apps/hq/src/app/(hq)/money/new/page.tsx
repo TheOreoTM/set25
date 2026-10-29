@@ -22,7 +22,7 @@ export default async function NewMoneyEntryPage({
   return (
     <main className="page-wrap">
       <PageHeader
-        eyebrow="Company / Money / Record"
+        eyebrow="Company / Money / New"
         title={
           selectedDirection === "IN" ? "Record Money In" : "Record Money Out"
         }

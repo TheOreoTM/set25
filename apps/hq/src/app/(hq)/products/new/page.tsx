@@ -10,7 +10,7 @@ export default async function NewProductPage() {
   return (
     <main className="page-wrap">
       <PageHeader
-        eyebrow="Commerce / Products / New"
+        eyebrow="Supply / Products / New"
         title="New product"
         description="Start with the shared product identity. Add variants and opening stock next."
       />

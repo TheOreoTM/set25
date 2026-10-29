@@ -4,7 +4,7 @@ export default function Loading() {
   return (
     <PageSkeleton
       kind="list"
-      eyebrow="Commerce / Preorders"
+      eyebrow="Launch / Preorders"
       title="Preorders"
       description="Deposits, balances, arrival expectations, and customer readiness."
     />

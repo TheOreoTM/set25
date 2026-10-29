@@ -40,6 +40,7 @@ export default async function EditPurchaseOrderPage({
         description="Once placed, quantities and agreed prices become historical facts."
       />
       <PurchaseOrderForm
+        mode="edit"
         action={updatePurchaseOrderAction.bind(null, id)}
         suppliers={suppliers.map(toSupplierOptionDto)}
         variants={variants}
