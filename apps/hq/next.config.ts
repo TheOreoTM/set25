@@ -5,6 +5,13 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   reactCompiler: true,
+  experimental: {
+    // Turbopack's on-disk cache kept serving an old compile of globals.css
+    // (through the Tailwind loader below) after it changed: new markup with
+    // stale styles, in `next dev` and on Vercel, which restores .next/cache.
+    turbopackFileSystemCacheForDev: false,
+    turbopackFileSystemCacheForBuild: false,
+  },
   turbopack: {
     rules: {
       "*.svg": {
